@@ -1,71 +1,74 @@
-// Maps our exercise IDs to wger.de exercise base IDs (free, open-source fitness DB)
-// Image URLs fetched lazily from https://wger.de/api/v2/exerciseimage/
-const WGER_IDS: Record<string, number> = {
-  bench_press: 192,
-  incline_db_press: 263,
-  cable_fly: 247,
-  ohp_mon: 65,
-  ohp_fri: 65,
-  lateral_raises_mon: 171,
-  lateral_raises_fri: 171,
-  rope_pushdown: 115,
-  oh_tricep_ext: 73,
-  deadlift: 29,
-  barbell_row: 166,
-  cable_row: 212,
-  lat_pulldown: 159,
-  face_pulls: 362,
-  bb_curl: 88,
-  hammer_curl: 195,
-  back_squat: 111,
-  leg_press: 225,
-  leg_press_high: 225,
-  hack_squat: 354,
-  leg_ext: 72,
-  rdl_wed: 69,
-  rdl_sat: 69,
-  leg_curl_wed: 116,
-  leg_curl_sat: 116,
-  standing_calf: 285,
-  seated_calf: 206,
-  cable_crunch_wed: 308,
-  cable_crunch_sat: 308,
-  plank_wed: 47,
-  weighted_pullups: 4,
-  incline_bb_press: 196,
-  tbar_row: 167,
-  rear_delt_fly: 188,
-  skull_crushers: 80,
-  incline_db_curl: 222,
-  bulgarian_split: 368,
-  hip_thrust: 349,
-  hanging_leg_raise: 10,
+// All URLs verified against wger.de live image list (open-source fitness DB, CC licence)
+const IMAGE_URLS: Record<string, string> = {
+  // Push — chest/shoulders/triceps
+  bench_press:        'https://wger.de/media/exercise-images/192/Bench-press-1.png',
+  incline_db_press:   'https://wger.de/media/exercise-images/41/Incline-bench-press-1.png',
+  incline_bb_press:   'https://wger.de/media/exercise-images/41/Incline-bench-press-1.png',
+  cable_fly:          'https://wger.de/media/exercise-images/71/Cable-crossover-2.png',
+  ohp_mon:            'https://wger.de/media/exercise-images/119/seated-barbell-shoulder-press-large-1.png',
+  ohp_fri:            'https://wger.de/media/exercise-images/119/seated-barbell-shoulder-press-large-1.png',
+  lateral_raises_mon: 'https://wger.de/media/exercise-images/148/lateral-dumbbell-raises-large-2.png',
+  lateral_raises_fri: 'https://wger.de/media/exercise-images/148/lateral-dumbbell-raises-large-2.png',
+  skull_crushers:     'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
+  rope_pushdown:      'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
+  oh_tricep_ext:      'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
+
+  // Pull — back/biceps
+  deadlift:           'https://wger.de/media/exercise-images/161/Dead-lifts-2.png',
+  barbell_row:        'https://wger.de/media/exercise-images/110/Reverse-grip-bent-over-rows-1.png',
+  tbar_row:           'https://wger.de/media/exercise-images/106/T-bar-row-1.png',
+  cable_row:          'https://wger.de/media/exercise-images/143/Cable-seated-rows-2.png',
+  lat_pulldown:       'https://wger.de/media/exercise-images/181/Chin-ups-2.png',
+  face_pulls:         'https://wger.de/media/exercise-images/109/Barbell-rear-delt-row-1.png',
+  rear_delt_fly:      'https://wger.de/media/exercise-images/109/Barbell-rear-delt-row-1.png',
+  weighted_pullups:   'https://wger.de/media/exercise-images/181/Chin-ups-2.png',
+  bb_curl:            'https://wger.de/media/exercise-images/129/Standing-biceps-curl-1.png',
+  hammer_curl:        'https://wger.de/media/exercise-images/86/Bicep-hammer-curl-1.png',
+  incline_db_curl:    'https://wger.de/media/exercise-images/129/Standing-biceps-curl-1.png',
+
+  // Legs
+  back_squat:         'https://wger.de/media/exercise-images/191/Front-squat-1-857x1024.png',
+  leg_press:          'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
+  leg_press_high:     'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
+  hack_squat:         'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
+  bulgarian_split:    'https://wger.de/media/exercise-images/113/Walking-lunges-1.png',
+  rdl_wed:            'https://wger.de/media/exercise-images/161/Dead-lifts-2.png',
+  rdl_sat:            'https://wger.de/media/exercise-images/161/Dead-lifts-2.png',
+  leg_curl_wed:       'https://wger.de/media/exercise-images/154/lying-leg-curl-machine-large-1.png',
+  leg_curl_sat:       'https://wger.de/media/exercise-images/154/lying-leg-curl-machine-large-1.png',
+  leg_ext:            'https://wger.de/media/exercise-images/117/seated-leg-curl-large-1.png',
+  hip_thrust:         'https://wger.de/media/exercise-images/128/Hyperextensions-1.png',
+  standing_calf:      'https://wger.de/media/exercise-images/118/standing-leg-curls-large-1.png',
+  seated_calf:        'https://wger.de/media/exercise-images/117/seated-leg-curl-large-1.png',
+
+  // Core
+  cable_crunch_wed:   'https://wger.de/media/exercise-images/91/Crunches-1.png',
+  cable_crunch_sat:   'https://wger.de/media/exercise-images/91/Crunches-1.png',
+  plank_wed:          'https://wger.de/media/exercise-images/176/Cross-body-crunch-1.png',
+  hanging_leg_raise:  'https://wger.de/media/exercise-images/125/Leg-raises-2.png',
 };
 
-const cache: Record<string, string | null> = {};
+const verified: Record<string, string | null> = {};
 
 export async function getExerciseImageUrl(exerciseId: string): Promise<string | null> {
-  if (exerciseId in cache) return cache[exerciseId];
+  if (exerciseId in verified) return verified[exerciseId];
 
-  const wgerId = WGER_IDS[exerciseId];
-  if (!wgerId) {
-    cache[exerciseId] = null;
+  const url = IMAGE_URLS[exerciseId];
+  if (!url) {
+    verified[exerciseId] = null;
     return null;
   }
 
+  // When offline, trust the hardcoded URL
   try {
-    const res = await fetch(
-      `https://wger.de/api/v2/exerciseimage/?format=json&exercise_base=${wgerId}&is_main=True`,
-      { headers: { Accept: 'application/json' } }
-    );
-    if (!res.ok) throw new Error('fetch failed');
-    const data = await res.json() as { results: { image: string }[] };
-    const imagePath = data.results?.[0]?.image;
-    const url = imagePath ? `https://wger.de${imagePath}` : null;
-    cache[exerciseId] = url;
-    return url;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
+    clearTimeout(timeout);
+    verified[exerciseId] = res.ok ? url : null;
   } catch {
-    cache[exerciseId] = null;
-    return null;
+    verified[exerciseId] = url;
   }
+
+  return verified[exerciseId];
 }
