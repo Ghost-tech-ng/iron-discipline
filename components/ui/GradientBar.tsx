@@ -6,7 +6,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface GradientBarProps {
   value: number;
@@ -23,9 +24,11 @@ export function GradientBar({
   max,
   label,
   unit = 'g',
-  color = Colors.accent,
+  color,
   showNumbers = true,
 }: GradientBarProps) {
+  const Colors = useColors();
+  const resolvedColor = color ?? Colors.accent;
   const progress = useSharedValue(0);
   const pct = Math.min(value / max, 1);
   const overTarget = value > max;
@@ -41,7 +44,50 @@ export function GradientBar({
     width: `${progress.value * 100}%`,
   }));
 
-  const displayColor = overTarget ? Colors.accentGreen : color;
+  const displayColor = overTarget ? Colors.accentGreen : resolvedColor;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      gap: 6,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    label: {
+      ...Typography.small,
+      color: Colors.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    values: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+    },
+    current: {
+      ...Typography.small,
+      fontWeight: '600',
+    },
+    separator: {
+      ...Typography.small,
+      color: Colors.muted,
+    },
+    target: {
+      ...Typography.small,
+      color: Colors.muted,
+    },
+    track: {
+      height: 4,
+      backgroundColor: Colors.surface2,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+  }), [Colors]);
 
   return (
     <View style={styles.container}>
@@ -69,46 +115,3 @@ export function GradientBar({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: 6,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  label: {
-    ...Typography.small,
-    color: Colors.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  values: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  current: {
-    ...Typography.small,
-    fontWeight: '600',
-  },
-  separator: {
-    ...Typography.small,
-    color: Colors.muted,
-  },
-  target: {
-    ...Typography.small,
-    color: Colors.muted,
-  },
-  track: {
-    height: 4,
-    backgroundColor: Colors.surface2,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-});

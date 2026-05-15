@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,82 @@ import {
 import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { lookupBarcode } from '../../services/barcodeService';
-import { Colors, Typography, Spacing } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography, Spacing } from '../../constants/theme';
 
 export default function ScanScreen() {
+  const Colors = useColors();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors.border,
+    },
+    closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+    closeText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
+    title: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    camera: { flex: 1 },
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 24,
+    },
+    scanFrame: {
+      width: 260,
+      height: 160,
+      borderWidth: 2,
+      borderColor: Colors.accent,
+      borderRadius: 12,
+      backgroundColor: 'transparent',
+    },
+    statusBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: Colors.surface,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+    },
+    statusText: { ...Typography.small, color: Colors.primary },
+    hint: {
+      ...Typography.small,
+      color: Colors.primary,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 16,
+    },
+    permissionBox: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: Spacing.xl,
+      gap: 12,
+    },
+    permTitle: { ...Typography.h3, color: Colors.primary, fontWeight: '700', textAlign: 'center' },
+    permSub: { ...Typography.body, color: Colors.secondary, textAlign: 'center', lineHeight: 22 },
+    permBtn: {
+      backgroundColor: Colors.accent,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+      borderRadius: 12,
+      marginTop: 8,
+    },
+    permBtnText: { ...Typography.body, color: Colors.base, fontWeight: '700' },
+    cancelText: { ...Typography.small, color: Colors.muted },
+  }), [Colors]);
 
   if (!permission) return <View style={styles.safe} />;
 
@@ -109,71 +179,3 @@ export default function ScanScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  closeText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
-  title: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
-  camera: { flex: 1 },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 24,
-  },
-  scanFrame: {
-    width: 260,
-    height: 160,
-    borderWidth: 2,
-    borderColor: Colors.accent,
-    borderRadius: 12,
-    backgroundColor: 'transparent',
-  },
-  statusBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  statusText: { ...Typography.small, color: Colors.primary },
-  hint: {
-    ...Typography.small,
-    color: Colors.primary,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  permissionBox: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
-    gap: 12,
-  },
-  permTitle: { ...Typography.h3, color: Colors.primary, fontWeight: '700', textAlign: 'center' },
-  permSub: { ...Typography.body, color: Colors.secondary, textAlign: 'center', lineHeight: 22 },
-  permBtn: {
-    backgroundColor: Colors.accent,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  permBtnText: { ...Typography.body, color: Colors.base, fontWeight: '700' },
-  cancelText: { ...Typography.small, color: Colors.muted },
-});

@@ -3,7 +3,9 @@ import { Tabs } from 'expo-router';
 import { Platform, View, StyleSheet, Text } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Colors, Spacing } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
 import { BlurView } from 'expo-blur';
+import { SyncStatusBar } from '../../components/ui/SyncStatusBar';
 
 // Minimal custom icons to avoid icon lib dependency in Phase 1
 function HomeIcon({ color }: { color: string }) {
@@ -71,8 +73,37 @@ function CheckIcon({ color }: { color: string }) {
 }
 
 export default function TabLayout() {
+  const C = useColors();
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    tabBar: {
+      position: 'absolute',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: C.border,
+      backgroundColor: Platform.OS === 'android' ? C.base + 'ee' : 'transparent',
+      height: Platform.OS === 'ios' ? 84 : 64,
+      paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+      paddingTop: 8,
+      elevation: 0,
+    },
+    tabBarAndroid: {
+      backgroundColor: C.base + 'f0',
+    },
+    label: {
+      fontSize: 10,
+      fontWeight: '500',
+      letterSpacing: 0.3,
+      marginTop: 2,
+    },
+    tabItem: {
+      gap: 2,
+    },
+  }), [C]);
+
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <SyncStatusBar />
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
@@ -83,8 +114,8 @@ export default function TabLayout() {
             <View style={[StyleSheet.absoluteFill, styles.tabBarAndroid]} />
           )
         ),
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.muted,
+        tabBarActiveTintColor: C.primary,
+        tabBarInactiveTintColor: C.muted,
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.label,
         tabBarItemStyle: styles.tabItem,
@@ -125,31 +156,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <CheckIcon color={color} />,
         }}
       />
-    </Tabs>
+      </Tabs>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBar: {
-    position: 'absolute',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-    backgroundColor: Platform.OS === 'android' ? '#0a0a0aee' : 'transparent',
-    height: Platform.OS === 'ios' ? 84 : 64,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-    paddingTop: 8,
-    elevation: 0,
-  },
-  tabBarAndroid: {
-    backgroundColor: '#0a0a0af0',
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '500',
-    letterSpacing: 0.3,
-    marginTop: 2,
-  },
-  tabItem: {
-    gap: 2,
-  },
-});

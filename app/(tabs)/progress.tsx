@@ -33,6 +33,7 @@ import { getUserId } from '../../services/db';
 import { isMongoConfigured } from '../../services/mongoService';
 import { SyncCard } from '../../components/ui/SyncCard';
 import { useSyncStore } from '../../store/syncStore';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -46,6 +47,7 @@ const STRENGTH_EXERCISES = [
 ];
 
 export default function ProgressScreen() {
+  const Colors = useColors();
   const { checkIns, latestWeight, totalLost, loadCheckIns } = useProgressStore();
   const { profile } = useUserStore();
   const { setSyncing, setLastSynced, setError } = useSyncStore();
@@ -120,6 +122,142 @@ export default function ProgressScreen() {
       setStrengthData(map);
     });
   }, []);
+
+  const THUMB_SIZE = (SCREEN_W - Spacing.md * 2 - 8) / 3;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
+    title: {
+      ...Typography.h1,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -1,
+    },
+    subtitle: { ...Typography.small, color: Colors.secondary },
+    chartCard: { gap: Spacing.sm },
+    goalCard: { gap: Spacing.sm },
+    cardTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    lostBadge: {
+      alignSelf: 'flex-start',
+      backgroundColor: Colors.accentGreen + '20',
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+      borderRadius: 20,
+    },
+    lostText: { ...Typography.small, color: Colors.accentGreen, fontWeight: '700' },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: Spacing.sm,
+    },
+    sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    sectionSub: { ...Typography.caption, color: Colors.secondary },
+    photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+    photoThumb: {
+      width: THUMB_SIZE,
+      height: THUMB_SIZE * 1.3,
+      borderRadius: 8,
+      overflow: 'hidden',
+      backgroundColor: Colors.surface,
+    },
+    photoImg: { width: '100%', height: '100%' },
+    photoLabel: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'flex-end',
+      padding: 6,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+    },
+    photoWeek: { fontSize: 10, color: Colors.primary, fontWeight: '700' },
+    photoWeight: { fontSize: 10, color: Colors.secondary },
+    compareCard: { gap: Spacing.sm },
+    compareRow: { flexDirection: 'row', gap: 8 },
+    compareItem: { flex: 1, gap: 4 },
+    compareImg: {
+      width: '100%',
+      aspectRatio: 3 / 4,
+      borderRadius: 8,
+    },
+    compareLabel: {
+      ...Typography.caption,
+      color: Colors.muted,
+      textAlign: 'center',
+    },
+    protocolCard: { gap: 8 },
+    ruleRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 10,
+      marginTop: 4,
+    },
+    ruleDot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: Colors.accent,
+      marginTop: 7,
+    },
+    ruleText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      flex: 1,
+      lineHeight: 18,
+    },
+    timelineCard: { gap: 10 },
+    timelineRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 4,
+    },
+    weekLabel: {
+      ...Typography.small,
+      color: Colors.accent,
+      fontWeight: '700',
+      width: 56,
+    },
+    changeLabel: {
+      ...Typography.small,
+      color: Colors.primary,
+      fontWeight: '600',
+      width: 90,
+    },
+    noteLabel: { ...Typography.small, color: Colors.muted, flex: 1 },
+    emptyCard: {
+      alignItems: 'center',
+      paddingVertical: Spacing.xl,
+      gap: 6,
+    },
+    emptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
+    emptySub: { ...Typography.small, color: Colors.muted },
+    checkInCard: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    checkInLeft: { flex: 1, gap: 2 },
+    checkInWeek: { ...Typography.small, color: Colors.accent, fontWeight: '700' },
+    checkInDate: { ...Typography.caption, color: Colors.muted },
+    checkInNotes: { ...Typography.caption, color: Colors.secondary, marginTop: 2 },
+    checkInRight: { alignItems: 'flex-end', gap: 4 },
+    checkInWeight: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    checkInWaist: { ...Typography.caption, color: Colors.muted },
+    checkInThumb: { width: 44, height: 58, borderRadius: 6 },
+    lightboxBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.92)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+    },
+    lightboxImage: {
+      width: SCREEN_W,
+      height: SCREEN_W * 1.4,
+    },
+    lightboxClose: { ...Typography.small, color: Colors.muted },
+  }), [Colors]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -358,9 +496,27 @@ function GoalBar({
   start: number;
   goal: number;
 }) {
+  const Colors = useColors();
   const totalChange = start - goal;
   const achieved = start - current;
   const pct = totalChange > 0 ? Math.min(achieved / totalChange, 1) : 0;
+
+  const gbStyles = React.useMemo(() => StyleSheet.create({
+    container: { gap: 8 },
+    labels: { flexDirection: 'row', justifyContent: 'space-between' },
+    label: { ...Typography.small, color: Colors.secondary },
+    track: {
+      height: 8,
+      backgroundColor: Colors.surface2,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    fill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 4 },
+    bottom: { flexDirection: 'row', justifyContent: 'space-between' },
+    current: { ...Typography.caption, color: Colors.primary, fontWeight: '600' },
+    pct: { ...Typography.caption, color: Colors.accent },
+  }), [Colors]);
+
   return (
     <View style={gbStyles.container}>
       <View style={gbStyles.labels}>
@@ -379,155 +535,3 @@ function GoalBar({
     </View>
   );
 }
-
-const gbStyles = StyleSheet.create({
-  container: { gap: 8 },
-  labels: { flexDirection: 'row', justifyContent: 'space-between' },
-  label: { ...Typography.small, color: Colors.secondary },
-  track: {
-    height: 8,
-    backgroundColor: Colors.surface2,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  fill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 4 },
-  bottom: { flexDirection: 'row', justifyContent: 'space-between' },
-  current: { ...Typography.caption, color: Colors.primary, fontWeight: '600' },
-  pct: { ...Typography.caption, color: Colors.accent },
-});
-
-const THUMB_SIZE = (SCREEN_W - Spacing.md * 2 - 8) / 3;
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-  title: {
-    ...Typography.h1,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  subtitle: { ...Typography.small, color: Colors.secondary },
-  chartCard: { gap: Spacing.sm },
-  goalCard: { gap: Spacing.sm },
-  cardTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
-  lostBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.accentGreen + '20',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  lostText: { ...Typography.small, color: Colors.accentGreen, fontWeight: '700' },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
-  sectionSub: { ...Typography.caption, color: Colors.secondary },
-  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  photoThumb: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE * 1.3,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: Colors.surface,
-  },
-  photoImg: { width: '100%', height: '100%' },
-  photoLabel: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    padding: 6,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  photoWeek: { fontSize: 10, color: Colors.primary, fontWeight: '700' },
-  photoWeight: { fontSize: 10, color: Colors.secondary },
-  compareCard: { gap: Spacing.sm },
-  compareRow: { flexDirection: 'row', gap: 8 },
-  compareItem: { flex: 1, gap: 4 },
-  compareImg: {
-    width: '100%',
-    aspectRatio: 3 / 4,
-    borderRadius: 8,
-  },
-  compareLabel: {
-    ...Typography.caption,
-    color: Colors.muted,
-    textAlign: 'center',
-  },
-  protocolCard: { gap: 8 },
-  ruleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginTop: 4,
-  },
-  ruleDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.accent,
-    marginTop: 7,
-  },
-  ruleText: {
-    ...Typography.small,
-    color: Colors.secondary,
-    flex: 1,
-    lineHeight: 18,
-  },
-  timelineCard: { gap: 10 },
-  timelineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 4,
-  },
-  weekLabel: {
-    ...Typography.small,
-    color: Colors.accent,
-    fontWeight: '700',
-    width: 56,
-  },
-  changeLabel: {
-    ...Typography.small,
-    color: Colors.primary,
-    fontWeight: '600',
-    width: 90,
-  },
-  noteLabel: { ...Typography.small, color: Colors.muted, flex: 1 },
-  emptyCard: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    gap: 6,
-  },
-  emptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
-  emptySub: { ...Typography.small, color: Colors.muted },
-  checkInCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  checkInLeft: { flex: 1, gap: 2 },
-  checkInWeek: { ...Typography.small, color: Colors.accent, fontWeight: '700' },
-  checkInDate: { ...Typography.caption, color: Colors.muted },
-  checkInNotes: { ...Typography.caption, color: Colors.secondary, marginTop: 2 },
-  checkInRight: { alignItems: 'flex-end', gap: 4 },
-  checkInWeight: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
-  checkInWaist: { ...Typography.caption, color: Colors.muted },
-  checkInThumb: { width: 44, height: 58, borderRadius: 6 },
-  lightboxBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  lightboxImage: {
-    width: SCREEN_W,
-    height: SCREEN_W * 1.4,
-  },
-  lightboxClose: { ...Typography.small, color: Colors.muted },
-});

@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { loadDisciplineHistory } from '../../services/disciplineService';
 import { CoachCard } from '../../components/ai/CoachCard';
 import { WEEKLY_SPLIT } from '../../constants/workouts';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 
@@ -68,6 +69,7 @@ function formatDate(): string {
 }
 
 export default function DashboardScreen() {
+  const Colors = useColors();
   const { score, workoutDone, proteinHit, calorieHit, supplementsTaken } = useDisciplineStore();
   const { getTotals, waterMl } = useNutritionStore();
   const { profile } = useUserStore();
@@ -85,6 +87,163 @@ export default function DashboardScreen() {
   const calorieRemaining = profile.goalCalories - calories;
   const proteinRemaining = profile.goalProtein - protein;
   const waterPct = waterMl / profile.goalWaterMl;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: Colors.base,
+    },
+    scroll: { flex: 1 },
+    content: {
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.lg,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: Spacing.lg,
+    },
+    greeting: {
+      ...Typography.h2,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -0.8,
+    },
+    date: {
+      ...Typography.small,
+      color: Colors.secondary,
+      marginTop: 2,
+    },
+    streakBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: Colors.surface,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: Colors.border,
+    },
+    streakCount: {
+      ...Typography.body,
+      color: Colors.primary,
+      fontWeight: '700',
+    },
+    disciplineCard: {
+      marginBottom: Spacing.lg,
+      padding: Spacing.lg,
+    },
+    disciplineInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.lg,
+    },
+    disciplineStats: {
+      flex: 1,
+      gap: Spacing.sm,
+    },
+    disciplineCaption: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 18,
+    },
+    scoreBreakdown: {
+      gap: 2,
+      marginTop: 4,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+      marginTop: Spacing.md,
+    },
+    sectionTitle: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    sectionSub: {
+      ...Typography.caption,
+      color: Colors.secondary,
+    },
+    sessionCard: {
+      marginBottom: Spacing.md,
+      gap: 6,
+    },
+    sessionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    sessionDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    sessionLabel: {
+      ...Typography.h4,
+      color: Colors.primary,
+      fontWeight: '600',
+      flex: 1,
+    },
+    doneBadge: {
+      backgroundColor: Colors.accentGreen + '20',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
+    },
+    doneText: {
+      ...Typography.caption,
+      color: Colors.accentGreen,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    exerciseCount: {
+      ...Typography.small,
+      color: Colors.secondary,
+    },
+    sessionCta: {
+      ...Typography.small,
+      color: Colors.accent,
+      fontWeight: '600',
+      marginTop: 4,
+    },
+    restCard: {
+      marginBottom: Spacing.md,
+      alignItems: 'center',
+      paddingVertical: Spacing.lg,
+      gap: 4,
+    },
+    restLabel: {
+      ...Typography.h4,
+      color: Colors.muted,
+      fontWeight: '600',
+      letterSpacing: 2,
+    },
+    restSub: {
+      ...Typography.small,
+      color: Colors.muted,
+    },
+    nutritionCard: {
+      marginBottom: Spacing.md,
+      gap: 0,
+    },
+    macroGrid: {
+      flexDirection: 'row',
+      paddingBottom: Spacing.sm,
+    },
+    bars: {
+      gap: Spacing.sm,
+    },
+    quickActions: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      marginBottom: Spacing.md,
+    },
+  }), [Colors]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -280,6 +439,31 @@ export default function DashboardScreen() {
 }
 
 function ScoreRow({ label, done, pts }: { label: string; done: boolean; pts: number }) {
+  const Colors = useColors();
+  const scoreRowStyles = React.useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 3,
+    },
+    indicator: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    label: {
+      ...Typography.small,
+      color: Colors.secondary,
+      flex: 1,
+    },
+    pts: {
+      ...Typography.caption,
+      color: Colors.muted,
+      fontWeight: '600',
+    },
+  }), [Colors]);
+
   return (
     <View style={scoreRowStyles.row}>
       <View
@@ -295,6 +479,25 @@ function ScoreRow({ label, done, pts }: { label: string; done: boolean; pts: num
 }
 
 function QuickAction({ label, iconName, color, onPress }: { label: string; iconName: React.ComponentProps<typeof Ionicons>['name']; color: string; onPress?: () => void }) {
+  const Colors = useColors();
+  const qaStyles = React.useMemo(() => StyleSheet.create({
+    action: {
+      flex: 1,
+      backgroundColor: Colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      paddingVertical: 16,
+      alignItems: 'center',
+      gap: 6,
+    },
+    label: {
+      ...Typography.caption,
+      fontWeight: '600',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+    },
+  }), [Colors]);
+
   return (
     <PressableScale onPress={onPress} style={[qaStyles.action, { borderColor: color + '40' }]}>
       <Ionicons name={iconName} size={22} color={color} />
@@ -302,202 +505,3 @@ function QuickAction({ label, iconName, color, onPress }: { label: string; iconN
     </PressableScale>
   );
 }
-
-const scoreRowStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 3,
-  },
-  indicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  label: {
-    ...Typography.small,
-    color: Colors.secondary,
-    flex: 1,
-  },
-  pts: {
-    ...Typography.caption,
-    color: Colors.muted,
-    fontWeight: '600',
-  },
-});
-
-const qaStyles = StyleSheet.create({
-  action: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-    gap: 6,
-  },
-  label: {
-    ...Typography.caption,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-});
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.base,
-  },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.lg,
-  },
-  greeting: {
-    ...Typography.h2,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-  },
-  date: {
-    ...Typography.small,
-    color: Colors.secondary,
-    marginTop: 2,
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.surface,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
-  },
-  streakCount: {
-    ...Typography.body,
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  disciplineCard: {
-    marginBottom: Spacing.lg,
-    padding: Spacing.lg,
-  },
-  disciplineInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.lg,
-  },
-  disciplineStats: {
-    flex: 1,
-    gap: Spacing.sm,
-  },
-  disciplineCaption: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 18,
-  },
-  scoreBreakdown: {
-    gap: 2,
-    marginTop: 4,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  sectionTitle: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  sectionSub: {
-    ...Typography.caption,
-    color: Colors.secondary,
-  },
-  sessionCard: {
-    marginBottom: Spacing.md,
-    gap: 6,
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sessionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  sessionLabel: {
-    ...Typography.h4,
-    color: Colors.primary,
-    fontWeight: '600',
-    flex: 1,
-  },
-  doneBadge: {
-    backgroundColor: Colors.accentGreen + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  doneText: {
-    ...Typography.caption,
-    color: Colors.accentGreen,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  exerciseCount: {
-    ...Typography.small,
-    color: Colors.secondary,
-  },
-  sessionCta: {
-    ...Typography.small,
-    color: Colors.accent,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  restCard: {
-    marginBottom: Spacing.md,
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    gap: 4,
-  },
-  restLabel: {
-    ...Typography.h4,
-    color: Colors.muted,
-    fontWeight: '600',
-    letterSpacing: 2,
-  },
-  restSub: {
-    ...Typography.small,
-    color: Colors.muted,
-  },
-  nutritionCard: {
-    marginBottom: Spacing.md,
-    gap: 0,
-  },
-  macroGrid: {
-    flexDirection: 'row',
-    paddingBottom: Spacing.sm,
-  },
-  bars: {
-    gap: Spacing.sm,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-});

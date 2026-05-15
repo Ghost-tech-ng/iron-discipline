@@ -53,6 +53,31 @@ export async function getUserId(): Promise<string> {
   return id;
 }
 
+export async function resetAllData(): Promise<void> {
+  const db = getDb();
+  await db.execAsync(`
+    DELETE FROM set_logs;
+    DELETE FROM exercise_logs;
+    DELETE FROM workout_logs;
+    DELETE FROM meal_entries;
+    DELETE FROM water_logs;
+    DELETE FROM supplement_logs;
+    DELETE FROM discipline_history;
+    DELETE FROM weekly_checkins;
+    UPDATE user_profile SET
+      name = '',
+      weight_kg = 95,
+      goal_weight_kg = 89,
+      goal_calories = 2500,
+      goal_protein = 200,
+      goal_carbs = 240,
+      goal_fat = 72,
+      goal_water_ml = 3500,
+      onboarding_complete = 0
+    WHERE id = 1;
+  `);
+}
+
 function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;

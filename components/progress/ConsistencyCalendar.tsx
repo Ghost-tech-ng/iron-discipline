@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface Props {
   workoutDates: string[];
@@ -12,6 +13,7 @@ const CELL = 14;
 const GAP = 3;
 
 export function ConsistencyCalendar({ workoutDates, weeks = 12 }: Props) {
+  const Colors = useColors();
   const dateSet = new Set(workoutDates);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -47,6 +49,24 @@ export function ConsistencyCalendar({ workoutDates, weeks = 12 }: Props) {
     return date >= startDate && date <= today;
   }).length;
 
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: { gap: GAP },
+    row: {
+      flexDirection: 'row',
+      gap: GAP,
+      alignItems: 'center',
+    },
+    weekSpacer: { width: 24 },
+    weekLabel: { fontSize: 8, color: Colors.muted, textAlign: 'right' },
+    cell: {
+      width: CELL,
+      height: CELL,
+      borderRadius: 3,
+    },
+    dayHeader: { fontSize: 8, color: Colors.muted, textAlign: 'center', width: CELL },
+    summary: { ...Typography.caption, color: Colors.muted, marginTop: 2 },
+  }), [Colors]);
+
   return (
     <View style={styles.container}>
       {/* Day-of-week headers */}
@@ -61,8 +81,6 @@ export function ConsistencyCalendar({ workoutDates, weeks = 12 }: Props) {
 
       {/* Grid */}
       {grid.map((week, wi) => {
-        const firstDay = week[0].dateStr;
-        const d = new Date(firstDay);
         const weekLabel = `W${wi + 1}`;
         return (
           <View key={wi} style={styles.row}>
@@ -96,21 +114,3 @@ export function ConsistencyCalendar({ workoutDates, weeks = 12 }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: GAP },
-  row: {
-    flexDirection: 'row',
-    gap: GAP,
-    alignItems: 'center',
-  },
-  weekSpacer: { width: 24 },
-  weekLabel: { fontSize: 8, color: Colors.muted, textAlign: 'right' },
-  cell: {
-    width: CELL,
-    height: CELL,
-    borderRadius: 3,
-  },
-  dayHeader: { fontSize: 8, color: Colors.muted, textAlign: 'center', width: CELL },
-  summary: { ...Typography.caption, color: Colors.muted, marginTop: 2 },
-});

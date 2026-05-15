@@ -7,7 +7,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -18,6 +19,7 @@ interface GlowRingProps {
 }
 
 export function GlowRing({ score, size = 180, strokeWidth = 12 }: GlowRingProps) {
+  const Colors = useColors();
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = useSharedValue(0);
@@ -35,6 +37,29 @@ export function GlowRing({ score, size = 180, strokeWidth = 12 }: GlowRingProps)
 
   const scoreColor =
     score >= 80 ? Colors.accentGreen : score >= 50 ? Colors.accent : Colors.accentAmber;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    center: {
+      position: 'absolute',
+      alignItems: 'center',
+    },
+    score: {
+      ...Typography.hero,
+      fontWeight: '700',
+      letterSpacing: -2,
+    },
+    label: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 2,
+      marginTop: 2,
+    },
+  }), [Colors]);
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -80,26 +105,3 @@ export function GlowRing({ score, size = 180, strokeWidth = 12 }: GlowRingProps)
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  center: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  score: {
-    ...Typography.hero,
-    fontWeight: '700',
-    letterSpacing: -2,
-  },
-  label: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 2,
-    marginTop: 2,
-  },
-});

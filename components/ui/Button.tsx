@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text, StyleSheet, type ViewStyle, ActivityIndicator } from 'react-native';
 import { PressableScale } from './PressableScale';
-import { Colors, Radius, Spacing, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Radius, Spacing, Typography } from '../../constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -26,7 +27,55 @@ export function Button({
   style,
   icon,
 }: ButtonProps) {
+  const Colors = useColors();
+
+  const VARIANTS = React.useMemo(() => ({
+    primary: {
+      container: { backgroundColor: Colors.primary },
+      textColor: Colors.base,
+    },
+    secondary: {
+      container: {
+        backgroundColor: 'transparent' as const,
+        borderWidth: 1,
+        borderColor: Colors.border,
+      },
+      textColor: Colors.primary,
+    },
+    ghost: {
+      container: { backgroundColor: 'transparent' as const },
+      textColor: Colors.secondary,
+    },
+    danger: {
+      container: { backgroundColor: Colors.accentRed },
+      textColor: '#ffffff',
+    },
+  }), [Colors]);
+
   const variantStyle = VARIANTS[variant];
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    base: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      paddingVertical: 14,
+      paddingHorizontal: Spacing.lg,
+      borderRadius: Radius.md,
+    },
+    fullWidth: {
+      width: '100%',
+    },
+    label: {
+      ...Typography.body,
+      fontWeight: '600',
+      letterSpacing: -0.1,
+    },
+    disabled: {
+      opacity: 0.4,
+    },
+  }), []);
 
   return (
     <PressableScale
@@ -52,49 +101,3 @@ export function Button({
     </PressableScale>
   );
 }
-
-const VARIANTS = {
-  primary: {
-    container: { backgroundColor: Colors.primary },
-    textColor: Colors.base,
-  },
-  secondary: {
-    container: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: Colors.border,
-    },
-    textColor: Colors.primary,
-  },
-  ghost: {
-    container: { backgroundColor: 'transparent' },
-    textColor: Colors.secondary,
-  },
-  danger: {
-    container: { backgroundColor: Colors.accentRed },
-    textColor: '#ffffff',
-  },
-};
-
-const styles = StyleSheet.create({
-  base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: Radius.md,
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  label: {
-    ...Typography.body,
-    fontWeight: '600',
-    letterSpacing: -0.1,
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-});

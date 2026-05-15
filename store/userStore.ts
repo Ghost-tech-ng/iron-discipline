@@ -4,10 +4,12 @@ import { USER_TARGETS } from '../constants/nutrition';
 
 interface UserStore {
   profile: UserProfile;
+  hydrated: boolean;
   setProfile: (profile: Partial<UserProfile>) => void;
   loadProfile: (profile: UserProfile) => void;
   completeOnboarding: () => void;
   updateWeight: (weightKg: number) => void;
+  setHydrated: () => void;
 }
 
 const defaults: UserProfile = {
@@ -25,6 +27,7 @@ const defaults: UserProfile = {
 
 export const useUserStore = create<UserStore>((set) => ({
   profile: defaults,
+  hydrated: false,
 
   setProfile: (updates) =>
     set((state) => ({ profile: { ...state.profile, ...updates } })),
@@ -38,4 +41,6 @@ export const useUserStore = create<UserStore>((set) => ({
 
   updateWeight: (weightKg) =>
     set((state) => ({ profile: { ...state.profile, weightKg } })),
+
+  setHydrated: () => set({ hydrated: true }),
 }));

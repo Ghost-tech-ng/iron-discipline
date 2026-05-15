@@ -8,9 +8,11 @@ import { WaterLogger } from '../../components/nutrition/WaterLogger';
 import { SupplementTracker } from '../../components/nutrition/SupplementTracker';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 export default function NutritionScreen() {
+  const Colors = useColors();
   const { getTotals, today, waterMl } = useNutritionStore();
   const { profile } = useUserStore();
   const { calories, protein, carbs, fat } = getTotals();
@@ -19,6 +21,107 @@ export default function NutritionScreen() {
     calories: profile.goalCalories - calories,
     protein: Math.max(0, profile.goalProtein - protein),
   };
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
+    title: {
+      ...Typography.h1,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -1,
+    },
+    subtitle: { ...Typography.small, color: Colors.secondary },
+    totalsCard: { gap: Spacing.md },
+    mainCalRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+    },
+    calValue: {
+      ...Typography.h2,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -0.8,
+      textAlign: 'center',
+    },
+    calLabel: {
+      ...Typography.caption,
+      color: Colors.muted,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+    calDivider: {
+      width: 1,
+      height: 40,
+      backgroundColor: Colors.border,
+    },
+    bars: { gap: Spacing.sm },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    sectionLabel: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    sectionCount: {
+      ...Typography.caption,
+      color: Colors.secondary,
+    },
+    mealsCard: { padding: 0, overflow: 'hidden' },
+    mealRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: Spacing.md,
+      gap: 12,
+    },
+    mealInfo: { flex: 1, gap: 2 },
+    mealName: {
+      ...Typography.small,
+      color: Colors.primary,
+      fontWeight: '600',
+    },
+    mealCategory: {
+      ...Typography.caption,
+      color: Colors.muted,
+      textTransform: 'capitalize',
+    },
+    mealMacros: { alignItems: 'flex-end', gap: 2 },
+    mealCal: {
+      ...Typography.small,
+      color: Colors.accentAmber,
+      fontWeight: '700',
+    },
+    mealProtein: {
+      ...Typography.caption,
+      color: Colors.accent,
+      fontWeight: '600',
+    },
+    mealSep: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: Colors.border,
+      marginLeft: Spacing.md,
+    },
+    noteCard: { gap: 6 },
+    noteTitle: {
+      ...Typography.small,
+      color: Colors.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    noteBody: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 20,
+    },
+  }), [Colors]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -137,104 +240,3 @@ export default function NutritionScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-  title: {
-    ...Typography.h1,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  subtitle: { ...Typography.small, color: Colors.secondary },
-  totalsCard: { gap: Spacing.md },
-  mainCalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  calValue: {
-    ...Typography.h2,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-    textAlign: 'center',
-  },
-  calLabel: {
-    ...Typography.caption,
-    color: Colors.muted,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  calDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: Colors.border,
-  },
-  bars: { gap: Spacing.sm },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  sectionLabel: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  sectionCount: {
-    ...Typography.caption,
-    color: Colors.secondary,
-  },
-  mealsCard: { padding: 0, overflow: 'hidden' },
-  mealRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: Spacing.md,
-    gap: 12,
-  },
-  mealInfo: { flex: 1, gap: 2 },
-  mealName: {
-    ...Typography.small,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  mealCategory: {
-    ...Typography.caption,
-    color: Colors.muted,
-    textTransform: 'capitalize',
-  },
-  mealMacros: { alignItems: 'flex-end', gap: 2 },
-  mealCal: {
-    ...Typography.small,
-    color: Colors.accentAmber,
-    fontWeight: '700',
-  },
-  mealProtein: {
-    ...Typography.caption,
-    color: Colors.accent,
-    fontWeight: '600',
-  },
-  mealSep: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
-    marginLeft: Spacing.md,
-  },
-  noteCard: { gap: 6 },
-  noteTitle: {
-    ...Typography.small,
-    color: Colors.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  noteBody: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 20,
-  },
-});

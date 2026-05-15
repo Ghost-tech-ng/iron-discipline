@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface DayCalories {
   date: string;
@@ -20,20 +21,33 @@ const PAD_TOP = 12;
 const PAD_BOTTOM = 16;
 const TOTAL_H = CHART_H + PAD_TOP + PAD_BOTTOM;
 
-function barColor(calories: number, target: number): string {
-  if (calories === 0) return Colors.surface2;
-  const ratio = calories / target;
-  if (ratio >= 0.9 && ratio <= 1.1) return Colors.accentGreen;
-  if (ratio < 0.9) return Colors.accent;
-  return Colors.accentRed;
-}
-
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
 export function CalorieChart({ history, target }: Props) {
+  const Colors = useColors();
+
+  function barColor(calories: number, tgt: number): string {
+    if (calories === 0) return Colors.surface2;
+    const ratio = calories / tgt;
+    if (ratio >= 0.9 && ratio <= 1.1) return Colors.accentGreen;
+    if (ratio < 0.9) return Colors.accent;
+    return Colors.accentRed;
+  }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: { gap: 8 },
+    empty: { height: 80, alignItems: 'center', justifyContent: 'center' },
+    emptyText: { ...Typography.small, color: Colors.muted },
+    legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    legendDot: { width: 8, height: 8, borderRadius: 2 },
+    legendLine: { width: 16, height: 0, borderTopWidth: 1.5, borderStyle: 'dashed' },
+    legendText: { fontSize: 10, color: Colors.muted },
+  }), [Colors]);
+
   if (history.length === 0) {
     return (
       <View style={styles.empty}>
@@ -115,14 +129,3 @@ export function CalorieChart({ history, target }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: 8 },
-  empty: { height: 80, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { ...Typography.small, color: Colors.muted },
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendDot: { width: 8, height: 8, borderRadius: 2 },
-  legendLine: { width: 16, height: 0, borderTopWidth: 1.5, borderStyle: 'dashed' },
-  legendText: { fontSize: 10, color: Colors.muted },
-});

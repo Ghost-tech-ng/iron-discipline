@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Svg, { Path, Circle, Line, Text as SvgText, G, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface DataPoint {
   date: string;
@@ -38,6 +39,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function StrengthChart({ exercises, data }: Props) {
+  const Colors = useColors();
   const [selected, setSelected] = useState(exercises[0]?.id ?? '');
   const [width, setWidth] = useState(320);
 
@@ -65,6 +67,23 @@ export function StrengthChart({ exercises, data }: Props) {
       : '';
 
   const yTicks = [yMin, Math.round((yMin + yMax) / 2), yMax];
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: { gap: 10 },
+    tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    tab: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 6,
+      backgroundColor: Colors.surface2,
+    },
+    tabActive: { backgroundColor: Colors.accent },
+    tabText: { fontSize: 11, fontWeight: '600', color: Colors.muted },
+    tabTextActive: { color: Colors.base },
+    empty: { alignItems: 'center', justifyContent: 'center' },
+    emptyText: { ...Typography.small, color: Colors.muted },
+    delta: { ...Typography.small, fontWeight: '700', textAlign: 'center' },
+  }), [Colors]);
 
   return (
     <View style={styles.container}>
@@ -158,20 +177,3 @@ export function StrengthChart({ exercises, data }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: 10 },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tab: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-    backgroundColor: Colors.surface2,
-  },
-  tabActive: { backgroundColor: Colors.accent },
-  tabText: { fontSize: 11, fontWeight: '600', color: Colors.muted },
-  tabTextActive: { color: Colors.base },
-  empty: { alignItems: 'center', justifyContent: 'center' },
-  emptyText: { ...Typography.small, color: Colors.muted },
-  delta: { ...Typography.small, fontWeight: '700', textAlign: 'center' },
-});

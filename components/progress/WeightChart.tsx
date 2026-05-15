@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path, Circle, Line, Text as SvgText, G, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 import type { WeeklyCheckIn } from '../../types';
 
 interface Props {
@@ -23,6 +24,7 @@ function bezierPath(points: { x: number; y: number }[]): string {
 }
 
 export function WeightChart({ checkIns, startWeight, goalWeight }: Props) {
+  const Colors = useColors();
   const [width, setWidth] = useState(320);
 
   const innerW = width - PAD.left - PAD.right;
@@ -67,6 +69,39 @@ export function WeightChart({ checkIns, startWeight, goalWeight }: Props) {
 
   const goalY = toY(goalWeight);
   const startY = toY(startWeight);
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      width: '100%',
+    },
+    legend: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 16,
+      marginTop: 4,
+      flexWrap: 'wrap',
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendLine: {
+      width: 16,
+      height: 0,
+      borderTopWidth: 1.5,
+      borderStyle: 'dashed',
+    },
+    legendText: {
+      fontSize: 10,
+      color: Colors.muted,
+    },
+  }), [Colors]);
 
   if (width === 0) return null;
 
@@ -217,36 +252,3 @@ export function WeightChart({ checkIns, startWeight, goalWeight }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-  },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginTop: 4,
-    flexWrap: 'wrap',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendLine: {
-    width: 16,
-    height: 0,
-    borderTopWidth: 1.5,
-    borderStyle: 'dashed',
-  },
-  legendText: {
-    fontSize: 10,
-    color: Colors.muted,
-  },
-});

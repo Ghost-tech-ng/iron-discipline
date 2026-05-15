@@ -10,7 +10,8 @@ import * as Haptics from 'expo-haptics';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { saveSupplementLog } from '../../services/nutritionService';
 import { DEFAULT_SUPPLEMENTS } from '../../constants/nutrition';
-import { Colors, Typography, Spacing } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography, Spacing } from '../../constants/theme';
 
 function SupplementRow({
   id,
@@ -27,6 +28,7 @@ function SupplementRow({
   taken: boolean;
   onToggle: () => void;
 }) {
+  const Colors = useColors();
   const scale = useSharedValue(1);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -38,6 +40,49 @@ function SupplementRow({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggle();
   }
+
+  const suppStyles = React.useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 12,
+      paddingHorizontal: Spacing.md,
+    },
+    rowDone: { opacity: 0.5 },
+    check: {
+      width: 24,
+      height: 24,
+      borderRadius: 6,
+      borderWidth: 1.5,
+      borderColor: Colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkDone: {
+      backgroundColor: Colors.accentGreen,
+      borderColor: Colors.accentGreen,
+    },
+    checkMark: {
+      fontSize: 13,
+      color: '#000',
+      fontWeight: '700',
+    },
+    info: { flex: 1, gap: 2 },
+    name: {
+      ...Typography.body,
+      color: Colors.primary,
+      fontWeight: '500',
+    },
+    nameDone: {
+      textDecorationLine: 'line-through',
+      color: Colors.secondary,
+    },
+    detail: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+  }), [Colors]);
 
   return (
     <Pressable onPress={handlePress}>
@@ -55,6 +100,7 @@ function SupplementRow({
 }
 
 export function SupplementTracker() {
+  const Colors = useColors();
   const { supplementsTaken, markSupplementTaken } = useDisciplineStore();
   const doneCount = supplementsTaken.length;
   const total = DEFAULT_SUPPLEMENTS.length;
@@ -64,6 +110,40 @@ export function SupplementTracker() {
     const nowTaken = !supplementsTaken.includes(id);
     await saveSupplementLog(id, nowTaken);
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: Colors.surface,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: Colors.border,
+      overflow: 'hidden',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors.border,
+    },
+    headerLabel: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    count: {
+      ...Typography.small,
+      color: Colors.secondary,
+      fontWeight: '700',
+    },
+    sep: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: Colors.border,
+      marginLeft: 52,
+    },
+  }), [Colors]);
 
   return (
     <View style={styles.container}>
@@ -95,80 +175,3 @@ export function SupplementTracker() {
     </View>
   );
 }
-
-const suppStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: Spacing.md,
-  },
-  rowDone: { opacity: 0.5 },
-  check: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkDone: {
-    backgroundColor: Colors.accentGreen,
-    borderColor: Colors.accentGreen,
-  },
-  checkMark: {
-    fontSize: 13,
-    color: '#000',
-    fontWeight: '700',
-  },
-  info: { flex: 1, gap: 2 },
-  name: {
-    ...Typography.body,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  nameDone: {
-    textDecorationLine: 'line-through',
-    color: Colors.secondary,
-  },
-  detail: {
-    ...Typography.caption,
-    color: Colors.muted,
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  headerLabel: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  count: {
-    ...Typography.small,
-    color: Colors.secondary,
-    fontWeight: '700',
-  },
-  sep: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
-    marginLeft: 52,
-  },
-});

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface DayScore {
   date: string;
@@ -32,15 +33,16 @@ function getRange(range: Range): { label: string; dateStr: string }[] {
   return result;
 }
 
-function scoreColor(score: number): string {
-  if (score >= 80) return Colors.accentGreen;
-  if (score >= 50) return Colors.accent;
-  if (score > 0) return Colors.accentAmber;
-  return Colors.surface2;
-}
-
 export function ScoreChart({ history }: Props) {
+  const Colors = useColors();
   const [range, setRange] = useState<Range>('28D');
+
+  function scoreColor(score: number): string {
+    if (score >= 80) return Colors.accentGreen;
+    if (score >= 50) return Colors.accent;
+    if (score > 0) return Colors.accentAmber;
+    return Colors.surface2;
+  }
 
   const scoreMap: Record<string, number> = {};
   history.forEach((d) => { scoreMap[d.date] = d.score; });
@@ -55,6 +57,86 @@ export function ScoreChart({ history }: Props) {
 
   const barWidth = range === '7D' ? 32 : range === '28D' ? 10 : 6;
   const barGap = range === '7D' ? 6 : range === '28D' ? 3 : 2;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      gap: 10,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    tabs: {
+      flexDirection: 'row',
+      backgroundColor: Colors.surface2,
+      borderRadius: 8,
+      padding: 2,
+      gap: 2,
+    },
+    tab: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    tabActive: {
+      backgroundColor: Colors.surface,
+    },
+    tabText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: Colors.muted,
+    },
+    tabTextActive: {
+      color: Colors.primary,
+    },
+    avg: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    barsScroll: {
+      alignItems: 'flex-end',
+      paddingBottom: 2,
+      minWidth: '100%',
+    },
+    bar: {
+      alignItems: 'center',
+      gap: 3,
+    },
+    barTrack: {
+      height: BAR_H,
+      justifyContent: 'flex-end',
+    },
+    barFill: {
+      width: '100%',
+      borderRadius: 3,
+      minHeight: 3,
+    },
+    dayLabel: {
+      fontSize: 9,
+      color: Colors.muted,
+      textAlign: 'center',
+    },
+    legend: {
+      flexDirection: 'row',
+      gap: 12,
+      flexWrap: 'wrap',
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 2,
+    },
+    legendText: {
+      fontSize: 10,
+      color: Colors.muted,
+    },
+  }), [Colors]);
 
   return (
     <View style={styles.container}>
@@ -138,83 +220,3 @@ export function ScoreChart({ history }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface2,
-    borderRadius: 8,
-    padding: 2,
-    gap: 2,
-  },
-  tab: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  tabActive: {
-    backgroundColor: Colors.surface,
-  },
-  tabText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.muted,
-  },
-  tabTextActive: {
-    color: Colors.primary,
-  },
-  avg: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  barsScroll: {
-    alignItems: 'flex-end',
-    paddingBottom: 2,
-    minWidth: '100%',
-  },
-  bar: {
-    alignItems: 'center',
-    gap: 3,
-  },
-  barTrack: {
-    height: BAR_H,
-    justifyContent: 'flex-end',
-  },
-  barFill: {
-    width: '100%',
-    borderRadius: 3,
-    minHeight: 3,
-  },
-  dayLabel: {
-    fontSize: 9,
-    color: Colors.muted,
-    textAlign: 'center',
-  },
-  legend: {
-    flexDirection: 'row',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 2,
-  },
-  legendText: {
-    fontSize: 10,
-    color: Colors.muted,
-  },
-});

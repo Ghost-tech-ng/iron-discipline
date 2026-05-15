@@ -4,10 +4,12 @@ import { router } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useUserStore } from '../../store/userStore';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import { USER_TARGETS } from '../../constants/nutrition';
 
 export default function Step2Screen() {
+  const Colors = useColors();
   const { profile, setProfile } = useUserStore();
   const [calories, setCalories] = useState(profile.goalCalories);
   const [protein, setProtein] = useState(profile.goalProtein);
@@ -20,6 +22,87 @@ export default function Step2Screen() {
     setProfile({ goalCalories: calories, goalProtein: protein });
     router.push('/(onboarding)/step3');
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    content: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.xl,
+      gap: Spacing.md,
+    },
+    header: { gap: 8 },
+    step: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    title: {
+      ...Typography.h1,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -1,
+    },
+    subtitle: {
+      ...Typography.body,
+      color: Colors.secondary,
+      lineHeight: 22,
+    },
+    targetCard: { gap: 8 },
+    targetTitle: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    targetValue: {
+      fontSize: 52,
+      fontWeight: '800',
+      color: Colors.accent,
+      letterSpacing: -2,
+      lineHeight: 58,
+    },
+    targetUnit: {
+      fontSize: 24,
+      fontWeight: '400',
+      letterSpacing: -1,
+    },
+    targetBasis: {
+      ...Typography.small,
+      color: Colors.secondary,
+      fontWeight: '500',
+    },
+    targetNote: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 19,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: Colors.border,
+      paddingTop: 10,
+      marginTop: 4,
+    },
+    researchCard: { gap: 10 },
+    researchTitle: {
+      ...Typography.small,
+      color: Colors.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    researchRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+    dot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: Colors.accent,
+      marginTop: 8,
+      flexShrink: 0,
+    },
+    researchText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 19,
+      flex: 1,
+    },
+  }), [Colors]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -84,84 +167,3 @@ export default function Step2Screen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-    gap: Spacing.md,
-  },
-  header: { gap: 8 },
-  step: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  title: {
-    ...Typography.h1,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.secondary,
-    lineHeight: 22,
-  },
-  targetCard: { gap: 8 },
-  targetTitle: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  targetValue: {
-    fontSize: 52,
-    fontWeight: '800',
-    color: Colors.accent,
-    letterSpacing: -2,
-    lineHeight: 58,
-  },
-  targetUnit: {
-    fontSize: 24,
-    fontWeight: '400',
-    letterSpacing: -1,
-  },
-  targetBasis: {
-    ...Typography.small,
-    color: Colors.secondary,
-    fontWeight: '500',
-  },
-  targetNote: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 19,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-    paddingTop: 10,
-    marginTop: 4,
-  },
-  researchCard: { gap: 10 },
-  researchTitle: {
-    ...Typography.small,
-    color: Colors.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  researchRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.accent,
-    marginTop: 8,
-    flexShrink: 0,
-  },
-  researchText: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 19,
-    flex: 1,
-  },
-});

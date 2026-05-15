@@ -10,7 +10,8 @@ import Animated, {
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { logWater } from '../../services/nutritionService';
-import { Colors, Typography, Spacing } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography, Spacing } from '../../constants/theme';
 
 const AMOUNTS = [
   { label: '250', ml: 250 },
@@ -22,6 +23,7 @@ const AMOUNTS = [
 const GOAL_ML = 3500;
 
 export function WaterLogger() {
+  const Colors = useColors();
   const { waterMl, addWater } = useNutritionStore();
   const { setWaterGoalHit } = useDisciplineStore();
   const pct = Math.min(waterMl / GOAL_ML, 1);
@@ -35,6 +37,74 @@ export function WaterLogger() {
       setWaterGoalHit(true);
     }
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: { gap: 10 },
+    glassRow: {
+      flexDirection: 'row',
+      gap: 5,
+    },
+    glass: {
+      flex: 1,
+      height: 20,
+      borderRadius: 3,
+      backgroundColor: Colors.surface2,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    glassFull: {
+      backgroundColor: Colors.accent2,
+      borderColor: Colors.accent2,
+    },
+    track: {
+      height: 4,
+      backgroundColor: Colors.surface2,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      backgroundColor: Colors.accent2,
+      borderRadius: 2,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 4,
+    },
+    current: {
+      ...Typography.h4,
+      color: Colors.primary,
+      fontWeight: '700',
+    },
+    goal: {
+      ...Typography.small,
+      color: Colors.muted,
+    },
+    done: {
+      ...Typography.body,
+      color: Colors.accentGreen,
+      marginLeft: 4,
+    },
+    btnRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    addBtn: {
+      flex: 1,
+      backgroundColor: Colors.surface2,
+      borderRadius: 8,
+      paddingVertical: 9,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    addBtnText: {
+      ...Typography.small,
+      color: Colors.accent2,
+      fontWeight: '700',
+    },
+  }), [Colors]);
 
   return (
     <View style={styles.container}>
@@ -75,71 +145,3 @@ export function WaterLogger() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: 10 },
-  glassRow: {
-    flexDirection: 'row',
-    gap: 5,
-  },
-  glass: {
-    flex: 1,
-    height: 20,
-    borderRadius: 3,
-    backgroundColor: Colors.surface2,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  glassFull: {
-    backgroundColor: Colors.accent2,
-    borderColor: Colors.accent2,
-  },
-  track: {
-    height: 4,
-    backgroundColor: Colors.surface2,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    backgroundColor: Colors.accent2,
-    borderRadius: 2,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  current: {
-    ...Typography.h4,
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  goal: {
-    ...Typography.small,
-    color: Colors.muted,
-  },
-  done: {
-    ...Typography.body,
-    color: Colors.accentGreen,
-    marginLeft: 4,
-  },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  addBtn: {
-    flex: 1,
-    backgroundColor: Colors.surface2,
-    borderRadius: 8,
-    paddingVertical: 9,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  addBtnText: {
-    ...Typography.small,
-    color: Colors.accent2,
-    fontWeight: '700',
-  },
-});

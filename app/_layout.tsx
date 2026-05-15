@@ -25,6 +25,8 @@ import { useNutritionStore } from '../store/nutritionStore';
 import { useDisciplineStore } from '../store/disciplineStore';
 import { useProgressStore } from '../store/progressStore';
 import { useSyncStore } from '../store/syncStore';
+import { useThemeStore } from '../store/themeStore';
+import { useColors } from '../hooks/useColors';
 import { Colors } from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -57,6 +59,7 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
+        await useThemeStore.getState().loadTheme();
         await initDatabase();
 
         const [savedProfile, meals, waterMl, supplements, disciplineState, checkIns] =
@@ -70,6 +73,7 @@ export default function RootLayout() {
           ]);
 
         if (savedProfile) loadProfile(savedProfile);
+        useUserStore.getState().setHydrated();
 
         useNutritionStore.getState().hydrateToday(meals, waterMl);
         useDisciplineStore.getState().hydrateSupplements(supplements);
@@ -86,6 +90,7 @@ export default function RootLayout() {
         // Auto-sync on startup if online
         const online = await isOnline();
         wasOnlineRef.current = online;
+        useSyncStore.getState().setOnline(online);
         if (online) runSync();
       } catch (e) {
         console.warn('App init error:', e);
@@ -102,6 +107,7 @@ export default function RootLayout() {
   useEffect(() => {
     const interval = setInterval(async () => {
       const online = await isOnline();
+      useSyncStore.getState().setOnline(online);
       if (online && !wasOnlineRef.current) {
         runSync();
       }
@@ -113,9 +119,18 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.base }}>
-      <StatusBar style="light" backgroundColor={Colors.base} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.base } }}>
+    <RootLayoutInner />
+  );
+}
+
+function RootLayoutInner() {
+  const C = useColors();
+  const { isDark } = useThemeStore();
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.base }}>
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={C.base} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.base } }}>
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen

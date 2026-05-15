@@ -3,13 +3,15 @@ import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from './Card';
 import { useSyncStore } from '../../store/syncStore';
-import { Colors, Typography, Spacing } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography, Spacing } from '../../constants/theme';
 
 interface Props {
   onSyncPress: () => void;
 }
 
 export function SyncCard({ onSyncPress }: Props) {
+  const Colors = useColors();
   const { isSyncing, lastSynced, error } = useSyncStore();
 
   function formatTime(iso: string) {
@@ -17,6 +19,32 @@ export function SyncCard({ onSyncPress }: Props) {
     return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) +
       ' · ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    card: { padding: Spacing.md },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: Colors.accent + '18',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    info: { flex: 1, gap: 2 },
+    title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.2 },
+    sub: { ...Typography.caption, color: Colors.secondary },
+    btn: {
+      backgroundColor: Colors.accent,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 10,
+      minWidth: 68,
+      alignItems: 'center',
+    },
+    btnDisabled: { opacity: 0.5 },
+    btnText: { ...Typography.caption, color: Colors.base, fontWeight: '700' },
+  }), [Colors]);
 
   return (
     <Card style={styles.card}>
@@ -51,29 +79,3 @@ export function SyncCard({ onSyncPress }: Props) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { padding: Spacing.md },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: Colors.accent + '18',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  info: { flex: 1, gap: 2 },
-  title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.2 },
-  sub: { ...Typography.caption, color: Colors.secondary },
-  btn: {
-    backgroundColor: Colors.accent,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    minWidth: 68,
-    alignItems: 'center',
-  },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { ...Typography.caption, color: Colors.base, fontWeight: '700' },
-});

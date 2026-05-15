@@ -18,7 +18,8 @@ import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
 import { useWorkoutStore } from '../../store/workoutStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { saveWorkoutLog, getLastSessionByType } from '../../services/workoutService';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Spacing, Typography } from '../../constants/theme';
 import type { SessionType, SetLog, WorkoutLog } from '../../types';
 
 type RouteParams = { id: SessionType };
@@ -31,7 +32,110 @@ function formatElapsed(seconds: number): string {
 
 const ALL_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as const;
 
+function StretchSection({
+  title,
+  stretches,
+  accentColor,
+}: {
+  title: string;
+  stretches: Stretch[];
+  accentColor: string;
+}) {
+  const Colors = useColors();
+  const [expanded, setExpanded] = useState(false);
+
+  const stretchStyles = React.useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: Colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderLeftWidth: 3,
+      overflow: 'hidden',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 12,
+      gap: 8,
+    },
+    title: {
+      ...Typography.label,
+      letterSpacing: 1.5,
+      flex: 1,
+    },
+    count: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+    toggle: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+    list: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: Colors.border,
+    },
+    item: {
+      padding: Spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors.surface2,
+      gap: 4,
+    },
+    itemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 8,
+    },
+    name: {
+      ...Typography.small,
+      color: Colors.primary,
+      fontWeight: '600',
+      flex: 1,
+    },
+    duration: {
+      ...Typography.caption,
+      color: Colors.accent,
+      fontWeight: '600',
+      textAlign: 'right',
+      flexShrink: 0,
+    },
+    description: {
+      ...Typography.caption,
+      color: Colors.secondary,
+      lineHeight: 18,
+    },
+  }), [Colors]);
+
+  return (
+    <View style={[stretchStyles.container, { borderLeftColor: accentColor }]}>
+      <Pressable style={stretchStyles.header} onPress={() => setExpanded((e) => !e)}>
+        <Text style={[stretchStyles.title, { color: accentColor }]}>{title}</Text>
+        <Text style={stretchStyles.count}>{stretches.length} stretches</Text>
+        <Text style={stretchStyles.toggle}>{expanded ? '▲' : '▼'}</Text>
+      </Pressable>
+
+      {expanded && (
+        <View style={stretchStyles.list}>
+          {stretches.map((s, i) => (
+            <View key={i} style={stretchStyles.item}>
+              <View style={stretchStyles.itemHeader}>
+                <Text style={stretchStyles.name}>{s.name}</Text>
+                <Text style={stretchStyles.duration}>{s.duration}</Text>
+              </View>
+              <Text style={stretchStyles.description}>{s.description}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function WorkoutScreen() {
+  const Colors = useColors();
   const { id } = useLocalSearchParams<RouteParams>();
   const session = id
     ? WEEKLY_SPLIT[ALL_DAYS.find((d) => WEEKLY_SPLIT[d]?.type === id) ?? 'monday']
@@ -45,6 +149,131 @@ export default function WorkoutScreen() {
   const [elapsed, setElapsed] = useState(0);
   const [previousSession, setPreviousSession] = useState<WorkoutLog | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: Colors.base,
+    },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors.border,
+    },
+    cancelBtn: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelText: {
+      ...Typography.body,
+      color: Colors.muted,
+      fontSize: 18,
+    },
+    topCenter: {
+      alignItems: 'center',
+      gap: 4,
+    },
+    typePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 20,
+    },
+    typeDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    typeText: {
+      ...Typography.caption,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    elapsed: {
+      ...Typography.small,
+      color: Colors.muted,
+      fontVariant: ['tabular-nums'],
+    },
+    finishBtn: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      backgroundColor: Colors.primary,
+      borderRadius: 20,
+    },
+    finishText: {
+      ...Typography.small,
+      color: Colors.base,
+      fontWeight: '700',
+    },
+    progressTrack: {
+      height: 2,
+      backgroundColor: Colors.surface2,
+    },
+    progressFill: {
+      height: '100%',
+      borderRadius: 1,
+    },
+    sessionHeader: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      gap: 3,
+    },
+    sessionTitle: {
+      ...Typography.h2,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -0.8,
+    },
+    sessionSub: {
+      ...Typography.small,
+      color: Colors.muted,
+    },
+    scroll: { flex: 1 },
+    scrollContent: {
+      paddingHorizontal: Spacing.md,
+      gap: Spacing.md,
+      paddingBottom: 20,
+    },
+    prevBanner: {
+      backgroundColor: Colors.surface2,
+      borderRadius: 10,
+      padding: 12,
+      borderLeftWidth: 3,
+      borderLeftColor: Colors.accent,
+    },
+    prevBannerText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 18,
+    },
+    finishSection: {
+      gap: 10,
+      marginTop: 8,
+    },
+    finishNote: {
+      ...Typography.caption,
+      color: Colors.muted,
+      textAlign: 'center',
+    },
+    errorContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+    },
+    errorText: {
+      ...Typography.body,
+      color: Colors.secondary,
+    },
+  }), [Colors]);
 
   useEffect(() => {
     timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
@@ -235,229 +464,3 @@ export default function WorkoutScreen() {
     </SafeAreaView>
   );
 }
-
-function StretchSection({
-  title,
-  stretches,
-  accentColor,
-}: {
-  title: string;
-  stretches: Stretch[];
-  accentColor: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <View style={[stretchStyles.container, { borderLeftColor: accentColor }]}>
-      <Pressable style={stretchStyles.header} onPress={() => setExpanded((e) => !e)}>
-        <Text style={[stretchStyles.title, { color: accentColor }]}>{title}</Text>
-        <Text style={stretchStyles.count}>{stretches.length} stretches</Text>
-        <Text style={stretchStyles.toggle}>{expanded ? '▲' : '▼'}</Text>
-      </Pressable>
-
-      {expanded && (
-        <View style={stretchStyles.list}>
-          {stretches.map((s, i) => (
-            <View key={i} style={stretchStyles.item}>
-              <View style={stretchStyles.itemHeader}>
-                <Text style={stretchStyles.name}>{s.name}</Text>
-                <Text style={stretchStyles.duration}>{s.duration}</Text>
-              </View>
-              <Text style={stretchStyles.description}>{s.description}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
-const stretchStyles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderLeftWidth: 3,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  title: {
-    ...Typography.label,
-    letterSpacing: 1.5,
-    flex: 1,
-  },
-  count: {
-    ...Typography.caption,
-    color: Colors.muted,
-  },
-  toggle: {
-    ...Typography.caption,
-    color: Colors.muted,
-  },
-  list: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-  },
-  item: {
-    padding: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.surface2,
-    gap: 4,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  name: {
-    ...Typography.small,
-    color: Colors.primary,
-    fontWeight: '600',
-    flex: 1,
-  },
-  duration: {
-    ...Typography.caption,
-    color: Colors.accent,
-    fontWeight: '600',
-    textAlign: 'right',
-    flexShrink: 0,
-  },
-  description: {
-    ...Typography.caption,
-    color: Colors.secondary,
-    lineHeight: 18,
-  },
-});
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.base,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  cancelBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelText: {
-    ...Typography.body,
-    color: Colors.muted,
-    fontSize: 18,
-  },
-  topCenter: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  typePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  typeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  typeText: {
-    ...Typography.caption,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  elapsed: {
-    ...Typography.small,
-    color: Colors.muted,
-    fontVariant: ['tabular-nums'],
-  },
-  finishBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
-  },
-  finishText: {
-    ...Typography.small,
-    color: Colors.base,
-    fontWeight: '700',
-  },
-  progressTrack: {
-    height: 2,
-    backgroundColor: Colors.surface2,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 1,
-  },
-  sessionHeader: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: 3,
-  },
-  sessionTitle: {
-    ...Typography.h2,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -0.8,
-  },
-  sessionSub: {
-    ...Typography.small,
-    color: Colors.muted,
-  },
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.md,
-    paddingBottom: 20,
-  },
-  prevBanner: {
-    backgroundColor: Colors.surface2,
-    borderRadius: 10,
-    padding: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.accent,
-  },
-  prevBannerText: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 18,
-  },
-  finishSection: {
-    gap: 10,
-    marginTop: 8,
-  },
-  finishNote: {
-    ...Typography.caption,
-    color: Colors.muted,
-    textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  errorText: {
-    ...Typography.body,
-    color: Colors.secondary,
-  },
-});

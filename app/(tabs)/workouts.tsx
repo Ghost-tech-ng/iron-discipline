@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 
@@ -18,8 +19,85 @@ const DAYS: { key: DayOfWeek; label: string }[] = [
 ];
 
 export default function WorkoutsScreen() {
+  const Colors = useColors();
   const todayIndex = new Date().getDay();
   const todayKey = DAYS[todayIndex === 0 ? 6 : todayIndex - 1].key;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.sm },
+    title: {
+      ...Typography.h1,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -1,
+    },
+    subtitle: {
+      ...Typography.small,
+      color: Colors.muted,
+      marginBottom: Spacing.sm,
+      letterSpacing: 0.2,
+    },
+    dayCard: {
+      gap: 6,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    dayHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    dayLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    dayLabel: {
+      ...Typography.h4,
+      color: Colors.secondary,
+      fontWeight: '600',
+      width: 34,
+    },
+    todayPill: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
+    },
+    todayText: {
+      ...Typography.caption,
+      fontWeight: '700',
+      letterSpacing: 0.8,
+    },
+    dayRight: {},
+    typeTag: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    typeText: {
+      ...Typography.caption,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    restText: {
+      ...Typography.small,
+      color: Colors.muted,
+      fontStyle: 'italic',
+    },
+    sessionName: {
+      ...Typography.body,
+      color: Colors.primary,
+      fontWeight: '600',
+      letterSpacing: -0.2,
+    },
+    exerciseList: {
+      ...Typography.caption,
+      color: Colors.muted,
+      lineHeight: 16,
+    },
+  }), [Colors]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -93,79 +171,3 @@ export default function WorkoutsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.sm },
-  title: {
-    ...Typography.h1,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  subtitle: {
-    ...Typography.small,
-    color: Colors.muted,
-    marginBottom: Spacing.sm,
-    letterSpacing: 0.2,
-  },
-  dayCard: {
-    gap: 6,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dayLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dayLabel: {
-    ...Typography.h4,
-    color: Colors.secondary,
-    fontWeight: '600',
-    width: 34,
-  },
-  todayPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  todayText: {
-    ...Typography.caption,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-  },
-  dayRight: {},
-  typeTag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  typeText: {
-    ...Typography.caption,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  restText: {
-    ...Typography.small,
-    color: Colors.muted,
-    fontStyle: 'italic',
-  },
-  sessionName: {
-    ...Typography.body,
-    color: Colors.primary,
-    fontWeight: '600',
-    letterSpacing: -0.2,
-  },
-  exerciseList: {
-    ...Typography.caption,
-    color: Colors.muted,
-    lineHeight: 16,
-  },
-});

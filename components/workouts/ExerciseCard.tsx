@@ -7,8 +7,32 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SetRow } from './SetRow';
 import { getExerciseImageUrl } from '../../constants/exerciseImages';
-import type { Exercise, SetLog, ExerciseLog } from '../../types';
-import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
+import type { Exercise, SetLog, ExerciseLog, MuscleGroup } from '../../types';
+import { useColors } from '../../hooks/useColors';
+import { Typography, Spacing, Radius } from '../../constants/theme';
+
+const LEG_MUSCLES: MuscleGroup[] = ['legs', 'quads', 'hamstrings', 'glutes', 'calves'];
+
+function calcRecommendation(
+  exercise: Exercise,
+  previousLog: ExerciseLog | undefined
+): { weight: number; direction: 'up' | 'hold' | 'none' } {
+  if (!previousLog || previousLog.sets.length === 0) return { weight: 0, direction: 'none' };
+
+  const completedSets = previousLog.sets.filter((s) => s.completed);
+  if (completedSets.length === 0) return { weight: 0, direction: 'none' };
+
+  const maxWeight = Math.max(...completedSets.map((s) => s.weight));
+  const allHitReps = completedSets.every((s) => s.reps >= exercise.repsMin);
+
+  if (allHitReps) {
+    const isLeg = exercise.muscleGroups.some((m) => LEG_MUSCLES.includes(m));
+    const increment = isLeg ? 5 : 2.5;
+    return { weight: maxWeight + increment, direction: 'up' };
+  }
+
+  return { weight: maxWeight, direction: 'hold' };
+}
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -25,9 +49,12 @@ export function ExerciseCard({
   onRestStart,
   isActive,
 }: ExerciseCardProps) {
+  const Colors = useColors();
   const [completedSets, setCompletedSets] = useState<SetLog[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const completedCount = completedSets.length;
+
+  const recommendation = calcRecommendation(exercise, previousLog);
 
   useEffect(() => {
     getExerciseImageUrl(exercise.id).then(setImageUrl);
@@ -63,15 +90,133 @@ export function ExerciseCard({
     return completedSets.some((s) => s.setNumber === setNum);
   }
 
+  const styles = React.useMemo(() => StyleSheet.create({
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: Radius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      overflow: 'hidden',
+    },
+    imageContainer: {
+      width: '100%',
+      height: 148,
+      backgroundColor: '#f0ede8',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    exerciseImage: {
+      width: '100%',
+      height: '100%',
+    },
+    cardDone: {
+      backgroundColor: Colors.surface,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.md,
+      paddingBottom: 8,
+      gap: 12,
+    },
+    headerLeft: { flex: 1, gap: 4 },
+    name: {
+      ...Typography.h4,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+    },
+    nameDone: { color: Colors.secondary },
+    notes: {
+      ...Typography.caption,
+      color: Colors.muted,
+      fontStyle: 'italic',
+    },
+    progress: {
+      backgroundColor: Colors.surface2,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 8,
+    },
+    progressText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+    },
+    colHeaders: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: Spacing.md,
+      paddingBottom: 6,
+    },
+    colHead: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 0.8,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: Colors.border,
+    },
+    setSep: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: Colors.surface2,
+      marginLeft: 40,
+    },
+    specRow: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: Colors.border,
+    },
+    specText: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+    targetBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    targetBadgeUp: {
+      backgroundColor: Colors.accentGreen + '15',
+      borderColor: Colors.accentGreen + '50',
+    },
+    targetBadgeHold: {
+      backgroundColor: '#f59e0b15',
+      borderColor: '#f59e0b50',
+    },
+    targetText: {
+      ...Typography.caption,
+      fontWeight: '600',
+      fontSize: 11,
+      letterSpacing: 0.3,
+    },
+    targetTextUp: {
+      color: Colors.accentGreen,
+    },
+    targetTextHold: {
+      color: '#f59e0b',
+    },
+  }), [Colors]);
+
   return (
     <Animated.View style={[styles.card, cardStyle, allDone && styles.cardDone]}>
       {/* Exercise image */}
       {imageUrl && (
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.exerciseImage}
-          resizeMode="cover"
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.exerciseImage}
+            resizeMode="contain"
+          />
+        </View>
       )}
 
       {/* Header */}
@@ -80,6 +225,21 @@ export function ExerciseCard({
           <Text style={[styles.name, allDone && styles.nameDone]}>{exercise.name}</Text>
           {exercise.notes && (
             <Text style={styles.notes}>{exercise.notes}</Text>
+          )}
+          {recommendation.direction !== 'none' && (
+            <View style={[
+              styles.targetBadge,
+              recommendation.direction === 'up' ? styles.targetBadgeUp : styles.targetBadgeHold,
+            ]}>
+              <Text style={[
+                styles.targetText,
+                recommendation.direction === 'up' ? styles.targetTextUp : styles.targetTextHold,
+              ]}>
+                {recommendation.direction === 'up'
+                  ? `Target ${recommendation.weight}kg ↑`
+                  : `Target ${recommendation.weight}kg — hold`}
+              </Text>
+            </View>
           )}
         </View>
         <View style={styles.progress}>
@@ -107,7 +267,11 @@ export function ExerciseCard({
           <SetRow
             setNumber={i + 1}
             previous={getPreviousSet(i + 1)}
-            defaultWeight={previousLog?.sets[i]?.weight ?? 0}
+            defaultWeight={
+              recommendation.direction !== 'none'
+                ? recommendation.weight
+                : (previousLog?.sets[i]?.weight ?? 0)
+            }
             onComplete={handleSetComplete}
             completed={isSetCompleted(i + 1)}
             existingLog={completedSets.find((s) => s.setNumber === i + 1)}
@@ -125,86 +289,3 @@ export function ExerciseCard({
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  exerciseImage: {
-    width: '100%',
-    height: 160,
-    backgroundColor: Colors.surface2,
-  },
-  cardDone: {
-    backgroundColor: Colors.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: 8,
-    gap: 12,
-  },
-  headerLeft: { flex: 1, gap: 3 },
-  name: {
-    ...Typography.h4,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  nameDone: { color: Colors.secondary },
-  notes: {
-    ...Typography.caption,
-    color: Colors.muted,
-    fontStyle: 'italic',
-  },
-  progress: {
-    backgroundColor: Colors.surface2,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  progressText: {
-    ...Typography.small,
-    color: Colors.secondary,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-  },
-  colHeaders: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: Spacing.md,
-    paddingBottom: 6,
-  },
-  colHead: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 0.8,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
-  },
-  setSep: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.surface2,
-    marginLeft: 40,
-  },
-  specRow: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-  },
-  specText: {
-    ...Typography.caption,
-    color: Colors.muted,
-  },
-});

@@ -16,14 +16,21 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ghosttech.irondiscipline"
+      "bundleIdentifier": "com.ghosttech.irondiscipline",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0a0a"
       },
-      "package": "com.ghosttech.irondiscipline"
+      "package": "com.ghosttech.irondiscipline",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -46,6 +53,19 @@
     "scheme": "irondiscipline",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "71c1e45f-2270-4c95-80bd-c43af6d83a5d"
+      }
+    },
+    "owner": "osemwegieeghosa",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/71c1e45f-2270-4c95-80bd-c43af6d83a5d"
     }
   }
 }

@@ -9,7 +9,8 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -20,6 +21,7 @@ interface RestTimerProps {
 }
 
 export function RestTimer({ seconds, onComplete, onDismiss }: RestTimerProps) {
+  const Colors = useColors();
   const [remaining, setRemaining] = useState(seconds);
   const [done, setDone] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -65,6 +67,64 @@ export function RestTimer({ seconds, onComplete, onDismiss }: RestTimerProps) {
   const secs = remaining % 60;
   const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
 
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 100,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: '#000000cc',
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: 24,
+      padding: 32,
+      alignItems: 'center',
+      gap: 24,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      width: 280,
+    },
+    title: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 3,
+    },
+    ringWrap: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    center: {
+      position: 'absolute',
+      alignItems: 'center',
+    },
+    time: {
+      fontSize: 48,
+      fontWeight: '700',
+      letterSpacing: -2,
+      lineHeight: 52,
+    },
+    sub: {
+      ...Typography.caption,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+    },
+    skipBtn: {
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+    },
+    skipText: {
+      ...Typography.body,
+      color: Colors.secondary,
+      fontWeight: '500',
+    },
+  }), [Colors]);
+
   return (
     <View style={styles.container}>
       <Pressable style={styles.backdrop} onPress={onDismiss} />
@@ -103,61 +163,3 @@ export function RestTimer({ seconds, onComplete, onDismiss }: RestTimerProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000000cc',
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    gap: 24,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    width: 280,
-  },
-  title: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 3,
-  },
-  ringWrap: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  center: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  time: {
-    fontSize: 48,
-    fontWeight: '700',
-    letterSpacing: -2,
-    lineHeight: 52,
-  },
-  sub: {
-    ...Typography.caption,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  skipBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-  },
-  skipText: {
-    ...Typography.body,
-    color: Colors.secondary,
-    fontWeight: '500',
-  },
-});

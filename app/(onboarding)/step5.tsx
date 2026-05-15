@@ -5,15 +5,94 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useUserStore } from '../../store/userStore';
 import { saveUserProfile } from '../../services/userService';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 export default function Step5Screen() {
+  const Colors = useColors();
   const { profile, completeOnboarding } = useUserStore();
 
   async function handleFinish() {
     completeOnboarding();
     await saveUserProfile({ ...profile, onboardingComplete: true });
     router.replace('/(tabs)');
+  }
+
+  const srStyles = React.useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+    },
+    label: { ...Typography.small, color: Colors.secondary },
+    value: { ...Typography.small, fontWeight: '700' },
+  }), [Colors]);
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    content: {
+      flex: 1,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.xl,
+      justifyContent: 'space-between',
+    },
+    top: { gap: 8 },
+    step: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    title: {
+      ...Typography.h1,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -1,
+    },
+    subtitle: {
+      ...Typography.body,
+      color: Colors.secondary,
+      lineHeight: 22,
+    },
+    summary: {
+      backgroundColor: Colors.surface,
+      borderRadius: 16,
+      paddingHorizontal: Spacing.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: Colors.border,
+    },
+    sep: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: Colors.border,
+      marginVertical: 4,
+    },
+    warningCard: {
+      backgroundColor: Colors.surface2,
+      borderColor: Colors.border,
+    },
+    warningText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 20,
+    },
+  }), [Colors]);
+
+  function SummaryRow({
+    label,
+    value,
+    color = Colors.primary,
+  }: {
+    label: string;
+    value: string;
+    color?: string;
+  }) {
+    return (
+      <View style={srStyles.row}>
+        <Text style={srStyles.label}>{label}</Text>
+        <Text style={[srStyles.value, { color }]}>{value}</Text>
+      </View>
+    );
   }
 
   return (
@@ -61,80 +140,3 @@ export default function Step5Screen() {
     </SafeAreaView>
   );
 }
-
-function SummaryRow({
-  label,
-  value,
-  color = Colors.primary,
-}: {
-  label: string;
-  value: string;
-  color?: string;
-}) {
-  return (
-    <View style={srStyles.row}>
-      <Text style={srStyles.label}>{label}</Text>
-      <Text style={[srStyles.value, { color }]}>{value}</Text>
-    </View>
-  );
-}
-
-const srStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  label: { ...Typography.small, color: Colors.secondary },
-  value: { ...Typography.small, fontWeight: '700' },
-});
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-    justifyContent: 'space-between',
-  },
-  top: { gap: 8 },
-  step: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  title: {
-    ...Typography.h1,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.secondary,
-    lineHeight: 22,
-  },
-  summary: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: Spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
-  },
-  sep: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
-    marginVertical: 4,
-  },
-  warningCard: {
-    backgroundColor: Colors.surface2,
-    borderColor: Colors.border,
-  },
-  warningText: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 20,
-  },
-});

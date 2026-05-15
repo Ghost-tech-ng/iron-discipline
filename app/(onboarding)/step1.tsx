@@ -3,9 +3,11 @@ import { View, Text, TextInput, StyleSheet, SafeAreaView, KeyboardAvoidingView, 
 import { router } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { useUserStore } from '../../store/userStore';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 export default function Step1Screen() {
+  const Colors = useColors();
   const { profile, setProfile } = useUserStore();
   const [name, setName] = useState(profile.name);
   const [height, setHeight] = useState(profile.heightCm.toString());
@@ -19,6 +21,101 @@ export default function Step1Screen() {
       weightKg: parseFloat(weight) || 95,
     });
     router.push('/(onboarding)/step2');
+  }
+
+  const fieldStyles = React.useMemo(() => StyleSheet.create({
+    container: { gap: 6 },
+    label: {
+      ...Typography.small,
+      color: Colors.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    input: {
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 12,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 14,
+      ...Typography.body,
+      color: Colors.primary,
+    },
+  }), [Colors]);
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    kav: { flex: 1 },
+    content: {
+      flex: 1,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.xl,
+      justifyContent: 'space-between',
+      gap: Spacing.xl,
+    },
+    header: { gap: 8 },
+    step: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+    },
+    title: {
+      ...Typography.h1,
+      color: Colors.primary,
+      fontWeight: '700',
+      letterSpacing: -1,
+    },
+    subtitle: {
+      ...Typography.body,
+      color: Colors.secondary,
+      lineHeight: 22,
+    },
+    fields: { gap: Spacing.md, flex: 1 },
+    infoBox: {
+      backgroundColor: Colors.surface,
+      borderRadius: 12,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    infoText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 20,
+    },
+  }), [Colors]);
+
+  function Field({
+    label,
+    value,
+    onChangeText,
+    placeholder,
+    keyboardType = 'default',
+    autoCapitalize = 'none',
+  }: {
+    label: string;
+    value: string;
+    onChangeText: (v: string) => void;
+    placeholder: string;
+    keyboardType?: any;
+    autoCapitalize?: any;
+  }) {
+    return (
+      <View style={fieldStyles.container}>
+        <Text style={fieldStyles.label}>{label}</Text>
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={Colors.muted}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          style={fieldStyles.input}
+          selectionColor={Colors.accent}
+        />
+      </View>
+    );
   }
 
   return (
@@ -86,98 +183,3 @@ export default function Step1Screen() {
     </SafeAreaView>
   );
 }
-
-function Field({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType = 'default',
-  autoCapitalize = 'none',
-}: {
-  label: string;
-  value: string;
-  onChangeText: (v: string) => void;
-  placeholder: string;
-  keyboardType?: any;
-  autoCapitalize?: any;
-}) {
-  return (
-    <View style={fieldStyles.container}>
-      <Text style={fieldStyles.label}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={Colors.muted}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        style={fieldStyles.input}
-        selectionColor={Colors.accent}
-      />
-    </View>
-  );
-}
-
-const fieldStyles = StyleSheet.create({
-  container: { gap: 6 },
-  label: {
-    ...Typography.small,
-    color: Colors.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    ...Typography.body,
-    color: Colors.primary,
-  },
-});
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  kav: { flex: 1 },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-    justifyContent: 'space-between',
-    gap: Spacing.xl,
-  },
-  header: { gap: 8 },
-  step: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  title: {
-    ...Typography.h1,
-    color: Colors.primary,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.secondary,
-    lineHeight: 22,
-  },
-  fields: { gap: Spacing.md, flex: 1 },
-  infoBox: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  infoText: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 20,
-  },
-});

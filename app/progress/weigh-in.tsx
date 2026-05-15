@@ -21,10 +21,12 @@ import { Card } from '../../components/ui/Card';
 import { useProgressStore } from '../../store/progressStore';
 import { useUserStore } from '../../store/userStore';
 import { saveWeeklyCheckIn } from '../../services/disciplineService';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Spacing, Typography } from '../../constants/theme';
 import type { WeeklyCheckIn } from '../../types';
 
 export default function WeighInScreen() {
+  const Colors = useColors();
   const { checkIns, addCheckIn } = useProgressStore();
   const { profile } = useUserStore();
 
@@ -40,6 +42,88 @@ export default function WeighInScreen() {
   const weightNum = parseFloat(weight);
   const waistNum = waist ? parseFloat(waist) : undefined;
   const delta = checkIns.length > 0 ? weightNum - lastWeight : null;
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors.border,
+    },
+    closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+    closeText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
+    headerTitle: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
+    weightSection: { alignItems: 'center', paddingVertical: Spacing.lg, gap: 8 },
+    weightLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 2 },
+    weightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+    weightInput: {
+      fontSize: 72,
+      fontWeight: '700',
+      color: Colors.primary,
+      letterSpacing: -3,
+      minWidth: 160,
+      textAlign: 'center',
+      fontVariant: ['tabular-nums'],
+    },
+    weightUnit: { ...Typography.h2, color: Colors.muted, fontWeight: '400' },
+    deltaBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+    deltaText: { ...Typography.small, fontWeight: '700' },
+    goalCard: { gap: 10 },
+    goalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+    goalItem: { alignItems: 'center', flex: 1 },
+    goalValue: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    goalLabel: { ...Typography.caption, color: Colors.muted, marginTop: 2 },
+    goalArrow: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', width: 24 },
+    arrowLine: { height: 1, width: 8, backgroundColor: Colors.border },
+    arrowHead: { color: Colors.muted, fontSize: 16 },
+    remaining: { ...Typography.small, color: Colors.muted, textAlign: 'center' },
+    sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, marginTop: 4 },
+    photoBox: {
+      height: 200,
+      borderRadius: 12,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderStyle: 'dashed',
+    },
+    photoPreview: { width: '100%', height: '100%' },
+    photoOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    photoChangeText: { ...Typography.small, color: Colors.primary, fontWeight: '600' },
+    photoEmpty: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      backgroundColor: Colors.surface,
+    },
+    photoEmptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
+    photoEmptySubtext: { ...Typography.small, color: Colors.muted },
+    optionalCard: { padding: 0, overflow: 'hidden', gap: 0 },
+    fieldRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 14,
+      gap: 12,
+    },
+    fieldLabel: { ...Typography.small, color: Colors.secondary, width: 90 },
+    fieldInput: { flex: 1, ...Typography.body, color: Colors.primary, textAlign: 'right' },
+    notesInput: { textAlign: 'left', paddingTop: 0 },
+    protocolCard: { gap: 6, backgroundColor: Colors.surface2 },
+    protocolTitle: { ...Typography.caption, color: Colors.muted, letterSpacing: 1.5 },
+    protocolBody: { ...Typography.small, color: Colors.secondary, lineHeight: 18 },
+  }), [Colors]);
 
   async function pickPhoto(source: 'camera' | 'library') {
     const result =
@@ -271,85 +355,3 @@ export default function WeighInScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  closeText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
-  headerTitle: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-  weightSection: { alignItems: 'center', paddingVertical: Spacing.lg, gap: 8 },
-  weightLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 2 },
-  weightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  weightInput: {
-    fontSize: 72,
-    fontWeight: '700',
-    color: Colors.primary,
-    letterSpacing: -3,
-    minWidth: 160,
-    textAlign: 'center',
-    fontVariant: ['tabular-nums'],
-  },
-  weightUnit: { ...Typography.h2, color: Colors.muted, fontWeight: '400' },
-  deltaBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
-  deltaText: { ...Typography.small, fontWeight: '700' },
-  goalCard: { gap: 10 },
-  goalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  goalItem: { alignItems: 'center', flex: 1 },
-  goalValue: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
-  goalLabel: { ...Typography.caption, color: Colors.muted, marginTop: 2 },
-  goalArrow: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', width: 24 },
-  arrowLine: { height: 1, width: 8, backgroundColor: Colors.border },
-  arrowHead: { color: Colors.muted, fontSize: 16 },
-  remaining: { ...Typography.small, color: Colors.muted, textAlign: 'center' },
-  sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, marginTop: 4 },
-  photoBox: {
-    height: 200,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderStyle: 'dashed',
-  },
-  photoPreview: { width: '100%', height: '100%' },
-  photoOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoChangeText: { ...Typography.small, color: Colors.primary, fontWeight: '600' },
-  photoEmpty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.surface,
-  },
-  photoEmptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
-  photoEmptySubtext: { ...Typography.small, color: Colors.muted },
-  optionalCard: { padding: 0, overflow: 'hidden', gap: 0 },
-  fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    gap: 12,
-  },
-  fieldLabel: { ...Typography.small, color: Colors.secondary, width: 90 },
-  fieldInput: { flex: 1, ...Typography.body, color: Colors.primary, textAlign: 'right' },
-  notesInput: { textAlign: 'left', paddingTop: 0 },
-  protocolCard: { gap: 6, backgroundColor: Colors.surface2 },
-  protocolTitle: { ...Typography.caption, color: Colors.muted, letterSpacing: 1.5 },
-  protocolBody: { ...Typography.small, color: Colors.secondary, lineHeight: 18 },
-});

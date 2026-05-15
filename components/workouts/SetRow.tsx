@@ -8,7 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { SetLog } from '../../types';
-import { Colors, Typography, Spacing } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography, Spacing } from '../../constants/theme';
 
 interface SetRowProps {
   setNumber: number;
@@ -27,6 +28,7 @@ export function SetRow({
   completed,
   existingLog,
 }: SetRowProps) {
+  const Colors = useColors();
   const [weight, setWeight] = useState(
     existingLog?.weight?.toString() ?? (previous?.weight ?? defaultWeight).toString()
   );
@@ -51,6 +53,88 @@ export function SetRow({
       completed: true,
     });
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 10,
+      paddingHorizontal: Spacing.md,
+    },
+    rowDone: {
+      opacity: 0.55,
+    },
+    setNum: {
+      width: 24,
+      alignItems: 'center',
+    },
+    setNumText: {
+      ...Typography.small,
+      color: Colors.muted,
+      fontWeight: '600',
+    },
+    setNumDone: {
+      color: Colors.accentGreen,
+    },
+    prevCol: {
+      width: 52,
+      alignItems: 'center',
+    },
+    prevText: {
+      ...Typography.caption,
+      color: Colors.muted,
+      fontWeight: '500',
+    },
+    prevEmpty: {
+      ...Typography.caption,
+      color: Colors.border,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: Colors.surface2,
+      borderRadius: 8,
+      paddingVertical: 9,
+      paddingHorizontal: 10,
+      ...Typography.body,
+      color: Colors.primary,
+      textAlign: 'center',
+      borderWidth: 1,
+      borderColor: Colors.border,
+      minWidth: 56,
+    },
+    inputDone: {
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      color: Colors.secondary,
+    },
+    x: {
+      ...Typography.small,
+      color: Colors.muted,
+    },
+    checkBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 1.5,
+      borderColor: Colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkBtnDone: {
+      backgroundColor: Colors.accentGreen + '20',
+      borderColor: Colors.accentGreen,
+    },
+    checkText: {
+      fontSize: 18,
+      color: Colors.muted,
+    },
+    checkTextDone: {
+      color: Colors.accentGreen,
+      fontWeight: '700',
+      fontSize: 16,
+    },
+  }), [Colors]);
 
   return (
     <Animated.View style={[styles.row, completed && styles.rowDone, animStyle]}>
@@ -113,85 +197,3 @@ export function SetRow({
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.md,
-  },
-  rowDone: {
-    opacity: 0.55,
-  },
-  setNum: {
-    width: 24,
-    alignItems: 'center',
-  },
-  setNumText: {
-    ...Typography.small,
-    color: Colors.muted,
-    fontWeight: '600',
-  },
-  setNumDone: {
-    color: Colors.accentGreen,
-  },
-  prevCol: {
-    width: 52,
-    alignItems: 'center',
-  },
-  prevText: {
-    ...Typography.caption,
-    color: Colors.muted,
-    fontWeight: '500',
-  },
-  prevEmpty: {
-    ...Typography.caption,
-    color: Colors.border,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: Colors.surface2,
-    borderRadius: 8,
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    ...Typography.body,
-    color: Colors.primary,
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    minWidth: 56,
-  },
-  inputDone: {
-    borderColor: 'transparent',
-    backgroundColor: 'transparent',
-    color: Colors.secondary,
-  },
-  x: {
-    ...Typography.small,
-    color: Colors.muted,
-  },
-  checkBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkBtnDone: {
-    backgroundColor: Colors.accentGreen + '20',
-    borderColor: Colors.accentGreen,
-  },
-  checkText: {
-    fontSize: 18,
-    color: Colors.muted,
-  },
-  checkTextDone: {
-    color: Colors.accentGreen,
-    fontWeight: '700',
-    fontSize: 16,
-  },
-});

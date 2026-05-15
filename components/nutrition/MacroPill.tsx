@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface MacroPillProps {
   calories: number;
@@ -11,6 +12,7 @@ interface MacroPillProps {
 }
 
 export function MacroPill({ calories, protein, carbs, fat, multiplier = 1 }: MacroPillProps) {
+  const Colors = useColors();
   const scale = (v: number) => Math.round(v * multiplier * 10) / 10;
 
   return (
@@ -24,10 +26,28 @@ export function MacroPill({ calories, protein, carbs, fat, multiplier = 1 }: Mac
 }
 
 function MacroChip({ value, label, color }: { value: number; label: string; color: string }) {
+  const Colors = useColors();
+
+  const chipStyles = React.useMemo(() => StyleSheet.create({
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 2,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      backgroundColor: color + '18',
+    },
+    label: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+  }), [Colors, color]);
+
   return (
-    <View style={[styles.chip, { backgroundColor: color + '18' }]}>
+    <View style={chipStyles.chip}>
       <Text style={[styles.value, { color }]}>{value}</Text>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={chipStyles.label}>{label}</Text>
     </View>
   );
 }
@@ -38,20 +58,8 @@ const styles = StyleSheet.create({
     gap: 6,
     flexWrap: 'wrap',
   },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 2,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
   value: {
     ...Typography.small,
     fontWeight: '700',
-  },
-  label: {
-    ...Typography.caption,
-    color: Colors.muted,
   },
 });

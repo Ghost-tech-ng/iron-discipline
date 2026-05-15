@@ -30,6 +30,7 @@ import {
   estimateMealFromPhoto,
   type MealEstimate,
 } from '../../services/aiService';
+import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { MealCategory, FoodItem } from '../../types';
 
@@ -66,6 +67,7 @@ function estimateToFoodItem(e: MealEstimate): FoodItem {
 type InputMode = 'library' | 'describe' | 'photo';
 
 export default function LogMealScreen() {
+  const Colors = useColors();
   const params = useLocalSearchParams<{
     scannedId?: string; scannedName?: string; scannedCalories?: string;
     scannedProtein?: string; scannedCarbs?: string; scannedFat?: string; scannedServing?: string;
@@ -174,6 +176,98 @@ export default function LogMealScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    safe: { flex: 1, backgroundColor: Colors.base },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: Colors.border,
+    },
+    backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+    backText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
+    title: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    scanBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, gap: Spacing.md },
+    categoryRow: { gap: 8, paddingRight: Spacing.md },
+    catChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: Colors.surface,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    catChipActive: { borderColor: Colors.accent, backgroundColor: Colors.accent + '15' },
+    catLabel: { ...Typography.small, color: Colors.secondary, fontWeight: '500' },
+    catLabelActive: { color: Colors.accent, fontWeight: '700' },
+    modeTabs: {
+      flexDirection: 'row',
+      backgroundColor: Colors.surface2,
+      borderRadius: 10,
+      padding: 3,
+      gap: 2,
+    },
+    modeTab: { flex: 1, paddingVertical: 7, borderRadius: 8, alignItems: 'center' },
+    modeTabActive: { backgroundColor: Colors.surface },
+    modeTabText: { fontSize: 12, fontWeight: '600', color: Colors.muted },
+    modeTabTextActive: { color: Colors.primary },
+    describeCard: { gap: Spacing.sm },
+    describeLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    describeInput: {
+      ...Typography.body,
+      color: Colors.primary,
+      backgroundColor: Colors.surface2,
+      borderRadius: 10,
+      padding: 12,
+      minHeight: 80,
+      textAlignVertical: 'top',
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    photoSub: { ...Typography.small, color: Colors.secondary, lineHeight: 20 },
+    aiLoadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' },
+    aiLoadingText: { ...Typography.small, color: Colors.muted },
+    selectedCard: { gap: Spacing.md },
+    selectedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    selectedName: { ...Typography.h4, color: Colors.primary, fontWeight: '700', flex: 1, letterSpacing: -0.3 },
+    clearSelected: { ...Typography.small, color: Colors.accent, fontWeight: '600' },
+    serving: { ...Typography.caption, color: Colors.muted, marginTop: -8 },
+    qtyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    qtyLabel: { ...Typography.body, color: Colors.secondary },
+    qtyControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    qtyBtn: {
+      width: 36, height: 36,
+      backgroundColor: Colors.surface2, borderRadius: 8,
+      alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1, borderColor: Colors.border,
+    },
+    qtyBtnText: { ...Typography.h4, color: Colors.primary },
+    qtyInput: {
+      width: 56, textAlign: 'center',
+      ...Typography.body, color: Colors.primary, fontWeight: '700',
+      backgroundColor: Colors.surface2, borderRadius: 8,
+      paddingVertical: 8, borderWidth: 1, borderColor: Colors.accent,
+    },
+    foodList: { gap: 8 },
+    listHeader: { ...Typography.label, color: Colors.muted, letterSpacing: 1.2 },
+    foodRow: {
+      paddingVertical: 14, paddingHorizontal: Spacing.md,
+      backgroundColor: Colors.surface, borderRadius: 12,
+      gap: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
+    },
+    foodInfo: { gap: 2 },
+    foodName: { ...Typography.body, color: Colors.primary, fontWeight: '600' },
+    foodServing: { ...Typography.caption, color: Colors.muted },
+  }), [Colors]);
 
   return (
     <KeyboardAvoidingView
@@ -381,95 +475,3 @@ export default function LogMealScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.base },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
-  title: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
-  scanBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, gap: Spacing.md },
-  categoryRow: { gap: 8, paddingRight: Spacing.md },
-  catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: Colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  catChipActive: { borderColor: Colors.accent, backgroundColor: Colors.accent + '15' },
-  catLabel: { ...Typography.small, color: Colors.secondary, fontWeight: '500' },
-  catLabelActive: { color: Colors.accent, fontWeight: '700' },
-  modeTabs: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface2,
-    borderRadius: 10,
-    padding: 3,
-    gap: 2,
-  },
-  modeTab: { flex: 1, paddingVertical: 7, borderRadius: 8, alignItems: 'center' },
-  modeTabActive: { backgroundColor: Colors.surface },
-  modeTabText: { fontSize: 12, fontWeight: '600', color: Colors.muted },
-  modeTabTextActive: { color: Colors.primary },
-  describeCard: { gap: Spacing.sm },
-  describeLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
-  describeInput: {
-    ...Typography.body,
-    color: Colors.primary,
-    backgroundColor: Colors.surface2,
-    borderRadius: 10,
-    padding: 12,
-    minHeight: 80,
-    textAlignVertical: 'top',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  photoSub: { ...Typography.small, color: Colors.secondary, lineHeight: 20 },
-  aiLoadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' },
-  aiLoadingText: { ...Typography.small, color: Colors.muted },
-  selectedCard: { gap: Spacing.md },
-  selectedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  selectedName: { ...Typography.h4, color: Colors.primary, fontWeight: '700', flex: 1, letterSpacing: -0.3 },
-  clearSelected: { ...Typography.small, color: Colors.accent, fontWeight: '600' },
-  serving: { ...Typography.caption, color: Colors.muted, marginTop: -8 },
-  qtyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  qtyLabel: { ...Typography.body, color: Colors.secondary },
-  qtyControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  qtyBtn: {
-    width: 36, height: 36,
-    backgroundColor: Colors.surface2, borderRadius: 8,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: Colors.border,
-  },
-  qtyBtnText: { ...Typography.h4, color: Colors.primary },
-  qtyInput: {
-    width: 56, textAlign: 'center',
-    ...Typography.body, color: Colors.primary, fontWeight: '700',
-    backgroundColor: Colors.surface2, borderRadius: 8,
-    paddingVertical: 8, borderWidth: 1, borderColor: Colors.accent,
-  },
-  foodList: { gap: 8 },
-  listHeader: { ...Typography.label, color: Colors.muted, letterSpacing: 1.2 },
-  foodRow: {
-    paddingVertical: 14, paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.surface, borderRadius: 12,
-    gap: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
-  },
-  foodInfo: { gap: 2 },
-  foodName: { ...Typography.body, color: Colors.primary, fontWeight: '600' },
-  foodServing: { ...Typography.caption, color: Colors.muted },
-});

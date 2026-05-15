@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../ui/Card';
 import { generateDailyCoaching, type CoachingData } from '../../services/aiService';
-import { Colors, Typography } from '../../constants/theme';
+import { useColors } from '../../hooks/useColors';
+import { Typography } from '../../constants/theme';
 
 interface Props {
   data: CoachingData;
@@ -12,6 +13,7 @@ interface Props {
 const CACHE_KEY_PREFIX = 'coach_cache_';
 
 export function CoachCard({ data }: Props) {
+  const Colors = useColors();
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -38,6 +40,23 @@ export function CoachCard({ data }: Props) {
       setLoading(false);
     }
   }
+
+  const styles = React.useMemo(() => StyleSheet.create({
+    card: { gap: 10 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, flex: 1 },
+    prompt: { ...Typography.small, color: Colors.accent, fontWeight: '600' },
+    refreshBtn: { padding: 4 },
+    refreshText: { fontSize: 16, color: Colors.muted },
+    loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    loadingText: { ...Typography.small, color: Colors.muted },
+    errorText: { ...Typography.small, color: Colors.accentRed },
+    message: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 20,
+    },
+  }), [Colors]);
 
   if (!message && !loading && !error) {
     return (
@@ -84,20 +103,3 @@ export function CoachCard({ data }: Props) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, flex: 1 },
-  prompt: { ...Typography.small, color: Colors.accent, fontWeight: '600' },
-  refreshBtn: { padding: 4 },
-  refreshText: { fontSize: 16, color: Colors.muted },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  loadingText: { ...Typography.small, color: Colors.muted },
-  errorText: { ...Typography.small, color: Colors.accentRed },
-  message: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 20,
-  },
-});
