@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Iron Discipline",
+    "slug": "iron-discipline",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ghosttech.irondiscipline"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      },
+      "package": "com.ghosttech.irondiscipline"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#f5f5f5"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Iron Discipline needs access to save your progress photos."
+        }
+      ],
+      "expo-sqlite"
+    ],
+    "scheme": "irondiscipline",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
