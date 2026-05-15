@@ -10,9 +10,11 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useProgressStore } from '../../store/progressStore';
@@ -31,11 +33,41 @@ export default function WeighInScreen() {
   const [weight, setWeight] = useState(String(lastWeight));
   const [waist, setWaist] = useState('');
   const [notes, setNotes] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const weightNum = parseFloat(weight);
   const waistNum = waist ? parseFloat(waist) : undefined;
   const delta = checkIns.length > 0 ? weightNum - lastWeight : null;
+
+  async function pickPhoto(source: 'camera' | 'library') {
+    const result =
+      source === 'camera'
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ['images'],
+            quality: 0.7,
+            allowsEditing: true,
+            aspect: [3, 4],
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            quality: 0.7,
+            allowsEditing: true,
+            aspect: [3, 4],
+          });
+
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }
+
+  function handlePhotoPress() {
+    Alert.alert('Progress Photo', 'Choose source', [
+      { text: 'Camera', onPress: () => pickPhoto('camera') },
+      { text: 'Photo Library', onPress: () => pickPhoto('library') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
 
   async function handleSave() {
     if (isNaN(weightNum) || weightNum < 30 || weightNum > 250) {
@@ -54,6 +86,7 @@ export default function WeighInScreen() {
         date: today,
         weightKg: weightNum,
         waistCm: waistNum,
+        photoUri: photoUri ?? undefined,
         notes: notes.trim() || undefined,
       };
 
@@ -62,14 +95,14 @@ export default function WeighInScreen() {
         weekNumber,
         weightNum,
         waistNum ?? null,
-        null,
+        photoUri,
         notes.trim() || null
       );
 
       addCheckIn(checkIn);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Could not save check-in. Try again.');
     } finally {
       setSaving(false);
@@ -116,11 +149,11 @@ export default function WeighInScreen() {
             {delta !== null && !isNaN(delta) && (
               <View style={[
                 styles.deltaBadge,
-                { backgroundColor: delta <= 0 ? Colors.accentGreen + '20' : Colors.accentRed + '20' }
+                { backgroundColor: delta <= 0 ? Colors.accentGreen + '20' : Colors.accentRed + '20' },
               ]}>
                 <Text style={[
                   styles.deltaText,
-                  { color: delta <= 0 ? Colors.accentGreen : Colors.accentRed }
+                  { color: delta <= 0 ? Colors.accentGreen : Colors.accentRed },
                 ]}>
                   {delta <= 0 ? '' : '+'}{delta.toFixed(1)} kg vs last week
                 </Text>
@@ -164,8 +197,28 @@ export default function WeighInScreen() {
             )}
           </Card>
 
+          {/* Progress photo */}
+          <Text style={styles.sectionTitle}>PROGRESS PHOTO</Text>
+
+          <Pressable style={styles.photoBox} onPress={handlePhotoPress}>
+            {photoUri ? (
+              <>
+                <Image source={{ uri: photoUri }} style={styles.photoPreview} resizeMode="cover" />
+                <View style={styles.photoOverlay}>
+                  <Text style={styles.photoChangeText}>Tap to change</Text>
+                </View>
+              </>
+            ) : (
+              <View style={styles.photoEmpty}>
+                <Text style={styles.photoIcon}>📷</Text>
+                <Text style={styles.photoEmptyText}>Add progress photo</Text>
+                <Text style={styles.photoEmptySubtext}>Camera or library</Text>
+              </View>
+            )}
+          </Pressable>
+
           {/* Optional measurements */}
-          <Text style={styles.sectionTitle}>OPTIONAL</Text>
+          <Text style={styles.sectionTitle}>MEASUREMENTS</Text>
 
           <Card style={styles.optionalCard}>
             <View style={styles.fieldRow}>
@@ -219,10 +272,7 @@ export default function WeighInScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.base,
-  },
+  safe: { flex: 1, backgroundColor: Colors.base },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -232,43 +282,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.border,
   },
-  closeBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeText: {
-    ...Typography.body,
-    color: Colors.muted,
-    fontSize: 18,
-  },
-  headerTitle: {
-    ...Typography.h4,
-    color: Colors.primary,
-    fontWeight: '700',
-  },
+  closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  closeText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
+  headerTitle: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
   scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.lg,
-    gap: Spacing.md,
-  },
-  weightSection: {
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    gap: 8,
-  },
-  weightLabel: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 2,
-  },
-  weightRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
-  },
+  content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
+  weightSection: { alignItems: 'center', paddingVertical: Spacing.lg, gap: 8 },
+  weightLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 2 },
+  weightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   weightInput: {
     fontSize: 72,
     fontWeight: '700',
@@ -278,74 +299,46 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
-  weightUnit: {
-    ...Typography.h2,
-    color: Colors.muted,
-    fontWeight: '400',
-  },
-  deltaBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  deltaText: {
-    ...Typography.small,
-    fontWeight: '700',
-  },
-  goalCard: {
-    gap: 10,
-  },
-  goalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 0,
-  },
-  goalItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  goalValue: {
-    ...Typography.h4,
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  goalLabel: {
-    ...Typography.caption,
-    color: Colors.muted,
-    marginTop: 2,
-  },
-  goalArrow: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    width: 24,
-  },
-  arrowLine: {
-    height: 1,
-    width: 8,
-    backgroundColor: Colors.border,
-  },
-  arrowHead: {
-    color: Colors.muted,
-    fontSize: 16,
-  },
-  remaining: {
-    ...Typography.small,
-    color: Colors.muted,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    ...Typography.label,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-    marginTop: 4,
-  },
-  optionalCard: {
-    padding: 0,
+  weightUnit: { ...Typography.h2, color: Colors.muted, fontWeight: '400' },
+  deltaBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  deltaText: { ...Typography.small, fontWeight: '700' },
+  goalCard: { gap: 10 },
+  goalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  goalItem: { alignItems: 'center', flex: 1 },
+  goalValue: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+  goalLabel: { ...Typography.caption, color: Colors.muted, marginTop: 2 },
+  goalArrow: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', width: 24 },
+  arrowLine: { height: 1, width: 8, backgroundColor: Colors.border },
+  arrowHead: { color: Colors.muted, fontSize: 16 },
+  remaining: { ...Typography.small, color: Colors.muted, textAlign: 'center' },
+  sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, marginTop: 4 },
+  photoBox: {
+    height: 200,
+    borderRadius: 12,
     overflow: 'hidden',
-    gap: 0,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
   },
+  photoPreview: { width: '100%', height: '100%' },
+  photoOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoChangeText: { ...Typography.small, color: Colors.primary, fontWeight: '600' },
+  photoEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface,
+  },
+  photoIcon: { fontSize: 32 },
+  photoEmptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
+  photoEmptySubtext: { ...Typography.small, color: Colors.muted },
+  optionalCard: { padding: 0, overflow: 'hidden', gap: 0 },
   fieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -353,33 +346,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
   },
-  fieldLabel: {
-    ...Typography.small,
-    color: Colors.secondary,
-    width: 90,
-  },
-  fieldInput: {
-    flex: 1,
-    ...Typography.body,
-    color: Colors.primary,
-    textAlign: 'right',
-  },
-  notesInput: {
-    textAlign: 'left',
-    paddingTop: 0,
-  },
-  protocolCard: {
-    gap: 6,
-    backgroundColor: Colors.surface2,
-  },
-  protocolTitle: {
-    ...Typography.caption,
-    color: Colors.muted,
-    letterSpacing: 1.5,
-  },
-  protocolBody: {
-    ...Typography.small,
-    color: Colors.secondary,
-    lineHeight: 18,
-  },
+  fieldLabel: { ...Typography.small, color: Colors.secondary, width: 90 },
+  fieldInput: { flex: 1, ...Typography.body, color: Colors.primary, textAlign: 'right' },
+  notesInput: { textAlign: 'left', paddingTop: 0 },
+  protocolCard: { gap: 6, backgroundColor: Colors.surface2 },
+  protocolTitle: { ...Typography.caption, color: Colors.muted, letterSpacing: 1.5 },
+  protocolBody: { ...Typography.small, color: Colors.secondary, lineHeight: 18 },
 });
