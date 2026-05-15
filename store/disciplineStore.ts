@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { DisciplineState } from '../types';
+import { saveDisciplineScore } from '../services/disciplineService';
 
 const WEIGHTS = {
   workoutDone: 25,
@@ -37,6 +38,11 @@ interface DisciplineStore extends DisciplineState {
   setSleepLogged: (logged: boolean) => void;
   setCardioLogged: (logged: boolean) => void;
   resetDay: () => void;
+  hydrateSupplements: (ids: string[]) => void;
+  hydrateFlags: (flags: {
+    workoutDone: boolean; proteinHit: boolean; calorieHit: boolean;
+    waterHit: boolean; sleepLogged: boolean; cardioLogged: boolean; score: number;
+  }) => void;
 }
 
 const initialState: Omit<DisciplineState, 'score'> = {
@@ -50,26 +56,43 @@ const initialState: Omit<DisciplineState, 'score'> = {
   cardioLogged: false,
 };
 
-export const useDisciplineStore = create<DisciplineStore>((set) => ({
+function persist(state: DisciplineStore) {
+  saveDisciplineScore(state.score, {
+    workoutDone: state.workoutDone,
+    proteinHit: state.proteinHit,
+    calorieHit: state.calorieHit,
+    waterHit: state.waterGoalHit,
+    sleepLogged: state.sleepLogged,
+    cardioLogged: state.cardioLogged,
+  }).catch(() => {});
+}
+
+export const useDisciplineStore = create<DisciplineStore>((set, get) => ({
   ...initialState,
   score: 0,
 
   setWorkoutDone: (workoutDone) =>
     set((s) => {
       const next = { ...s, workoutDone };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   setProteinHit: (proteinHit) =>
     set((s) => {
       const next = { ...s, proteinHit };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   setCalorieHit: (calorieHit) =>
     set((s) => {
       const next = { ...s, calorieHit };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   markSupplementTaken: (id) =>
@@ -78,27 +101,55 @@ export const useDisciplineStore = create<DisciplineStore>((set) => ({
         ? s.supplementsTaken.filter((x) => x !== id)
         : [...s.supplementsTaken, id];
       const next = { ...s, supplementsTaken };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   setWaterGoalHit: (waterGoalHit) =>
     set((s) => {
       const next = { ...s, waterGoalHit };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   setSleepLogged: (sleepLogged) =>
     set((s) => {
       const next = { ...s, sleepLogged };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   setCardioLogged: (cardioLogged) =>
     set((s) => {
       const next = { ...s, cardioLogged };
-      return { ...next, score: computeScore(next) };
+      const result = { ...next, score: computeScore(next) };
+      persist({ ...get(), ...result });
+      return result;
     }),
 
   resetDay: () =>
     set({ ...initialState, date: todayStr(), score: 0 }),
+
+  hydrateSupplements: (ids) =>
+    set((s) => {
+      const next = { ...s, supplementsTaken: ids };
+      return { ...next, score: computeScore(next) };
+    }),
+
+  hydrateFlags: (flags) =>
+    set((s) => {
+      const next = {
+        ...s,
+        workoutDone: flags.workoutDone,
+        proteinHit: flags.proteinHit,
+        calorieHit: flags.calorieHit,
+        waterGoalHit: flags.waterHit,
+        sleepLogged: flags.sleepLogged,
+        cardioLogged: flags.cardioLogged,
+      };
+      return { ...next, score: computeScore(next) };
+    }),
 }));

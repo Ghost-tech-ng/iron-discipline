@@ -15,7 +15,12 @@ import { initDatabase } from '../services/db';
 import { requestNotificationPermissions, scheduleAllNotifications } from '../services/notificationService';
 import { checkAndRunDailyReset } from '../services/dailyReset';
 import { loadUserProfile } from '../services/userService';
+import { loadTodayMeals, loadTodayWater, loadTodaySupplements } from '../services/nutritionService';
+import { loadTodayDisciplineState, loadWeeklyCheckIns } from '../services/disciplineService';
 import { useUserStore } from '../store/userStore';
+import { useNutritionStore } from '../store/nutritionStore';
+import { useDisciplineStore } from '../store/disciplineStore';
+import { useProgressStore } from '../store/progressStore';
 import { Colors } from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -34,8 +39,22 @@ export default function RootLayout() {
       try {
         await initDatabase();
 
-        const savedProfile = await loadUserProfile();
+        const [savedProfile, meals, waterMl, supplements, disciplineState, checkIns] =
+          await Promise.all([
+            loadUserProfile(),
+            loadTodayMeals(),
+            loadTodayWater(),
+            loadTodaySupplements(),
+            loadTodayDisciplineState(),
+            loadWeeklyCheckIns(),
+          ]);
+
         if (savedProfile) loadProfile(savedProfile);
+
+        useNutritionStore.getState().hydrateToday(meals, waterMl);
+        useDisciplineStore.getState().hydrateSupplements(supplements);
+        if (disciplineState) useDisciplineStore.getState().hydrateFlags(disciplineState);
+        useProgressStore.getState().loadCheckIns(checkIns);
 
         await checkAndRunDailyReset();
 

@@ -55,6 +55,37 @@ export async function saveWeeklyCheckIn(
   );
 }
 
+export async function loadTodayDisciplineState(): Promise<{
+  workoutDone: boolean;
+  proteinHit: boolean;
+  calorieHit: boolean;
+  waterHit: boolean;
+  sleepLogged: boolean;
+  cardioLogged: boolean;
+  score: number;
+} | null> {
+  const db = getDb();
+  const row = await db.getFirstAsync<{
+    score: number;
+    workout_done: number;
+    protein_hit: number;
+    calorie_hit: number;
+    water_hit: number;
+    sleep_logged: number;
+    cardio_logged: number;
+  }>(`SELECT * FROM discipline_history WHERE date = ?;`, [today()]);
+  if (!row) return null;
+  return {
+    workoutDone: row.workout_done === 1,
+    proteinHit: row.protein_hit === 1,
+    calorieHit: row.calorie_hit === 1,
+    waterHit: row.water_hit === 1,
+    sleepLogged: row.sleep_logged === 1,
+    cardioLogged: row.cardio_logged === 1,
+    score: row.score,
+  };
+}
+
 export async function loadWeeklyCheckIns(): Promise<
   {
     id: string;

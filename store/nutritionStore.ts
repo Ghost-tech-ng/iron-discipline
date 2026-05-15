@@ -12,6 +12,7 @@ interface NutritionStore {
   addWater: (ml: number) => void;
   resetDay: (date: string) => void;
   loadHistory: (history: DailyNutrition[]) => void;
+  hydrateToday: (meals: MealEntry[], waterMl: number) => void;
   getTotals: () => { calories: number; protein: number; carbs: number; fat: number };
 }
 
@@ -87,6 +88,18 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
   resetDay: (date) => set({ today: emptyDay(date), waterMl: 0 }),
 
   loadHistory: (history) => set({ history }),
+
+  hydrateToday: (meals, waterMl) => {
+    const date = new Date().toISOString().split('T')[0];
+    let calories = 0, protein = 0, carbs = 0, fat = 0;
+    for (const m of meals) {
+      calories += m.foodItem.calories * m.quantity;
+      protein += m.foodItem.protein * m.quantity;
+      carbs += m.foodItem.carbs * m.quantity;
+      fat += m.foodItem.fat * m.quantity;
+    }
+    set({ today: { date, calories, protein, carbs, fat, entries: meals }, waterMl });
+  },
 
   getTotals: () => {
     const { today } = get();
