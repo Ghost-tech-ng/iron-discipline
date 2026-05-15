@@ -15,23 +15,43 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/progress/WeightChart';
 import { ScoreChart } from '../../components/progress/ScoreChart';
+import { StrengthChart } from '../../components/progress/StrengthChart';
+import { CalorieChart } from '../../components/progress/CalorieChart';
+import { ConsistencyCalendar } from '../../components/progress/ConsistencyCalendar';
 import { useProgressStore } from '../../store/progressStore';
 import { useUserStore } from '../../store/userStore';
-import { loadWeeklyCheckIns, loadDisciplineHistory } from '../../services/disciplineService';
+import {
+  loadWeeklyCheckIns,
+  loadDisciplineHistory,
+} from '../../services/disciplineService';
+import { loadStrengthHistory, loadWorkoutDates } from '../../services/workoutService';
+import { loadDailyCalorieHistory } from '../../services/nutritionService';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 const SCREEN_W = Dimensions.get('window').width;
+
+const STRENGTH_EXERCISES = [
+  { id: 'bench_press', label: 'Bench' },
+  { id: 'deadlift', label: 'Deadlift' },
+  { id: 'back_squat', label: 'Squat' },
+  { id: 'ohp_mon', label: 'OHP' },
+  { id: 'barbell_row', label: 'Row' },
+];
 
 export default function ProgressScreen() {
   const { checkIns, latestWeight, totalLost, loadCheckIns } = useProgressStore();
   const { profile } = useUserStore();
 
   const [scoreHistory, setScoreHistory] = useState<{ date: string; score: number }[]>([]);
+  const [strengthData, setStrengthData] = useState<
+    Record<string, { date: string; weight: number; reps: number }[]>
+  >({});
+  const [calorieHistory, setCalorieHistory] = useState<{ date: string; calories: number }[]>([]);
+  const [workoutDates, setWorkoutDates] = useState<string[]>([]);
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
 
   const currentWeight = latestWeight() ?? profile.weightKg;
   const lost = totalLost();
-
   const photos = checkIns.filter((c) => !!c.photoUri);
 
   useEffect(() => {
@@ -50,6 +70,20 @@ export default function ProgressScreen() {
     });
 
     loadDisciplineHistory().then(setScoreHistory);
+    loadDailyCalorieHistory(30).then(setCalorieHistory);
+    loadWorkoutDates(84).then(setWorkoutDates);
+
+    // Load strength history for all tracked exercises
+    Promise.all(
+      STRENGTH_EXERCISES.map(async (ex) => {
+        const history = await loadStrengthHistory(ex.id, 12);
+        return { id: ex.id, history };
+      })
+    ).then((results) => {
+      const map: Record<string, { date: string; weight: number; reps: number }[]> = {};
+      results.forEach(({ id, history }) => { map[id] = history; });
+      setStrengthData(map);
+    });
   }, []);
 
   return (
@@ -93,12 +127,32 @@ export default function ProgressScreen() {
           <ScoreChart history={scoreHistory} />
         </Card>
 
+        {/* Workout consistency calendar */}
+        <Card style={styles.chartCard}>
+          <Text style={styles.cardTitle}>WORKOUT CONSISTENCY — 12 WEEKS</Text>
+          <ConsistencyCalendar workoutDates={workoutDates} weeks={12} />
+        </Card>
+
+        {/* Strength progress */}
+        <Card style={styles.chartCard}>
+          <Text style={styles.cardTitle}>STRENGTH PROGRESS</Text>
+          <StrengthChart exercises={STRENGTH_EXERCISES} data={strengthData} />
+        </Card>
+
+        {/* Calorie adherence */}
+        <Card style={styles.chartCard}>
+          <Text style={styles.cardTitle}>CALORIE ADHERENCE — 30 DAYS</Text>
+          <CalorieChart history={calorieHistory} target={profile.goalCalories} />
+        </Card>
+
         {/* Progress photos */}
         {photos.length > 0 && (
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>PROGRESS PHOTOS</Text>
-              <Text style={styles.sectionSub}>{photos.length} photo{photos.length !== 1 ? 's' : ''}</Text>
+              <Text style={styles.sectionSub}>
+                {photos.length} photo{photos.length !== 1 ? 's' : ''}
+              </Text>
             </View>
             <View style={styles.photoGrid}>
               {photos.map((c) => (
@@ -107,7 +161,11 @@ export default function ProgressScreen() {
                   style={styles.photoThumb}
                   onPress={() => setLightboxUri(c.photoUri!)}
                 >
-                  <Image source={{ uri: c.photoUri! }} style={styles.photoImg} resizeMode="cover" />
+                  <Image
+                    source={{ uri: c.photoUri! }}
+                    style={styles.photoImg}
+                    resizeMode="cover"
+                  />
                   <View style={styles.photoLabel}>
                     <Text style={styles.photoWeek}>W{c.week}</Text>
                     <Text style={styles.photoWeight}>{c.weightKg}kg</Text>
@@ -115,6 +173,35 @@ export default function ProgressScreen() {
                 </Pressable>
               ))}
             </View>
+
+            {/* Side-by-side first vs latest */}
+            {photos.length >= 2 && (
+              <Card style={styles.compareCard}>
+                <Text style={styles.cardTitle}>BEFORE / AFTER</Text>
+                <View style={styles.compareRow}>
+                  <View style={styles.compareItem}>
+                    <Image
+                      source={{ uri: photos[0].photoUri! }}
+                      style={styles.compareImg}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.compareLabel}>
+                      Week {photos[0].week} · {photos[0].weightKg}kg
+                    </Text>
+                  </View>
+                  <View style={styles.compareItem}>
+                    <Image
+                      source={{ uri: photos[photos.length - 1].photoUri! }}
+                      style={styles.compareImg}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.compareLabel}>
+                      Week {photos[photos.length - 1].week} · {photos[photos.length - 1].weightKg}kg
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            )}
           </>
         )}
 
@@ -175,7 +262,9 @@ export default function ProgressScreen() {
                   <Text style={styles.checkInWaist}>{c.waistCm}cm</Text>
                 )}
                 {c.photoUri && (
-                  <Image source={{ uri: c.photoUri }} style={styles.checkInThumb} />
+                  <Pressable onPress={() => setLightboxUri(c.photoUri!)}>
+                    <Image source={{ uri: c.photoUri }} style={styles.checkInThumb} />
+                  </Pressable>
                 )}
               </View>
             </Card>
@@ -209,7 +298,15 @@ export default function ProgressScreen() {
   );
 }
 
-function GoalBar({ current, start, goal }: { current: number; start: number; goal: number }) {
+function GoalBar({
+  current,
+  start,
+  goal,
+}: {
+  current: number;
+  start: number;
+  goal: number;
+}) {
   const totalChange = start - goal;
   const achieved = start - current;
   const pct = totalChange > 0 ? Math.min(achieved / totalChange, 1) : 0;
@@ -217,7 +314,9 @@ function GoalBar({ current, start, goal }: { current: number; start: number; goa
     <View style={gbStyles.container}>
       <View style={gbStyles.labels}>
         <Text style={gbStyles.label}>Start {start}kg</Text>
-        <Text style={[gbStyles.label, { color: Colors.accentGreen }]}>Goal {goal}kg</Text>
+        <Text style={[gbStyles.label, { color: Colors.accentGreen }]}>
+          Goal {goal}kg
+        </Text>
       </View>
       <View style={gbStyles.track}>
         <View style={[gbStyles.fill, { width: `${pct * 100}%` }]} />
@@ -234,7 +333,12 @@ const gbStyles = StyleSheet.create({
   container: { gap: 8 },
   labels: { flexDirection: 'row', justifyContent: 'space-between' },
   label: { ...Typography.small, color: Colors.secondary },
-  track: { height: 8, backgroundColor: Colors.surface2, borderRadius: 4, overflow: 'hidden' },
+  track: {
+    height: 8,
+    backgroundColor: Colors.surface2,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
   fill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 4 },
   bottom: { flexDirection: 'row', justifyContent: 'space-between' },
   current: { ...Typography.caption, color: Colors.primary, fontWeight: '600' },
@@ -247,7 +351,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.base },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-  title: { ...Typography.h1, color: Colors.primary, fontWeight: '700', letterSpacing: -1 },
+  title: {
+    ...Typography.h1,
+    color: Colors.primary,
+    fontWeight: '700',
+    letterSpacing: -1,
+  },
   subtitle: { ...Typography.small, color: Colors.secondary },
   chartCard: { gap: Spacing.sm },
   goalCard: { gap: Spacing.sm },
@@ -268,11 +377,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
   sectionSub: { ...Typography.caption, color: Colors.secondary },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   photoThumb: {
     width: THUMB_SIZE,
     height: THUMB_SIZE * 1.3,
@@ -289,19 +394,71 @@ const styles = StyleSheet.create({
   },
   photoWeek: { fontSize: 10, color: Colors.primary, fontWeight: '700' },
   photoWeight: { fontSize: 10, color: Colors.secondary },
+  compareCard: { gap: Spacing.sm },
+  compareRow: { flexDirection: 'row', gap: 8 },
+  compareItem: { flex: 1, gap: 4 },
+  compareImg: {
+    width: '100%',
+    aspectRatio: 3 / 4,
+    borderRadius: 8,
+  },
+  compareLabel: {
+    ...Typography.caption,
+    color: Colors.muted,
+    textAlign: 'center',
+  },
   protocolCard: { gap: 8 },
-  ruleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 4 },
-  ruleDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.accent, marginTop: 7 },
-  ruleText: { ...Typography.small, color: Colors.secondary, flex: 1, lineHeight: 18 },
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 4,
+  },
+  ruleDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.accent,
+    marginTop: 7,
+  },
+  ruleText: {
+    ...Typography.small,
+    color: Colors.secondary,
+    flex: 1,
+    lineHeight: 18,
+  },
   timelineCard: { gap: 10 },
-  timelineRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
-  weekLabel: { ...Typography.small, color: Colors.accent, fontWeight: '700', width: 56 },
-  changeLabel: { ...Typography.small, color: Colors.primary, fontWeight: '600', width: 90 },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 4,
+  },
+  weekLabel: {
+    ...Typography.small,
+    color: Colors.accent,
+    fontWeight: '700',
+    width: 56,
+  },
+  changeLabel: {
+    ...Typography.small,
+    color: Colors.primary,
+    fontWeight: '600',
+    width: 90,
+  },
   noteLabel: { ...Typography.small, color: Colors.muted, flex: 1 },
-  emptyCard: { alignItems: 'center', paddingVertical: Spacing.xl, gap: 6 },
+  emptyCard: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    gap: 6,
+  },
   emptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
   emptySub: { ...Typography.small, color: Colors.muted },
-  checkInCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  checkInCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   checkInLeft: { flex: 1, gap: 2 },
   checkInWeek: { ...Typography.small, color: Colors.accent, fontWeight: '700' },
   checkInDate: { ...Typography.caption, color: Colors.muted },

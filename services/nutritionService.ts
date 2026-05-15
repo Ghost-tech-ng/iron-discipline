@@ -88,6 +88,25 @@ export async function saveSupplementLog(supplementId: string, taken: boolean): P
   );
 }
 
+export async function loadDailyCalorieHistory(
+  days = 30
+): Promise<{ date: string; calories: number }[]> {
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days + 1);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+
+  const rows = await db.getAllAsync<{ date: string; calories: number }>(
+    `SELECT date, ROUND(SUM(food_calories * quantity)) as calories
+     FROM meal_entries
+     WHERE date >= ?
+     GROUP BY date
+     ORDER BY date ASC;`,
+    [cutoffStr]
+  );
+  return rows;
+}
+
 export async function loadTodaySupplements(): Promise<string[]> {
   const db = getDb();
   const rows = await db.getAllAsync<{ supplement_id: string }>(

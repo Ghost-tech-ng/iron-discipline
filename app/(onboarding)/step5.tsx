@@ -4,13 +4,15 @@ import { router } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useUserStore } from '../../store/userStore';
+import { saveUserProfile } from '../../services/userService';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 export default function Step5Screen() {
   const { profile, completeOnboarding } = useUserStore();
 
-  function handleFinish() {
+  async function handleFinish() {
     completeOnboarding();
+    await saveUserProfile({ ...profile, onboardingComplete: true });
     router.replace('/(tabs)');
   }
 

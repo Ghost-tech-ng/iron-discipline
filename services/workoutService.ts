@@ -86,6 +86,39 @@ export async function loadWorkoutHistory(): Promise<WorkoutLog[]> {
   return logs;
 }
 
+export async function loadStrengthHistory(
+  exerciseId: string,
+  limit = 12
+): Promise<{ date: string; weight: number; reps: number }[]> {
+  const db = getDb();
+  // Get best set (highest weight) per workout session for a given exercise
+  const rows = await db.getAllAsync<{ date: string; weight: number; reps: number }>(
+    `SELECT wl.date, MAX(sl.weight) as weight, sl.reps
+     FROM set_logs sl
+     JOIN exercise_logs el ON el.id = sl.exercise_log_id
+     JOIN workout_logs wl ON wl.id = el.workout_log_id
+     WHERE el.exercise_id = ? AND sl.completed = 1 AND wl.completed = 1
+     GROUP BY wl.id
+     ORDER BY wl.date DESC
+     LIMIT ?;`,
+    [exerciseId, limit]
+  );
+  return rows.reverse();
+}
+
+export async function loadWorkoutDates(days = 84): Promise<string[]> {
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+
+  const rows = await db.getAllAsync<{ date: string }>(
+    `SELECT DISTINCT date FROM workout_logs WHERE completed = 1 AND date >= ? ORDER BY date ASC;`,
+    [cutoffStr]
+  );
+  return rows.map((r) => r.date);
+}
+
 export async function getLastSessionByType(sessionType: string): Promise<WorkoutLog | null> {
   const db = getDb();
   const row = await db.getFirstAsync<{ id: string }>(

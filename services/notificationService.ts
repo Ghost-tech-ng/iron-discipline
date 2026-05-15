@@ -98,12 +98,57 @@ const SCHEDULE: Array<{
     body: "Saturday legs. Don't skip.",
     trigger: { type: 'weekly', weekday: 7, hour: 7, minute: 0 },
   },
+  // --- Evening workout reminders (training days, if still not done by 7pm) ---
+  {
+    identifier: 'workout_eve_mon',
+    title: 'Workout Reminder',
+    body: 'Push day not logged yet. Get to the gym before bed.',
+    trigger: { type: 'weekly', weekday: 2, hour: 19, minute: 0 },
+  },
+  {
+    identifier: 'workout_eve_tue',
+    title: 'Workout Reminder',
+    body: 'Pull day not logged yet. Back and biceps — finish it tonight.',
+    trigger: { type: 'weekly', weekday: 3, hour: 19, minute: 0 },
+  },
+  {
+    identifier: 'workout_eve_wed',
+    title: 'Workout Reminder',
+    body: 'Leg day not logged yet. No shortcuts on Wednesday.',
+    trigger: { type: 'weekly', weekday: 4, hour: 19, minute: 0 },
+  },
+  {
+    identifier: 'workout_eve_fri',
+    title: 'Workout Reminder',
+    body: 'Upper body session pending. End the week strong.',
+    trigger: { type: 'weekly', weekday: 6, hour: 19, minute: 0 },
+  },
+  {
+    identifier: 'workout_eve_sat',
+    title: 'Workout Reminder',
+    body: "Lower day not logged. Finish the week — you're almost there.",
+    trigger: { type: 'weekly', weekday: 7, hour: 19, minute: 0 },
+  },
+  // --- Evening protein check ---
+  {
+    identifier: 'protein_evening',
+    title: 'Protein Check',
+    body: 'Have you hit 171g protein today? Top up now if not — sardines, tuna, milk.',
+    trigger: { type: 'daily', hour: 20, minute: 0 },
+  },
   // --- End-of-day score check ---
   {
     identifier: 'eod_check',
-    title: 'Daily Check',
-    body: 'Log your habits before midnight. Every point counts.',
+    title: 'Daily Score',
+    body: 'Calories on target? Log remaining habits before midnight. Every point counts.',
     trigger: { type: 'daily', hour: 21, minute: 0 },
+  },
+  // --- Streak break alert ---
+  {
+    identifier: 'streak_check',
+    title: 'Streak Alert',
+    body: "Don't let today be a zero. Log sleep and any habit before midnight.",
+    trigger: { type: 'daily', hour: 22, minute: 0 },
   },
   // --- Monday weigh-in ---
   {

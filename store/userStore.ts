@@ -5,6 +5,7 @@ import { USER_TARGETS } from '../constants/nutrition';
 interface UserStore {
   profile: UserProfile;
   setProfile: (profile: Partial<UserProfile>) => void;
+  loadProfile: (profile: UserProfile) => void;
   completeOnboarding: () => void;
   updateWeight: (weightKg: number) => void;
 }
@@ -27,6 +28,8 @@ export const useUserStore = create<UserStore>((set) => ({
 
   setProfile: (updates) =>
     set((state) => ({ profile: { ...state.profile, ...updates } })),
+
+  loadProfile: (profile) => set({ profile }),
 
   completeOnboarding: () =>
     set((state) => ({

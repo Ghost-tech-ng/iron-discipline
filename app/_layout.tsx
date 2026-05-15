@@ -14,6 +14,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initDatabase } from '../services/db';
 import { requestNotificationPermissions, scheduleAllNotifications } from '../services/notificationService';
 import { checkAndRunDailyReset } from '../services/dailyReset';
+import { loadUserProfile } from '../services/userService';
+import { useUserStore } from '../store/userStore';
 import { Colors } from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -25,11 +27,16 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const { loadProfile } = useUserStore();
 
   useEffect(() => {
     async function prepare() {
       try {
         await initDatabase();
+
+        const savedProfile = await loadUserProfile();
+        if (savedProfile) loadProfile(savedProfile);
+
         await checkAndRunDailyReset();
 
         const granted = await requestNotificationPermissions();
