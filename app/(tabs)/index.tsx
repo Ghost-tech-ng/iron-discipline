@@ -18,6 +18,7 @@ import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useWorkoutStore } from '../../store/workoutStore';
 import { loadDisciplineHistory } from '../../services/disciplineService';
+import { CoachCard } from '../../components/ai/CoachCard';
 import { WEEKLY_SPLIT } from '../../constants/workouts';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
@@ -227,6 +228,20 @@ export default function DashboardScreen() {
             />
           </View>
         </Card>
+
+        {/* AI Coach */}
+        <CoachCard
+          data={{
+            score,
+            protein,
+            proteinGoal: profile.goalProtein,
+            calories,
+            calorieGoal: profile.goalCalories,
+            workoutDone,
+            streak,
+            weightTrend: 'unknown',
+          }}
+        />
 
         {/* Quick actions */}
         <View style={styles.sectionHeader}>

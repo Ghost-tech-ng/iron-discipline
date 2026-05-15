@@ -8,6 +8,7 @@ import {
   Image,
   Pressable,
   Modal,
+  Alert,
   Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -26,6 +27,7 @@ import {
 } from '../../services/disciplineService';
 import { loadStrengthHistory, loadWorkoutDates } from '../../services/workoutService';
 import { loadDailyCalorieHistory } from '../../services/nutritionService';
+import { exportAllData } from '../../services/exportService';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -276,6 +278,20 @@ export default function ProgressScreen() {
           variant="primary"
           fullWidth
           onPress={() => router.push('/progress/weigh-in')}
+        />
+
+        <Button
+          label="Export Data as CSV"
+          variant="secondary"
+          fullWidth
+          onPress={async () => {
+            try {
+              await exportAllData();
+            } catch (e: unknown) {
+              const msg = e instanceof Error ? e.message : 'Export failed';
+              Alert.alert('Export Error', msg);
+            }
+          }}
         />
 
         <View style={{ height: 100 }} />
