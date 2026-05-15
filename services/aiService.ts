@@ -1,7 +1,7 @@
 import type { FoodItem } from '../types';
 
 const BASE_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 async function callGemini(parts: object[]): Promise<string> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
