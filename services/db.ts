@@ -35,6 +35,34 @@ export async function initDatabase(): Promise<void> {
     await runMigration2(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (2);');
   }
+
+  if (currentVersion < 3) {
+    await runMigration3(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (3);');
+  }
+}
+
+export async function getUserId(): Promise<string> {
+  const db = getDb();
+  const row = await db.getFirstAsync<{ user_id: string | null }>(
+    'SELECT user_id FROM user_profile WHERE id = 1;'
+  );
+  if (row?.user_id) return row.user_id;
+  const id = generateUUID();
+  await db.runAsync('UPDATE user_profile SET user_id = ? WHERE id = 1;', [id]);
+  return id;
+}
+
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+async function runMigration3(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync(`ALTER TABLE user_profile ADD COLUMN user_id TEXT;`);
 }
 
 async function runMigration2(db: SQLite.SQLiteDatabase): Promise<void> {

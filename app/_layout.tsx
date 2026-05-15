@@ -1,8 +1,9 @@
 import '../global.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Network from 'expo-network';
 import {
   useFonts,
   Inter_400Regular,
@@ -11,19 +12,37 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { initDatabase } from '../services/db';
+import { initDatabase, getUserId } from '../services/db';
 import { requestNotificationPermissions, scheduleAllNotifications } from '../services/notificationService';
 import { checkAndRunDailyReset } from '../services/dailyReset';
 import { loadUserProfile } from '../services/userService';
 import { loadTodayMeals, loadTodayWater, loadTodaySupplements } from '../services/nutritionService';
 import { loadTodayDisciplineState, loadWeeklyCheckIns } from '../services/disciplineService';
+import { syncToCloud, isOnline } from '../services/syncService';
+import { isMongoConfigured } from '../services/mongoService';
 import { useUserStore } from '../store/userStore';
 import { useNutritionStore } from '../store/nutritionStore';
 import { useDisciplineStore } from '../store/disciplineStore';
 import { useProgressStore } from '../store/progressStore';
+import { useSyncStore } from '../store/syncStore';
 import { Colors } from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
+
+async function runSync() {
+  if (!isMongoConfigured()) return;
+  const { setSyncing, setLastSynced, setError } = useSyncStore.getState();
+  setSyncing(true);
+  try {
+    const userId = await getUserId();
+    await syncToCloud(userId);
+    setLastSynced(new Date().toISOString());
+  } catch (e) {
+    setError(e instanceof Error ? e.message : 'Sync failed');
+  } finally {
+    setSyncing(false);
+  }
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -33,6 +52,7 @@ export default function RootLayout() {
     Inter_700Bold,
   });
   const { loadProfile } = useUserStore();
+  const wasOnlineRef = useRef(false);
 
   useEffect(() => {
     async function prepare() {
@@ -62,6 +82,11 @@ export default function RootLayout() {
         if (granted) {
           await scheduleAllNotifications();
         }
+
+        // Auto-sync on startup if online
+        const online = await isOnline();
+        wasOnlineRef.current = online;
+        if (online) runSync();
       } catch (e) {
         console.warn('App init error:', e);
       } finally {
@@ -72,6 +97,18 @@ export default function RootLayout() {
     }
     prepare();
   }, [fontsLoaded]);
+
+  // Poll every 30 seconds for connectivity — sync when we come back online
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const online = await isOnline();
+      if (online && !wasOnlineRef.current) {
+        runSync();
+      }
+      wasOnlineRef.current = online;
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!fontsLoaded) return null;
 

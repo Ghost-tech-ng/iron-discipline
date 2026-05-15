@@ -28,6 +28,11 @@ import {
 import { loadStrengthHistory, loadWorkoutDates } from '../../services/workoutService';
 import { loadDailyCalorieHistory } from '../../services/nutritionService';
 import { exportAllData } from '../../services/exportService';
+import { syncToCloud, isOnline } from '../../services/syncService';
+import { getUserId } from '../../services/db';
+import { isMongoConfigured } from '../../services/mongoService';
+import { SyncCard } from '../../components/ui/SyncCard';
+import { useSyncStore } from '../../store/syncStore';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -43,6 +48,34 @@ const STRENGTH_EXERCISES = [
 export default function ProgressScreen() {
   const { checkIns, latestWeight, totalLost, loadCheckIns } = useProgressStore();
   const { profile } = useUserStore();
+  const { setSyncing, setLastSynced, setError } = useSyncStore();
+
+  async function handleManualSync() {
+    if (!isMongoConfigured()) {
+      Alert.alert(
+        'MongoDB not configured',
+        'Add your MongoDB Atlas credentials to .env.local to enable cloud backup.'
+      );
+      return;
+    }
+    const online = await isOnline();
+    if (!online) {
+      Alert.alert('No Internet', 'You are offline. Connect to the internet and try again.');
+      return;
+    }
+    setSyncing(true);
+    try {
+      const userId = await getUserId();
+      await syncToCloud(userId);
+      setLastSynced(new Date().toISOString());
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Sync failed';
+      setError(msg);
+      Alert.alert('Sync Failed', msg);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const [scoreHistory, setScoreHistory] = useState<{ date: string; score: number }[]>([]);
   const [strengthData, setStrengthData] = useState<
@@ -279,6 +312,8 @@ export default function ProgressScreen() {
           fullWidth
           onPress={() => router.push('/progress/weigh-in')}
         />
+
+        <SyncCard onSyncPress={handleManualSync} />
 
         <Button
           label="Export Data as CSV"
