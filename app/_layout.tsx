@@ -2,7 +2,6 @@ import '../global.css';
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
@@ -13,6 +12,8 @@ import {
 } from '@expo-google-fonts/inter';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initDatabase } from '../services/db';
+import { requestNotificationPermissions, scheduleAllNotifications } from '../services/notificationService';
+import { checkAndRunDailyReset } from '../services/dailyReset';
 import { Colors } from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -29,8 +30,14 @@ export default function RootLayout() {
     async function prepare() {
       try {
         await initDatabase();
+        await checkAndRunDailyReset();
+
+        const granted = await requestNotificationPermissions();
+        if (granted) {
+          await scheduleAllNotifications();
+        }
       } catch (e) {
-        console.warn('DB init error:', e);
+        console.warn('App init error:', e);
       } finally {
         if (fontsLoaded) {
           await SplashScreen.hideAsync();
@@ -57,6 +64,13 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="meal/log"
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="progress/weigh-in"
           options={{
             presentation: 'modal',
             animation: 'slide_from_bottom',

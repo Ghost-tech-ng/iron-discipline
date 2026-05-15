@@ -1,10 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useProgressStore } from '../../store/progressStore';
 import { useUserStore } from '../../store/userStore';
+import { loadWeeklyCheckIns, loadDisciplineHistory } from '../../services/disciplineService';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+
+const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function getLast7Days(): { label: string; dateStr: string }[] {
+  const result = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    result.push({
+      label: DAYS_SHORT[d.getDay()],
+      dateStr: d.toISOString().split('T')[0],
+    });
+  }
+  return result;
+}
+
+function ScoreHistoryBar({ score, label, isToday }: { score: number; label: string; isToday: boolean }) {
+  const barHeight = Math.max(4, Math.round((score / 100) * 56));
+  const color = score >= 80 ? Colors.accentGreen : score >= 50 ? Colors.accent : score > 0 ? Colors.accentAmber : Colors.surface2;
+
+  return (
+    <View style={barStyles.col}>
+      <Text style={barStyles.scoreLabel}>{score > 0 ? score : ''}</Text>
+      <View style={barStyles.track}>
+        <View style={[barStyles.fill, { height: barHeight, backgroundColor: color }]} />
+      </View>
+      <Text style={[barStyles.dayLabel, isToday && { color: Colors.accent, fontWeight: '700' }]}>
+        {label}
+      </Text>
+    </View>
+  );
+}
 
 function WeightBar({ current, start, goal }: { current: number; start: number; goal: number }) {
   const totalChange = start - goal;
@@ -29,10 +63,37 @@ function WeightBar({ current, start, goal }: { current: number; start: number; g
 }
 
 export default function ProgressScreen() {
-  const { checkIns, latestWeight, totalLost } = useProgressStore();
+  const { checkIns, latestWeight, totalLost, loadCheckIns } = useProgressStore();
   const { profile } = useUserStore();
+
+  const [scoreHistory, setScoreHistory] = useState<Record<string, number>>({});
+
   const currentWeight = latestWeight() ?? profile.weightKg;
   const lost = totalLost();
+  const last7 = getLast7Days();
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    loadWeeklyCheckIns().then((data) => {
+      loadCheckIns(
+        data.map((d) => ({
+          id: d.id,
+          week: d.week,
+          date: d.date,
+          weightKg: d.weightKg,
+          waistCm: d.waistCm,
+          photoUri: d.photoUri,
+          notes: d.notes,
+        }))
+      );
+    });
+
+    loadDisciplineHistory().then((rows) => {
+      const map: Record<string, number> = {};
+      rows.forEach((r) => { map[r.date] = r.score; });
+      setScoreHistory(map);
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -44,6 +105,21 @@ export default function ProgressScreen() {
         <Text style={styles.title}>Progress</Text>
         <Text style={styles.subtitle}>Weigh in every Monday morning</Text>
 
+        {/* 7-day discipline score history */}
+        <Card style={styles.historyCard}>
+          <Text style={styles.cardTitle}>DISCIPLINE SCORE — 7 DAYS</Text>
+          <View style={styles.barsRow}>
+            {last7.map(({ label, dateStr }) => (
+              <ScoreHistoryBar
+                key={dateStr}
+                score={scoreHistory[dateStr] ?? 0}
+                label={label}
+                isToday={dateStr === todayStr}
+              />
+            ))}
+          </View>
+        </Card>
+
         {/* Goal progress bar */}
         <Card style={styles.goalCard}>
           <Text style={styles.cardTitle}>12-WEEK GOAL</Text>
@@ -53,9 +129,7 @@ export default function ProgressScreen() {
             goal={profile.goalWeightKg}
           />
           {lost !== null && lost > 0 && (
-            <Text style={styles.lostText}>
-              −{lost}kg total lost
-            </Text>
+            <Text style={styles.lostText}>−{lost}kg total lost</Text>
           )}
         </Card>
 
@@ -100,26 +174,69 @@ export default function ProgressScreen() {
 
         {checkIns.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No check-ins logged yet.</Text>
+            <Text style={styles.emptyText}>No check-ins yet.</Text>
             <Text style={styles.emptySub}>Log your first weigh-in to start tracking.</Text>
           </Card>
         ) : (
           checkIns.map((c) => (
             <Card key={c.id} style={styles.checkInCard}>
-              <Text style={styles.checkInWeek}>Week {c.week}</Text>
-              <Text style={styles.checkInDate}>{c.date}</Text>
-              <Text style={styles.checkInWeight}>{c.weightKg}kg</Text>
+              <View>
+                <Text style={styles.checkInWeek}>Week {c.week}</Text>
+                <Text style={styles.checkInDate}>{c.date}</Text>
+              </View>
+              <View style={styles.checkInRight}>
+                <Text style={styles.checkInWeight}>{c.weightKg}kg</Text>
+                {c.waistCm && (
+                  <Text style={styles.checkInWaist}>{c.waistCm}cm waist</Text>
+                )}
+              </View>
             </Card>
           ))
         )}
 
-        <Button label="+ Log Weigh-In" variant="primary" fullWidth />
+        <Button
+          label="+ Log Weigh-In"
+          variant="primary"
+          fullWidth
+          onPress={() => router.push('/progress/weigh-in')}
+        />
 
         <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const barStyles = StyleSheet.create({
+  col: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  track: {
+    width: 28,
+    height: 56,
+    backgroundColor: Colors.surface2,
+    borderRadius: 4,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  fill: {
+    width: '100%',
+    borderRadius: 4,
+  },
+  dayLabel: {
+    ...Typography.caption,
+    color: Colors.muted,
+    fontSize: 10,
+  },
+  scoreLabel: {
+    ...Typography.caption,
+    color: Colors.secondary,
+    fontSize: 9,
+    height: 12,
+  },
+});
 
 const wbStyles = StyleSheet.create({
   container: { gap: 8 },
@@ -152,6 +269,13 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   subtitle: { ...Typography.small, color: Colors.secondary },
+  historyCard: { gap: Spacing.sm },
+  barsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 4,
+    paddingTop: 4,
+  },
   goalCard: { gap: Spacing.sm },
   cardTitle: {
     ...Typography.label,
@@ -209,6 +333,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkInWeek: { ...Typography.small, color: Colors.accent, fontWeight: '700' },
-  checkInDate: { ...Typography.small, color: Colors.muted },
+  checkInDate: { ...Typography.caption, color: Colors.muted, marginTop: 2 },
+  checkInRight: { alignItems: 'flex-end' },
   checkInWeight: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+  checkInWaist: { ...Typography.caption, color: Colors.muted },
 });

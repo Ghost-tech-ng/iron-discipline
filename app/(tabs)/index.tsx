@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,9 +17,28 @@ import { useDisciplineStore } from '../../store/disciplineStore';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useWorkoutStore } from '../../store/workoutStore';
+import { loadDisciplineHistory } from '../../services/disciplineService';
 import { WEEKLY_SPLIT } from '../../constants/workouts';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
+
+function computeStreak(history: { date: string; score: number }[]): number {
+  if (history.length === 0) return 0;
+  const sorted = [...history].sort((a, b) => b.date.localeCompare(a.date));
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < sorted.length; i++) {
+    const expected = new Date(today);
+    expected.setDate(today.getDate() - (i + 1));
+    const expectedStr = expected.toISOString().split('T')[0];
+    if (sorted[i].date === expectedStr && sorted[i].score >= 50) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
 
 const DAY_NAMES: DayOfWeek[] = [
   'monday','tuesday','wednesday','thursday','friday','saturday','sunday',
@@ -47,10 +66,17 @@ function formatDate(): string {
 }
 
 export default function DashboardScreen() {
-  const { score, workoutDone } = useDisciplineStore();
+  const { score, workoutDone, proteinHit, calorieHit, supplementsTaken } = useDisciplineStore();
   const { getTotals, waterMl } = useNutritionStore();
   const { profile } = useUserStore();
   const { activeWorkout } = useWorkoutStore();
+  const [streak, setStreak] = useState(0);
+
+  useEffect(() => {
+    loadDisciplineHistory().then((history) => {
+      setStreak(computeStreak(history));
+    });
+  }, [score]); // re-run when today's score updates
 
   const { session } = getTodaySession();
   const { calories, protein, carbs, fat } = getTotals();
@@ -71,9 +97,9 @@ export default function DashboardScreen() {
             <Text style={styles.greeting}>{getGreeting(profile.name)}</Text>
             <Text style={styles.date}>{formatDate()}</Text>
           </View>
-          <PressableScale style={styles.streakBadge}>
+          <PressableScale style={styles.streakBadge} onPress={() => router.push('/(tabs)/progress')}>
             <Text style={styles.streakFire}>🔥</Text>
-            <Text style={styles.streakCount}>0</Text>
+            <Text style={styles.streakCount}>{streak}</Text>
           </PressableScale>
         </View>
 
@@ -93,9 +119,9 @@ export default function DashboardScreen() {
               </Text>
               <View style={styles.scoreBreakdown}>
                 <ScoreRow label="Workout" done={workoutDone} pts={25} />
-                <ScoreRow label="Protein" done={false} pts={20} />
-                <ScoreRow label="Calories" done={false} pts={15} />
-                <ScoreRow label="Supplements" done={false} pts={15} />
+                <ScoreRow label="Protein" done={proteinHit} pts={20} />
+                <ScoreRow label="Calories" done={calorieHit} pts={15} />
+                <ScoreRow label="Supplements" done={supplementsTaken.length >= 5} pts={15} />
                 <ScoreRow label="Water" done={waterPct >= 1} pts={10} />
               </View>
             </View>
