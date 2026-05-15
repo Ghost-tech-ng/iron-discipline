@@ -8,6 +8,7 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
+import type { Stretch } from '../../types';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ExerciseCard } from '../../components/workouts/ExerciseCard';
@@ -195,6 +196,11 @@ export default function WorkoutScreen() {
           </View>
         )}
 
+        {/* Warm-up stretches */}
+        {session.warmUp.length > 0 && (
+          <StretchSection title="WARM-UP" stretches={session.warmUp} accentColor={accentColor} />
+        )}
+
         {session.exercises.map((exercise) => (
           <ExerciseCard
             key={exercise.id}
@@ -205,6 +211,11 @@ export default function WorkoutScreen() {
             isActive={true}
           />
         ))}
+
+        {/* Cool-down stretches */}
+        {session.coolDown.length > 0 && (
+          <StretchSection title="COOL-DOWN" stretches={session.coolDown} accentColor={Colors.accentGreen} />
+        )}
 
         {/* Finish button at bottom */}
         <View style={styles.finishSection}>
@@ -224,6 +235,107 @@ export default function WorkoutScreen() {
     </SafeAreaView>
   );
 }
+
+function StretchSection({
+  title,
+  stretches,
+  accentColor,
+}: {
+  title: string;
+  stretches: Stretch[];
+  accentColor: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <View style={[stretchStyles.container, { borderLeftColor: accentColor }]}>
+      <Pressable style={stretchStyles.header} onPress={() => setExpanded((e) => !e)}>
+        <Text style={[stretchStyles.title, { color: accentColor }]}>{title}</Text>
+        <Text style={stretchStyles.count}>{stretches.length} stretches</Text>
+        <Text style={stretchStyles.toggle}>{expanded ? '▲' : '▼'}</Text>
+      </Pressable>
+
+      {expanded && (
+        <View style={stretchStyles.list}>
+          {stretches.map((s, i) => (
+            <View key={i} style={stretchStyles.item}>
+              <View style={stretchStyles.itemHeader}>
+                <Text style={stretchStyles.name}>{s.name}</Text>
+                <Text style={stretchStyles.duration}>{s.duration}</Text>
+              </View>
+              <Text style={stretchStyles.description}>{s.description}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const stretchStyles = StyleSheet.create({
+  container: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderLeftWidth: 3,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  title: {
+    ...Typography.label,
+    letterSpacing: 1.5,
+    flex: 1,
+  },
+  count: {
+    ...Typography.caption,
+    color: Colors.muted,
+  },
+  toggle: {
+    ...Typography.caption,
+    color: Colors.muted,
+  },
+  list: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.border,
+  },
+  item: {
+    padding: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.surface2,
+    gap: 4,
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  name: {
+    ...Typography.small,
+    color: Colors.primary,
+    fontWeight: '600',
+    flex: 1,
+  },
+  duration: {
+    ...Typography.caption,
+    color: Colors.accent,
+    fontWeight: '600',
+    textAlign: 'right',
+    flexShrink: 0,
+  },
+  description: {
+    ...Typography.caption,
+    color: Colors.secondary,
+    lineHeight: 18,
+  },
+});
 
 const styles = StyleSheet.create({
   safe: {

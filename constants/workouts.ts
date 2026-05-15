@@ -76,6 +76,19 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         notes: 'Long head emphasis',
       },
     ],
+    warmUp: [
+      { name: 'Arm Circles', duration: '30 secs each direction', description: 'Arms out to sides, large circles forward then backward. Mobilises the shoulder joint and warms rotator cuff before any pressing load.' },
+      { name: 'Band Pull-Aparts', duration: '20 reps', description: 'Hold a band or towel at shoulder width, arms straight. Pull apart toward chest. Activates rear delts and opens the anterior shoulder — cuts impingement risk on bench and OHP.' },
+      { name: 'Doorway Chest Opener', duration: '30 secs each side', description: 'Forearm on doorframe at 90°, elbow at shoulder height. Lean gently through. Increases pec minor flexibility and anterior shoulder range before loading.' },
+      { name: 'Scapular Push-Ups', duration: '15 reps', description: 'Plank position. Protract and retract shoulder blades without bending elbows. Activates serratus anterior, which stabilises the scapula through every press rep.' },
+      { name: 'Light Warm-Up Press', duration: '2 × 15 reps (empty bar or very light)', description: 'Two sets at minimal weight. Primes the neuromuscular pattern, lubricates the elbow and shoulder joints before loading.' },
+    ],
+    coolDown: [
+      { name: 'Doorway Chest Stretch (held)', duration: '45 secs each side', description: 'Same as warm-up position but hold longer. Passive static stretching post-training restores resting pec length and reduces next-day tightness.' },
+      { name: 'Cross-Body Shoulder Stretch', duration: '30 secs each side', description: 'Pull one straight arm across your chest. Hold at mild tension in rear delt and lateral shoulder capsule.' },
+      { name: 'Overhead Tricep Stretch', duration: '30 secs each side', description: 'Arm overhead, elbow bent, hand behind head. Press elbow down gently with opposite hand. Stretches the long head — most loaded during overhead movements.' },
+      { name: 'Lying Pec Stretch', duration: '45 secs each side', description: 'Face down, one arm extended sideways at shoulder height. Roll gently onto that side. Deep stretch of the sternal pec head.' },
+    ],
   },
 
   tuesday: {
@@ -151,6 +164,19 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 60,
         notes: 'Brachialis + forearm',
       },
+    ],
+    warmUp: [
+      { name: 'Cat-Cow Thoracic Extension', duration: '10 slow reps', description: 'On hands and knees, alternate between arching and rounding the thoracic spine. Frees up spinal mobility required for deadlifting and rowing.' },
+      { name: 'Band Pull-Aparts', duration: '20 reps', description: 'Activates the scapular retractors (rhomboids, mid-traps, rear delts) before heavy pulling. Non-negotiable for shoulder health on pull day.' },
+      { name: 'Dead Hang', duration: '3 × 20 secs', description: 'Hang from a pull-up bar with relaxed shoulders. Decompresses the spine, opens the lats, and primes the grip. Direct prep for deadlifts and pull-ups.' },
+      { name: 'Hip Hinge Practice', duration: '10 reps (bodyweight)', description: 'Stand with feet hip-width, hinge at hips keeping back neutral, push hips back until you feel hamstring tension, return. Grooves the deadlift pattern under zero load.' },
+      { name: 'Lat Overhead Stretch', duration: '20 secs each side', description: 'Reach one arm overhead and side-bend away. Decompresses the lat and thoracolumbar fascia before row and pulldown movements.' },
+    ],
+    coolDown: [
+      { name: 'Child\'s Pose with Lat Reach', duration: '45 secs each side', description: 'Kneel, sit back on heels, extend both arms forward on floor. Walk hands to one side. Deep lat stretch that also releases the thoracic extensors strained during deadlifts.' },
+      { name: 'Thoracic Rotation Stretch', duration: '30 secs each side', description: 'Seated or kneeling. Place one hand behind your head, rotate your upper body to that side. Restores thoracic rotation compressed during heavy rows.' },
+      { name: 'Bicep Wall Stretch', duration: '20 secs each side', description: 'Extend arm back behind you at shoulder height against a wall, thumb pointing down. Gentle stretch of the bicep and anterior shoulder capsule.' },
+      { name: 'Doorway Lat Stretch', duration: '30 secs each side', description: 'Grip a doorframe at shoulder height with one hand. Lean away until you feel the lat stretch through the side. Particularly valuable after lat pulldowns.' },
     ],
   },
 
@@ -248,6 +274,20 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         notes: 'Seconds — squeeze everything',
       },
     ],
+    warmUp: [
+      { name: 'Hip Circles', duration: '10 reps each direction', description: 'Stand on one foot, draw large circles with the raised knee. Mobilises the hip joint in all planes before squatting. Reduces femoral impingement at depth.' },
+      { name: 'Leg Swings', duration: '10 reps each direction per leg', description: 'Hold a wall for balance. Swing one leg forward and back, then side to side. Dynamic stretch that warms the hip flexors, hamstrings and adductors before loaded movement.' },
+      { name: 'Deep Bodyweight Squat Hold', duration: '3 × 30 secs', description: 'Sink into the bottom of a squat and hold. Heels flat, knees tracking toes. Identifies mobility restrictions before loading and opens up hip flexors and ankles.' },
+      { name: 'Hip Flexor Kneeling Lunge', duration: '30 secs each side', description: 'Rear knee on floor, front foot flat. Push hips forward gently. Tight hip flexors cause anterior pelvic tilt under the bar — this directly addresses that.' },
+      { name: 'Glute Bridges', duration: '20 reps slow', description: 'Lying on back, feet flat, drive hips up squeezing glutes at the top. Activates the posterior chain before squats — particularly important if you\'ve been sitting.' },
+    ],
+    coolDown: [
+      { name: 'Standing Quad Stretch', duration: '45 secs each side', description: 'Stand on one leg, pull the other foot to your glute. Hold at the point of quad tension. The quads are heavily loaded on leg day — restoring their resting length reduces DOMS.' },
+      { name: 'Supine Hamstring Stretch', duration: '45 secs each side', description: 'Lie on back, pull one leg toward your chest keeping it as straight as possible. The hamstrings act as decelerators during squats and are often undertreated post-training.' },
+      { name: 'Pigeon Pose (Figure-4)', duration: '60 secs each side', description: 'Lying on back, cross one ankle over the opposite knee. Pull both legs toward chest. Deeply stretches the piriformis and gluteus medius — the hip rotators compressed during heavy squatting.' },
+      { name: 'Standing Calf Stretch', duration: '30 secs each side', description: 'Foot flat on floor, lean into a wall with a straight knee. Restricted ankle dorsiflexion limits squat depth and shifts load to the knee — this directly addresses that.' },
+      { name: 'Hip Flexor Lunge Stretch (held)', duration: '45 secs each side', description: 'Same as warm-up but held longer. Counteracts the hip flexor shortening caused by heavy squat loading, especially important for posture.' },
+    ],
   },
 
   thursday: null,
@@ -337,6 +377,19 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         notes: 'Long head stretch',
       },
     ],
+    warmUp: [
+      { name: 'Thoracic Extension on Foam Roller', duration: '10 slow passes', description: 'Place foam roller under mid-back. Support your head and gently extend over the roller at different thoracic segments. Undoes desk posture and opens the thoracic spine before overhead pressing.' },
+      { name: 'Shoulder 90/90 External Rotation', duration: '10 reps each side', description: 'Upper arm parallel to floor, elbow bent 90°. Rotate forearm up and down against resistance. Activates the rotator cuff muscles critical for shoulder stability during OHP and pull-ups.' },
+      { name: 'Dead Hangs', duration: '3 × 20 secs', description: 'Hang relaxed from pull-up bar. Decompresses the spine, opens the lats and shoulder capsule. Essential warm-up before weighted pull-ups.' },
+      { name: 'Band Pull-Aparts', duration: '20 reps', description: 'Activates rear delts, rhomboids and lower traps — the scapular stabilisers that underpin every upper body movement.' },
+      { name: 'Arm Circles + Neck Rolls', duration: '30 secs', description: 'Slow controlled arm circles in both directions, then gentle neck rolls. Gets blood into the upper traps, neck and shoulder girdle before the compound movements.' },
+    ],
+    coolDown: [
+      { name: 'Doorway Chest Stretch', duration: '45 secs each side', description: 'Forearm on doorframe, lean through. Restores pec minor and anterior deltoid length after pressing volume.' },
+      { name: 'Child\'s Pose with Lat Reach', duration: '45 secs each side', description: 'Kneeling, arms extended forward, walk hands to one side. Decompresses the thoracic spine and stretches the lat after pulling work.' },
+      { name: 'Cross-Body Shoulder Stretch', duration: '30 secs each side', description: 'Pull straight arm across chest. Stretches the posterior capsule of the shoulder joint — reduced posterior capsule tightness lowers shoulder injury risk.' },
+      { name: 'Wrist Flexor/Extensor Stretch', duration: '20 secs each direction per wrist', description: 'Extend arm, use opposite hand to bend wrist up (extensor stretch) then down (flexor stretch). Forearm and wrist health is critical for long-term pressing and curling capacity.' },
+    ],
   },
 
   saturday: {
@@ -422,6 +475,20 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMax: 20,
         restSeconds: 60,
       },
+    ],
+    warmUp: [
+      { name: 'Hip Circles', duration: '10 reps each direction', description: 'Large knee circles while standing on one foot. Mobilises the hip capsule before posterior chain loading — particularly important before heavy RDLs and hip thrusts.' },
+      { name: 'Glute Bridges', duration: '20 reps', description: 'Lying on back. Drive hips up, hard glute squeeze at the top. Activates the glutes before you ask them to handle serious load — prevents the hamstrings and spinal erectors from over-compensating.' },
+      { name: 'Banded Clamshells', duration: '15 reps each side', description: 'Lie on side, hips bent at 45°, light band above knees. Open top knee like a clamshell. Activates gluteus medius — the hip abductor that stabilises the pelvis during split squats and single-leg movements.' },
+      { name: 'Hip Flexor Lunge with Rotation', duration: '30 secs each side', description: 'Rear knee on floor, front foot flat. Reach overhead arm toward the front foot. Opens the hip flexor and thoracic rotation simultaneously — key mobility combo for heavy RDL and split squats.' },
+      { name: 'Leg Swings', duration: '10 reps each direction per leg', description: 'Front-to-back and side-to-side. Warms the adductors, hip flexors, hamstrings and glutes dynamically before loaded posterior chain work.' },
+    ],
+    coolDown: [
+      { name: 'Supine Hamstring Stretch', duration: '45 secs each side', description: 'Lie on back, pull one leg toward chest with it as straight as possible. The hamstrings are the primary mover in RDL — static stretching post-session restores resting length and reduces DOMS.' },
+      { name: 'Pigeon Pose', duration: '60 secs each side', description: 'One shin across the mat, opposite leg extended back. Sink the hips. The deepest available stretch for the piriformis and glute complex — critical after hip thrusts and split squats.' },
+      { name: 'Kneeling Hip Flexor Stretch', duration: '45 secs each side', description: 'Rear knee on floor. Push hips forward gently. RDLs lengthen the hamstrings but the hip flexors stay contracted throughout — this counterbalances that pattern.' },
+      { name: 'Seated Butterfly Stretch', duration: '45 secs', description: 'Soles of feet together, let knees fall out. Gentle forward lean. Stretches the adductors and inner groin — often neglected but vital after wide-stance leg press and hip work.' },
+      { name: 'Standing IT Band Stretch', duration: '30 secs each side', description: 'Cross one foot behind the other, reach opposite arm overhead and lean away. Stretches the iliotibial band and TFL — commonly tight after heavy single-leg and posterior chain work.' },
     ],
   },
 

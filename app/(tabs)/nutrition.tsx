@@ -83,6 +83,7 @@ export default function NutritionScreen() {
                       <Text style={styles.mealName}>{entry.foodItem.name}</Text>
                       <Text style={styles.mealCategory}>
                         {entry.category.replace('_', ' ')} · ×{entry.quantity}
+                        {entry.time ? `  ·  ${entry.time}` : ''}
                       </Text>
                     </View>
                     <View style={styles.mealMacros}>
@@ -127,7 +128,7 @@ export default function NutritionScreen() {
           <Text style={styles.noteTitle}>Daily protein target</Text>
           <Text style={styles.noteBody}>
             <Text style={{ color: Colors.accent, fontWeight: '700' }}>{profile.goalProtein}g</Text>
-            {' '}at {profile.weightKg}kg — 2.1g/kg bodyweight. Hit this every day regardless of training. This single variable has the biggest impact on body recomposition.
+            {' '}at {profile.weightKg}kg — 1.8g/kg bodyweight. Hit this every day regardless of training. This single variable has the biggest impact on body recomposition.
           </Text>
         </Card>
 

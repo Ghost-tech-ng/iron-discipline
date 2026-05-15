@@ -6,7 +6,7 @@ export const USER_TARGETS = {
   carbs: 292,     // bumped up from 240 to fill the ~116 kcal freed by reducing protein
   fat: 72,
   waterMl: 3500,
-  goalWeightKg: 89,
+  goalWeightKg: 85,
   startWeightKg: 95,
   weeklyGoalKg: 0.6,
 };

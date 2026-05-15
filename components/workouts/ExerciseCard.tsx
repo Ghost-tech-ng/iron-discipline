@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
 import { SetRow } from './SetRow';
+import { getExerciseImageUrl } from '../../constants/exerciseImages';
 import type { Exercise, SetLog, ExerciseLog } from '../../types';
 import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
 
@@ -25,7 +26,12 @@ export function ExerciseCard({
   isActive,
 }: ExerciseCardProps) {
   const [completedSets, setCompletedSets] = useState<SetLog[]>([]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const completedCount = completedSets.length;
+
+  useEffect(() => {
+    getExerciseImageUrl(exercise.id).then(setImageUrl);
+  }, [exercise.id]);
   const totalSets = exercise.sets;
   const allDone = completedCount >= totalSets;
 
@@ -59,6 +65,15 @@ export function ExerciseCard({
 
   return (
     <Animated.View style={[styles.card, cardStyle, allDone && styles.cardDone]}>
+      {/* Exercise image */}
+      {imageUrl && (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.exerciseImage}
+          resizeMode="cover"
+        />
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -118,6 +133,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
+  },
+  exerciseImage: {
+    width: '100%',
+    height: 160,
+    backgroundColor: Colors.surface2,
   },
   cardDone: {
     backgroundColor: Colors.surface,

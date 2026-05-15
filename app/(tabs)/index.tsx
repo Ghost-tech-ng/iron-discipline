@@ -17,6 +17,7 @@ import { useDisciplineStore } from '../../store/disciplineStore';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useWorkoutStore } from '../../store/workoutStore';
+import { Ionicons } from '@expo/vector-icons';
 import { loadDisciplineHistory } from '../../services/disciplineService';
 import { CoachCard } from '../../components/ai/CoachCard';
 import { WEEKLY_SPLIT } from '../../constants/workouts';
@@ -99,7 +100,7 @@ export default function DashboardScreen() {
             <Text style={styles.date}>{formatDate()}</Text>
           </View>
           <PressableScale style={styles.streakBadge} onPress={() => router.push('/(tabs)/progress')}>
-            <Text style={styles.streakFire}>🔥</Text>
+            <Ionicons name="flame" size={16} color={Colors.accentAmber} />
             <Text style={styles.streakCount}>{streak}</Text>
           </PressableScale>
         </View>
@@ -251,13 +252,13 @@ export default function DashboardScreen() {
         <View style={styles.quickActions}>
           <QuickAction
             label="Log Meal"
-            icon="🍗"
+            iconName="restaurant-outline"
             color={Colors.accentAmber}
             onPress={() => router.push('/meal/log')}
           />
           <QuickAction
             label="Start Workout"
-            icon="💪"
+            iconName="barbell-outline"
             color={Colors.accent}
             onPress={() => {
               const s = getTodaySession();
@@ -266,7 +267,7 @@ export default function DashboardScreen() {
           />
           <QuickAction
             label="Add Water"
-            icon="💧"
+            iconName="water-outline"
             color={Colors.accent2}
             onPress={() => router.push('/nutrition')}
           />
@@ -293,10 +294,10 @@ function ScoreRow({ label, done, pts }: { label: string; done: boolean; pts: num
   );
 }
 
-function QuickAction({ label, icon, color, onPress }: { label: string; icon: string; color: string; onPress?: () => void }) {
+function QuickAction({ label, iconName, color, onPress }: { label: string; iconName: React.ComponentProps<typeof Ionicons>['name']; color: string; onPress?: () => void }) {
   return (
     <PressableScale onPress={onPress} style={[qaStyles.action, { borderColor: color + '40' }]}>
-      <Text style={qaStyles.icon}>{icon}</Text>
+      <Ionicons name={iconName} size={22} color={color} />
       <Text style={[qaStyles.label, { color }]}>{label}</Text>
     </PressableScale>
   );
@@ -335,9 +336,6 @@ const qaStyles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     gap: 6,
-  },
-  icon: {
-    fontSize: 22,
   },
   label: {
     ...Typography.caption,
@@ -385,7 +383,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
   },
-  streakFire: { fontSize: 16 },
   streakCount: {
     ...Typography.body,
     color: Colors.primary,

@@ -30,6 +30,18 @@ export async function initDatabase(): Promise<void> {
     await runMigration1(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (1);');
   }
+
+  if (currentVersion < 2) {
+    await runMigration2(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (2);');
+  }
+}
+
+async function runMigration2(db: SQLite.SQLiteDatabase): Promise<void> {
+  // Add time column to meal_entries for existing installs
+  await db.execAsync(`ALTER TABLE meal_entries ADD COLUMN time TEXT;`);
+  // Correct default goal weight to 85kg
+  await db.execAsync(`UPDATE user_profile SET goal_weight_kg = 85 WHERE goal_weight_kg = 89;`);
 }
 
 async function runMigration1(db: SQLite.SQLiteDatabase): Promise<void> {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../ui/Card';
 import { generateDailyCoaching, type CoachingData } from '../../services/aiService';
 import { Colors, Typography } from '../../constants/theme';
@@ -43,7 +44,7 @@ export function CoachCard({ data }: Props) {
       <Pressable onPress={load}>
         <Card style={styles.card}>
           <View style={styles.row}>
-            <Text style={styles.icon}>🤖</Text>
+            <Ionicons name="hardware-chip-outline" size={16} color={Colors.accent} />
             <Text style={styles.title}>AI COACH</Text>
             <Text style={styles.prompt}>Tap for today's feedback</Text>
           </View>
@@ -55,7 +56,7 @@ export function CoachCard({ data }: Props) {
   return (
     <Card style={styles.card}>
       <View style={styles.row}>
-        <Text style={styles.icon}>🤖</Text>
+        <Ionicons name="hardware-chip-outline" size={16} color={Colors.accent} />
         <Text style={styles.title}>AI COACH</Text>
         {!loading && (
           <Pressable onPress={load} style={styles.refreshBtn}>
@@ -87,7 +88,6 @@ export function CoachCard({ data }: Props) {
 const styles = StyleSheet.create({
   card: { gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  icon: { fontSize: 16 },
   title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, flex: 1 },
   prompt: { ...Typography.small, color: Colors.accent, fontWeight: '600' },
   refreshBtn: { padding: 4 },

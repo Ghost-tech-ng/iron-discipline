@@ -5,11 +5,12 @@ export async function saveMealEntry(entry: MealEntry): Promise<void> {
   const db = getDb();
   await db.runAsync(
     `INSERT OR REPLACE INTO meal_entries
-       (id, date, category, food_id, food_name, food_calories, food_protein, food_carbs, food_fat, quantity)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+       (id, date, time, category, food_id, food_name, food_calories, food_protein, food_carbs, food_fat, quantity)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       entry.id,
       entry.date,
+      entry.time ?? null,
       entry.category,
       entry.foodItem.id,
       entry.foodItem.name,
@@ -36,6 +37,7 @@ export async function loadMealsForDate(date: string): Promise<MealEntry[]> {
   const rows = await db.getAllAsync<{
     id: string;
     date: string;
+    time: string | null;
     category: string;
     food_id: string;
     food_name: string;
@@ -49,6 +51,7 @@ export async function loadMealsForDate(date: string): Promise<MealEntry[]> {
   return rows.map((r) => ({
     id: r.id,
     date: r.date,
+    time: r.time ?? undefined,
     category: r.category as MealEntry['category'],
     quantity: r.quantity,
     foodItem: {

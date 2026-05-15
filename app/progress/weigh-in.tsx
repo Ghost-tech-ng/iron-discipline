@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../components/ui/Button';
@@ -210,7 +211,7 @@ export default function WeighInScreen() {
               </>
             ) : (
               <View style={styles.photoEmpty}>
-                <Text style={styles.photoIcon}>📷</Text>
+                <Ionicons name="camera-outline" size={36} color={Colors.muted} />
                 <Text style={styles.photoEmptyText}>Add progress photo</Text>
                 <Text style={styles.photoEmptySubtext}>Camera or library</Text>
               </View>
@@ -335,7 +336,6 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: Colors.surface,
   },
-  photoIcon: { fontSize: 32 },
   photoEmptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
   photoEmptySubtext: { ...Typography.small, color: Colors.muted },
   optionalCard: { padding: 0, overflow: 'hidden', gap: 0 },

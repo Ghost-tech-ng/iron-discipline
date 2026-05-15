@@ -26,11 +26,19 @@ export interface Exercise {
   notes?: string;
 }
 
+export interface Stretch {
+  name: string;
+  duration: string;
+  description: string;
+}
+
 export interface WorkoutSession {
   id: string;
   type: SessionType;
   label: string;
   exercises: Exercise[];
+  warmUp: Stretch[];
+  coolDown: Stretch[];
 }
 
 export interface SetLog {
@@ -74,6 +82,7 @@ export interface MealEntry {
   category: MealCategory;
   foodItem: FoodItem;
   quantity: number;
+  time?: string;
 }
 
 export interface DailyNutrition {

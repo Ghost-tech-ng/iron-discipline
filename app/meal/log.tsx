@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -32,12 +33,13 @@ import {
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { MealCategory, FoodItem } from '../../types';
 
-const CATEGORIES: { key: MealCategory; label: string; emoji: string }[] = [
-  { key: 'breakfast', label: 'Breakfast', emoji: '🌅' },
-  { key: 'lunch', label: 'Lunch', emoji: '☀️' },
-  { key: 'post_workout', label: 'Post-Workout', emoji: '💪' },
-  { key: 'dinner', label: 'Dinner', emoji: '🌙' },
-  { key: 'snack', label: 'Snack', emoji: '🥜' },
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+const CATEGORIES: { key: MealCategory; label: string; icon: IoniconsName }[] = [
+  { key: 'breakfast', label: 'Breakfast', icon: 'sunny-outline' },
+  { key: 'lunch', label: 'Lunch', icon: 'partly-sunny-outline' },
+  { key: 'post_workout', label: 'Post-Workout', icon: 'barbell-outline' },
+  { key: 'dinner', label: 'Dinner', icon: 'moon-outline' },
+  { key: 'snack', label: 'Snack', icon: 'cafe-outline' },
 ];
 
 function getDefaultCategory(): MealCategory {
@@ -156,9 +158,12 @@ export default function LogMealScreen() {
   async function handleAdd() {
     if (!selected) return;
 
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const entry = {
       id: `meal_${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
+      date: now.toISOString().split('T')[0],
+      time,
       category,
       foodItem: selected,
       quantity: qty,
@@ -183,7 +188,7 @@ export default function LogMealScreen() {
           </Pressable>
           <Text style={styles.title}>Log a Meal</Text>
           <Pressable onPress={() => router.push('/meal/scan')} style={styles.scanBtn}>
-            <Text style={styles.scanIcon}>▦</Text>
+            <Ionicons name="barcode-outline" size={22} color={Colors.accent} />
           </Pressable>
         </View>
 
@@ -205,7 +210,11 @@ export default function LogMealScreen() {
                 onPress={() => setCategory(c.key)}
                 style={[styles.catChip, category === c.key && styles.catChipActive]}
               >
-                <Text style={styles.catEmoji}>{c.emoji}</Text>
+                <Ionicons
+                  name={c.icon}
+                  size={14}
+                  color={category === c.key ? Colors.accent : Colors.muted}
+                />
                 <Text style={[styles.catLabel, category === c.key && styles.catLabelActive]}>
                   {c.label}
                 </Text>
@@ -388,7 +397,6 @@ const styles = StyleSheet.create({
   backText: { ...Typography.body, color: Colors.muted, fontSize: 18 },
   title: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
   scanBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  scanIcon: { fontSize: 20, color: Colors.accent },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, gap: Spacing.md },
   categoryRow: { gap: 8, paddingRight: Spacing.md },
@@ -404,7 +412,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   catChipActive: { borderColor: Colors.accent, backgroundColor: Colors.accent + '15' },
-  catEmoji: { fontSize: 14 },
   catLabel: { ...Typography.small, color: Colors.secondary, fontWeight: '500' },
   catLabelActive: { color: Colors.accent, fontWeight: '700' },
   modeTabs: {
