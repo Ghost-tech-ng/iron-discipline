@@ -6,24 +6,23 @@ import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
-export default function Step1Screen() {
+function Field({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType = 'default',
+  autoCapitalize = 'none',
+}: {
+  label: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  placeholder: string;
+  keyboardType?: any;
+  autoCapitalize?: any;
+}) {
   const Colors = useColors();
-  const { profile, setProfile } = useUserStore();
-  const [name, setName] = useState(profile.name);
-  const [height, setHeight] = useState(profile.heightCm.toString());
-  const [weight, setWeight] = useState(profile.weightKg.toString());
-
-  function handleNext() {
-    if (!name.trim()) return;
-    setProfile({
-      name: name.trim(),
-      heightCm: parseFloat(height) || 191,
-      weightKg: parseFloat(weight) || 95,
-    });
-    router.push('/(onboarding)/step2');
-  }
-
-  const fieldStyles = React.useMemo(() => StyleSheet.create({
+  const styles = React.useMemo(() => StyleSheet.create({
     container: { gap: 6 },
     label: {
       ...Typography.small,
@@ -42,6 +41,40 @@ export default function Step1Screen() {
       color: Colors.primary,
     },
   }), [Colors]);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.muted}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        style={styles.input}
+        selectionColor={Colors.accent}
+      />
+    </View>
+  );
+}
+
+export default function Step1Screen() {
+  const Colors = useColors();
+  const { profile, setProfile } = useUserStore();
+  const [name, setName] = useState(profile.name);
+  const [height, setHeight] = useState(profile.heightCm.toString());
+  const [weight, setWeight] = useState(profile.weightKg.toString());
+
+  function handleNext() {
+    if (!name.trim()) return;
+    setProfile({
+      name: name.trim(),
+      heightCm: parseFloat(height) || 191,
+      weightKg: parseFloat(weight) || 95,
+    });
+    router.push('/(onboarding)/step2');
+  }
 
   const styles = React.useMemo(() => StyleSheet.create({
     safe: { flex: 1, backgroundColor: Colors.base },
@@ -85,38 +118,6 @@ export default function Step1Screen() {
       lineHeight: 20,
     },
   }), [Colors]);
-
-  function Field({
-    label,
-    value,
-    onChangeText,
-    placeholder,
-    keyboardType = 'default',
-    autoCapitalize = 'none',
-  }: {
-    label: string;
-    value: string;
-    onChangeText: (v: string) => void;
-    placeholder: string;
-    keyboardType?: any;
-    autoCapitalize?: any;
-  }) {
-    return (
-      <View style={fieldStyles.container}>
-        <Text style={fieldStyles.label}>{label}</Text>
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={Colors.muted}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          style={fieldStyles.input}
-          selectionColor={Colors.accent}
-        />
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safe}>
