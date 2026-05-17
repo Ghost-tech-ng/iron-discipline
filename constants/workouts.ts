@@ -146,6 +146,16 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         notes: 'Non-negotiable for shoulder health',
       },
       {
+        id: 'db_shrugs',
+        name: 'Dumbbell Shrugs',
+        muscleGroups: ['back'],
+        sets: 4,
+        repsMin: 12,
+        repsMax: 15,
+        restSeconds: 60,
+        notes: 'Pause 1 sec at top — upper trap + neck thickness',
+      },
+      {
         id: 'bb_curl',
         name: 'Barbell Curl',
         muscleGroups: ['biceps'],

@@ -1,5 +1,72 @@
 import type { FoodItem, Supplement } from '../types';
 
+export interface MealSlot {
+  time: string;
+  label: string;
+  emoji: string;
+  why: string;
+  foods: string[];
+  protein: number;
+  calories: number;
+}
+
+export const DAILY_MEAL_PLAN: MealSlot[] = [
+  {
+    time: '7:00 AM',
+    label: 'Breakfast',
+    emoji: '🍳',
+    why: 'Breaks the overnight fast and spikes muscle protein synthesis early. Getting 40g+ protein within an hour of waking sets your anabolic tone for the day.',
+    foods: ['4 whole eggs scrambled', '150g Greek yogurt (0% fat)', '1 banana', 'Black coffee (optional)'],
+    protein: 42,
+    calories: 490,
+  },
+  {
+    time: '10:30 AM',
+    label: 'Mid-Morning',
+    emoji: '🍗',
+    why: 'Muscle protein synthesis peaks for ~3 hours then drops. Eating every 4-5 hours keeps amino acid levels high enough to stay anabolic throughout the day.',
+    foods: ['150g grilled chicken breast', '200g sweet potato (baked)', '100g spinach or cucumber'],
+    protein: 50,
+    calories: 470,
+  },
+  {
+    time: '1:30 PM',
+    label: 'Lunch',
+    emoji: '🍚',
+    why: 'Your largest carb meal — midday. Insulin sensitivity is highest now. Carbs here fuel the afternoon without being stored as fat the way late-night carbs can be.',
+    foods: ['150g lean beef or tuna', '250g cooked white rice', '100g broccoli steamed', '1 tbsp olive oil'],
+    protein: 45,
+    calories: 620,
+  },
+  {
+    time: '4:30 PM',
+    label: 'Pre-Workout',
+    emoji: '⚡',
+    why: '60-90 minutes before training. Fast protein + quick carbs = better strength output and less muscle breakdown during the session. Do not train fasted at your size.',
+    foods: ['1 whey protein shake (25g protein)', '1 banana', '1 tbsp peanut butter'],
+    protein: 27,
+    calories: 310,
+  },
+  {
+    time: '7:30 PM',
+    label: 'Post-Workout Dinner',
+    emoji: '🥩',
+    why: 'The most important meal. Protein + carbs within 2 hours of training maximises muscle repair. Glycogen is depleted — the carbs go straight to muscle, not fat storage.',
+    foods: ['200g chicken breast or salmon', '200g cooked rice or pasta', '150g mixed vegetables', '1 tbsp olive oil'],
+    protein: 55,
+    calories: 670,
+  },
+  {
+    time: '9:30 PM',
+    label: 'Before Bed',
+    emoji: '🌙',
+    why: 'Cottage cheese and Greek yogurt are high in casein — a slow-digesting protein that releases amino acids for 6-8 hours while you sleep. Prevents overnight muscle breakdown.',
+    foods: ['200g cottage cheese or Greek yogurt', '30g almonds or walnuts'],
+    protein: 28,
+    calories: 310,
+  },
+];
+
 export const USER_TARGETS = {
   calories: 2500,
   protein: 171,   // 1.8g/kg at 95kg — minimum effective dose for recomposition (Morton et al. 2018: plateau at 1.62g/kg)

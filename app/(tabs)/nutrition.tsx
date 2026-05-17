@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { GradientBar } from '../../components/ui/GradientBar';
@@ -10,12 +10,14 @@ import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { DAILY_MEAL_PLAN } from '../../constants/nutrition';
 
 export default function NutritionScreen() {
   const Colors = useColors();
   const { getTotals, today, waterMl } = useNutritionStore();
   const { profile } = useUserStore();
   const { calories, protein, carbs, fat } = getTotals();
+  const [expandedMeal, setExpandedMeal] = useState<number | null>(null);
 
   const remaining = {
     calories: profile.goalCalories - calories,
@@ -121,6 +123,78 @@ export default function NutritionScreen() {
       color: Colors.secondary,
       lineHeight: 20,
     },
+    mealPlanCard: { gap: 0, padding: 0, overflow: 'hidden' },
+    mealSlot: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 12,
+    },
+    mealSlotHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    mealSlotTime: {
+      ...Typography.caption,
+      color: Colors.muted,
+      width: 60,
+    },
+    mealSlotEmoji: {
+      fontSize: 16,
+    },
+    mealSlotInfo: { flex: 1 },
+    mealSlotLabel: {
+      ...Typography.small,
+      color: Colors.primary,
+      fontWeight: '600',
+    },
+    mealSlotMacros: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+    mealSlotChevron: {
+      ...Typography.caption,
+      color: Colors.muted,
+    },
+    mealSlotExpanded: {
+      paddingTop: 8,
+      paddingLeft: 70,
+      gap: 6,
+    },
+    mealSlotWhy: {
+      ...Typography.caption,
+      color: Colors.secondary,
+      lineHeight: 17,
+      fontStyle: 'italic',
+    },
+    mealSlotFood: {
+      ...Typography.caption,
+      color: Colors.primary,
+      lineHeight: 18,
+    },
+    mealSlotDot: {
+      color: Colors.accent,
+    },
+    mealSlotSep: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: Colors.border,
+      marginLeft: Spacing.md,
+    },
+    mealPlanTotal: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 10,
+      backgroundColor: Colors.surface2,
+    },
+    mealPlanTotalText: {
+      ...Typography.caption,
+      color: Colors.secondary,
+    },
+    mealPlanTotalVal: {
+      ...Typography.caption,
+      color: Colors.primary,
+      fontWeight: '700',
+    },
   }), [Colors]);
 
   return (
@@ -204,6 +278,55 @@ export default function NutritionScreen() {
             </Card>
           </>
         )}
+
+        {/* Meal plan */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>MEAL PLAN + TIMING</Text>
+          <Text style={styles.sectionCount}>tap to expand</Text>
+        </View>
+        <Card style={styles.mealPlanCard}>
+          {DAILY_MEAL_PLAN.map((slot, idx) => (
+            <React.Fragment key={slot.time}>
+              <TouchableOpacity
+                style={styles.mealSlot}
+                onPress={() => setExpandedMeal(expandedMeal === idx ? null : idx)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.mealSlotHeader}>
+                  <Text style={styles.mealSlotTime}>{slot.time}</Text>
+                  <Text style={styles.mealSlotEmoji}>{slot.emoji}</Text>
+                  <View style={styles.mealSlotInfo}>
+                    <Text style={styles.mealSlotLabel}>{slot.label}</Text>
+                    <Text style={styles.mealSlotMacros}>
+                      {slot.protein}g protein · {slot.calories} kcal
+                    </Text>
+                  </View>
+                  <Text style={styles.mealSlotChevron}>
+                    {expandedMeal === idx ? '▲' : '▼'}
+                  </Text>
+                </View>
+                {expandedMeal === idx && (
+                  <View style={styles.mealSlotExpanded}>
+                    <Text style={styles.mealSlotWhy}>{slot.why}</Text>
+                    {slot.foods.map((food) => (
+                      <Text key={food} style={styles.mealSlotFood}>
+                        <Text style={styles.mealSlotDot}>· </Text>{food}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </TouchableOpacity>
+              {idx < DAILY_MEAL_PLAN.length - 1 && <View style={styles.mealSlotSep} />}
+            </React.Fragment>
+          ))}
+          <View style={styles.mealPlanTotal}>
+            <Text style={styles.mealPlanTotalText}>Daily total</Text>
+            <Text style={styles.mealPlanTotalVal}>
+              ~{DAILY_MEAL_PLAN.reduce((s, m) => s + m.protein, 0)}g protein ·{' '}
+              {DAILY_MEAL_PLAN.reduce((s, m) => s + m.calories, 0)} kcal
+            </Text>
+          </View>
+        </Card>
 
         <Button
           label="+ Log a Meal"
