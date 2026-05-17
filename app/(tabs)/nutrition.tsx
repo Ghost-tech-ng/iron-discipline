@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { GradientBar } from '../../components/ui/GradientBar';
@@ -10,7 +10,8 @@ import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
-import { DAILY_MEAL_PLAN } from '../../constants/nutrition';
+import { DAILY_MEAL_PLAN, type MealSlot } from '../../constants/nutrition';
+import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
 
 export default function NutritionScreen() {
   const Colors = useColors();
@@ -18,6 +19,38 @@ export default function NutritionScreen() {
   const { profile } = useUserStore();
   const { calories, protein, carbs, fat } = getTotals();
   const [expandedMeal, setExpandedMeal] = useState<number | null>(null);
+  const [mealPlan, setMealPlan] = useState<MealSlot[]>(DAILY_MEAL_PLAN);
+  const [refreshing, setRefreshing] = useState(false);
+  const [aiGenerated, setAiGenerated] = useState(false);
+
+  useEffect(() => {
+    loadCachedMealPlan().then((cached) => {
+      if (cached && cached.length > 0) {
+        setMealPlan(cached);
+        setAiGenerated(true);
+      }
+    });
+  }, []);
+
+  async function handleRefreshMealPlan() {
+    setRefreshing(true);
+    try {
+      const plan = await generateMealPlan(
+        profile.weightKg,
+        profile.goalProtein,
+        profile.goalCalories
+      );
+      if (plan.length > 0) {
+        setMealPlan(plan);
+        setAiGenerated(true);
+        setExpandedMeal(null);
+      }
+    } catch {
+      // silently fail — keep current plan
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   const remaining = {
     calories: profile.goalCalories - calories,
@@ -281,11 +314,21 @@ export default function NutritionScreen() {
 
         {/* Meal plan */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>MEAL PLAN + TIMING</Text>
-          <Text style={styles.sectionCount}>tap to expand</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.sectionLabel}>MEAL PLAN + TIMING</Text>
+            {aiGenerated && (
+              <Text style={[styles.sectionCount, { color: Colors.accent }]}>AI</Text>
+            )}
+          </View>
+          <TouchableOpacity onPress={handleRefreshMealPlan} disabled={refreshing}>
+            {refreshing
+              ? <ActivityIndicator size="small" color={Colors.accent} />
+              : <Text style={[styles.sectionCount, { color: Colors.accent }]}>Refresh</Text>
+            }
+          </TouchableOpacity>
         </View>
         <Card style={styles.mealPlanCard}>
-          {DAILY_MEAL_PLAN.map((slot, idx) => (
+          {mealPlan.map((slot, idx) => (
             <React.Fragment key={slot.time}>
               <TouchableOpacity
                 style={styles.mealSlot}
@@ -316,14 +359,14 @@ export default function NutritionScreen() {
                   </View>
                 )}
               </TouchableOpacity>
-              {idx < DAILY_MEAL_PLAN.length - 1 && <View style={styles.mealSlotSep} />}
+              {idx < mealPlan.length - 1 && <View style={styles.mealSlotSep} />}
             </React.Fragment>
           ))}
           <View style={styles.mealPlanTotal}>
             <Text style={styles.mealPlanTotalText}>Daily total</Text>
             <Text style={styles.mealPlanTotalVal}>
-              ~{DAILY_MEAL_PLAN.reduce((s, m) => s + m.protein, 0)}g protein ·{' '}
-              {DAILY_MEAL_PLAN.reduce((s, m) => s + m.calories, 0)} kcal
+              ~{mealPlan.reduce((s, m) => s + m.protein, 0)}g protein ·{' '}
+              {mealPlan.reduce((s, m) => s + m.calories, 0)} kcal
             </Text>
           </View>
         </Card>
