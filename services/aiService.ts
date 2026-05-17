@@ -106,7 +106,7 @@ All macros in grams, calories in kcal as integers.`,
   return JSON.parse(match[0]) as MealEstimate;
 }
 
-const MEAL_PLAN_CACHE_KEY = 'ai_meal_plan_v1';
+const MEAL_PLAN_CACHE_KEY = 'ai_meal_plan_v2';
 
 export async function generateMealPlan(
   weightKg: number,
@@ -120,19 +120,21 @@ export async function generateMealPlan(
     },
     {
       role: 'user',
-      content: `Design a single day meal plan for a ${weightKg}kg male doing 5-day strength training (push/pull/legs split) targeting body recomposition.
+      content: `Design a single day meal plan for a ${weightKg}kg Nigerian male doing 5-day strength training (push/pull/legs split) targeting body recomposition.
 Goals: ${proteinGoal}g protein, ${calorieGoal} kcal per day.
+
+IMPORTANT — use foods commonly available and eaten in Nigeria: rice, beans, plantain, yam, oats, eggs, chicken, fish (tilapia, catfish, mackerel), beef, sardines, groundnut, pap (akamu), moi moi, suya, boiled groundnut, bread, peanut butter, Greek yogurt if available, milk. You can mix Nigerian staples with simple globally available foods (eggs, oats, whey protein).
 
 Return exactly 6 meals as a JSON array. Each meal must have:
 - time: meal time as string e.g. "7:00 AM"
 - label: short meal name e.g. "Breakfast"
 - emoji: one relevant emoji
 - why: 1-2 sentences explaining WHY this meal at this time (the science/logic)
-- foods: array of 3-4 specific food items with amounts e.g. ["200g grilled chicken", "250g cooked rice"]
-- protein: integer grams for this meal
-- calories: integer kcal for this meal
+- foods: array of 3-5 specific food items with exact amounts e.g. ["200g boiled chicken thigh", "1 cup cooked white rice (180g)", "100g fried plantain"]
+- protein: integer — calculate accurately from the exact foods and amounts listed. Use these values per 100g: chicken breast 31g, chicken thigh cooked 26g, beef 26g, egg 13g (1 large egg = 6g), tilapia 26g, mackerel 19g, sardines canned 25g, beans cooked 9g, moi moi 7g, white rice cooked 2.7g, oats dry 17g, plantain 1.3g, yam boiled 1.5g, peanut butter 25g per 100g, groundnut 26g per 100g, milk 3.4g per 100ml, whey protein 25g per 30g scoop
+- calories: integer — calculate accurately. Use these values per 100g: chicken breast 165kcal, chicken thigh cooked 209kcal, beef 250kcal, egg 155kcal (1 large egg = 78kcal), tilapia 128kcal, mackerel 205kcal, sardines canned 208kcal, beans cooked 132kcal, moi moi 100kcal, white rice cooked 130kcal, oats dry 389kcal, plantain fried 220kcal, plantain boiled 122kcal, yam boiled 118kcal, peanut butter 588kcal per 100g, groundnut 567kcal, milk 61kcal per 100ml, whey 120kcal per 30g scoop
 
-Spread protein evenly. Include a pre-workout meal around 4-5 PM and a casein-rich meal before bed. Vary the protein sources (eggs, chicken, beef, fish, dairy). Make it practical and affordable.
+Spread protein as evenly as possible across meals. Include pre-workout meal around 4-5 PM. Vary protein sources across the day. The total across all 6 meals must be within 15g of ${proteinGoal}g protein and within 150kcal of ${calorieGoal} kcal.
 Return JSON: {"meals": [...]}`,
     },
   ]);
