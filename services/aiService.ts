@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { FoodItem } from '../types';
 import type { MealSlot } from '../constants/nutrition';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -106,7 +105,7 @@ All macros in grams, calories in kcal as integers.`,
   return JSON.parse(match[0]) as MealEstimate;
 }
 
-const MEAL_PLAN_CACHE_KEY = 'ai_meal_plan_v2';
+const MEAL_PLAN_CACHE_KEY = 'ai_meal_plan_v3';
 
 export async function generateMealPlan(
   weightKg: number,
@@ -120,21 +119,26 @@ export async function generateMealPlan(
     },
     {
       role: 'user',
-      content: `Design a single day meal plan for a ${weightKg}kg Nigerian male doing 5-day strength training (push/pull/legs split) targeting body recomposition.
-Goals: ${proteinGoal}g protein, ${calorieGoal} kcal per day.
+      content: `Design a 3-meal day plan for a ${weightKg}kg Nigerian male doing 5-day strength training (push/pull/legs split) targeting body recomposition (losing fat, keeping/building muscle).
 
-IMPORTANT — use foods commonly available and eaten in Nigeria: rice, beans, plantain, yam, oats, eggs, chicken, fish (tilapia, catfish, mackerel), beef, sardines, groundnut, pap (akamu), moi moi, suya, boiled groundnut, bread, peanut butter, Greek yogurt if available, milk. You can mix Nigerian staples with simple globally available foods (eggs, oats, whey protein).
+Eating window: 10:00 AM to 7:00 PM (16:8 intermittent fasting). This is evidence-based — 3 large protein meals produce equal or greater muscle protein synthesis over 24h compared to 6 small meals (Trommelen et al. 2023).
 
-Return exactly 6 meals as a JSON array. Each meal must have:
-- time: meal time as string e.g. "7:00 AM"
-- label: short meal name e.g. "Breakfast"
+Goals: ${proteinGoal}g protein, ${calorieGoal} kcal — spread across exactly 3 meals. Each meal must have roughly ${Math.round(proteinGoal / 3)}g protein.
+
+IMPORTANT — use foods commonly available in Nigeria: rice, beans, plantain, yam, oats, eggs, chicken, fish (tilapia, catfish, mackerel), beef, sardines, groundnut, pap (akamu), moi moi, suya, bread, peanut butter, milk. Mix Nigerian staples with simple global foods (eggs, oats, whey protein shake).
+
+Return exactly 3 meals as a JSON array. Meals should be at 10:00 AM, 2:00 PM, and 6:30 PM. The 2:00 PM meal doubles as pre-workout fuel if training in the afternoon. The 6:30 PM meal is post-workout recovery.
+
+Each meal must have:
+- time: string e.g. "10:00 AM"
+- label: short name e.g. "First Meal"
 - emoji: one relevant emoji
-- why: 1-2 sentences explaining WHY this meal at this time (the science/logic)
-- foods: array of 3-5 specific food items with exact amounts e.g. ["200g boiled chicken thigh", "1 cup cooked white rice (180g)", "100g fried plantain"]
-- protein: integer — calculate accurately from the exact foods and amounts listed. Use these values per 100g: chicken breast 31g, chicken thigh cooked 26g, beef 26g, egg 13g (1 large egg = 6g), tilapia 26g, mackerel 19g, sardines canned 25g, beans cooked 9g, moi moi 7g, white rice cooked 2.7g, oats dry 17g, plantain 1.3g, yam boiled 1.5g, peanut butter 25g per 100g, groundnut 26g per 100g, milk 3.4g per 100ml, whey protein 25g per 30g scoop
-- calories: integer — calculate accurately. Use these values per 100g: chicken breast 165kcal, chicken thigh cooked 209kcal, beef 250kcal, egg 155kcal (1 large egg = 78kcal), tilapia 128kcal, mackerel 205kcal, sardines canned 208kcal, beans cooked 132kcal, moi moi 100kcal, white rice cooked 130kcal, oats dry 389kcal, plantain fried 220kcal, plantain boiled 122kcal, yam boiled 118kcal, peanut butter 588kcal per 100g, groundnut 567kcal, milk 61kcal per 100ml, whey 120kcal per 30g scoop
+- why: 1-2 sentences on WHY this meal and timing matters for the goal
+- foods: array of 3-5 items with exact amounts e.g. ["200g grilled chicken breast", "250g cooked white rice", "2 boiled eggs"]
+- protein: integer — calculate from amounts using: chicken breast 31g/100g, chicken thigh 26g/100g, beef 26g/100g, egg 6g each, tilapia 26g/100g, mackerel 19g/100g, sardines 25g/100g, beans cooked 9g/100g, moi moi 7g/100g, rice cooked 2.7g/100g, oats dry 17g/100g, plantain 1.3g/100g, yam 1.5g/100g, peanut butter 25g/100g, milk 3.4g/100ml, whey 25g per 30g scoop
+- calories: integer — calculate from amounts using: chicken breast 165kcal/100g, chicken thigh 209kcal/100g, beef 250kcal/100g, egg 78kcal each, tilapia 128kcal/100g, mackerel 205kcal/100g, sardines 208kcal/100g, beans 132kcal/100g, moi moi 100kcal/100g, rice cooked 130kcal/100g, oats dry 389kcal/100g, plantain fried 220kcal/100g, plantain boiled 122kcal/100g, yam 118kcal/100g, peanut butter 588kcal/100g, milk 61kcal/100ml, whey 120kcal per 30g scoop
 
-Spread protein as evenly as possible across meals. Include pre-workout meal around 4-5 PM. Vary protein sources across the day. The total across all 6 meals must be within 15g of ${proteinGoal}g protein and within 150kcal of ${calorieGoal} kcal.
+The total across all 3 meals must land within 10g of ${proteinGoal}g protein and within 100kcal of ${calorieGoal} kcal. Vary protein sources across the 3 meals.
 Return JSON: {"meals": [...]}`,
     },
   ]);
