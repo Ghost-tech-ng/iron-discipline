@@ -1,50 +1,63 @@
-// All URLs verified against wger.de live image list (open-source fitness DB, CC licence)
+// All URLs sourced from wger.de live scan — open-source fitness DB (CC licence)
 const IMAGE_URLS: Record<string, string> = {
-  // Push — chest/shoulders/triceps
+  // ── Push — Chest ──────────────────────────────────────────────
   bench_press:        'https://wger.de/media/exercise-images/192/Bench-press-1.png',
-  incline_db_press:   'https://wger.de/media/exercise-images/41/Incline-bench-press-1.png',
+  incline_db_press:   'https://wger.de/media/exercise-images/16/Incline-press-1.png',
   incline_bb_press:   'https://wger.de/media/exercise-images/41/Incline-bench-press-1.png',
   cable_fly:          'https://wger.de/media/exercise-images/71/Cable-crossover-2.png',
+
+  // ── Push — Shoulders ──────────────────────────────────────────
   ohp_mon:            'https://wger.de/media/exercise-images/119/seated-barbell-shoulder-press-large-1.png',
   ohp_fri:            'https://wger.de/media/exercise-images/119/seated-barbell-shoulder-press-large-1.png',
   lateral_raises_mon: 'https://wger.de/media/exercise-images/148/lateral-dumbbell-raises-large-2.png',
   lateral_raises_fri: 'https://wger.de/media/exercise-images/148/lateral-dumbbell-raises-large-2.png',
+
+  // ── Push — Triceps ────────────────────────────────────────────
+  rope_pushdown:      'https://wger.de/media/exercise-images/50/695ced5c-9961-4076-add2-cb250d01089e.png',
+  oh_tricep_ext:      'https://wger.de/media/exercise-images/50/695ced5c-9961-4076-add2-cb250d01089e.png',
   skull_crushers:     'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
-  rope_pushdown:      'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
-  oh_tricep_ext:      'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
 
-  // Pull — back/biceps
-  deadlift:           'https://wger.de/media/exercise-images/161/Dead-lifts-2.png',
-  barbell_row:        'https://wger.de/media/exercise-images/110/Reverse-grip-bent-over-rows-1.png',
+  // ── Pull — Back ───────────────────────────────────────────────
+  deadlift:           'https://wger.de/media/exercise-images/184/1709c405-620a-4d07-9658-fade2b66a2df.jpeg',
+  barbell_row:        'https://wger.de/media/exercise-images/109/Barbell-rear-delt-row-1.png',
+  cable_row:          'https://wger.de/media/exercise-images/512/b938437e-ff00-4679-9036-acb41bb28bbd.png',
+  lat_pulldown:       'https://wger.de/media/exercise-images/158/02e8a7c3-dc67-434e-a4bc-77fdecf84b49.webp',
   tbar_row:           'https://wger.de/media/exercise-images/106/T-bar-row-1.png',
-  cable_row:          'https://wger.de/media/exercise-images/143/Cable-seated-rows-2.png',
-  lat_pulldown:       'https://wger.de/media/exercise-images/181/Chin-ups-2.png',
-  face_pulls:         'https://wger.de/media/exercise-images/109/Barbell-rear-delt-row-1.png',
-  rear_delt_fly:      'https://wger.de/media/exercise-images/109/Barbell-rear-delt-row-1.png',
-  weighted_pullups:   'https://wger.de/media/exercise-images/181/Chin-ups-2.png',
-  bb_curl:            'https://wger.de/media/exercise-images/129/Standing-biceps-curl-1.png',
-  hammer_curl:        'https://wger.de/media/exercise-images/86/Bicep-hammer-curl-1.png',
-  incline_db_curl:    'https://wger.de/media/exercise-images/129/Standing-biceps-curl-1.png',
+  weighted_pullups:   'https://wger.de/media/exercise-images/475/b0554016-16fd-4dbe-be47-a2a17d16ae0e.jpg',
+  db_shrugs:          'https://wger.de/media/exercise-images/151/Dumbbell-shrugs-2.png',
 
-  // Legs
+  // ── Pull — Rear Delt ──────────────────────────────────────────
+  face_pulls:         'https://wger.de/media/exercise-images/349/9d969203-9cb6-4d47-9c31-fef53bfe1de5.png',
+  rear_delt_fly:      'https://wger.de/media/exercise-images/81/a751a438-ae2d-4751-8d61-cef0e9292174.png',
+
+  // ── Pull — Biceps ─────────────────────────────────────────────
+  bb_curl:            'https://wger.de/media/exercise-images/74/Bicep-curls-1.png',
+  hammer_curl:        'https://wger.de/media/exercise-images/86/Bicep-hammer-curl-1.png',
+  incline_db_curl:    'https://wger.de/media/exercise-images/81/Biceps-curl-1.png',
+
+  // ── Legs — Quads ──────────────────────────────────────────────
   back_squat:         'https://wger.de/media/exercise-images/191/Front-squat-1-857x1024.png',
-  leg_press:          'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
-  leg_press_high:     'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
+  leg_press:          'https://wger.de/media/exercise-images/371/d2136f96-3a43-4d4c-9944-1919c4ca1ce1.webp',
+  leg_press_high:     'https://wger.de/media/exercise-images/371/d2136f96-3a43-4d4c-9944-1919c4ca1ce1.webp',
   hack_squat:         'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
+  leg_ext:            'https://wger.de/media/exercise-images/369/78c915d1-e46d-4d30-8124-65d68664c3ef.png',
   bulgarian_split:    'https://wger.de/media/exercise-images/113/Walking-lunges-1.png',
-  rdl_wed:            'https://wger.de/media/exercise-images/161/Dead-lifts-2.png',
-  rdl_sat:            'https://wger.de/media/exercise-images/161/Dead-lifts-2.png',
+
+  // ── Legs — Hamstrings / Glutes ────────────────────────────────
+  rdl_wed:            'https://wger.de/media/exercise-images/184/1709c405-620a-4d07-9658-fade2b66a2df.jpeg',
+  rdl_sat:            'https://wger.de/media/exercise-images/184/1709c405-620a-4d07-9658-fade2b66a2df.jpeg',
   leg_curl_wed:       'https://wger.de/media/exercise-images/154/lying-leg-curl-machine-large-1.png',
   leg_curl_sat:       'https://wger.de/media/exercise-images/154/lying-leg-curl-machine-large-1.png',
-  leg_ext:            'https://wger.de/media/exercise-images/117/seated-leg-curl-large-1.png',
   hip_thrust:         'https://wger.de/media/exercise-images/128/Hyperextensions-1.png',
-  standing_calf:      'https://wger.de/media/exercise-images/118/standing-leg-curls-large-1.png',
-  seated_calf:        'https://wger.de/media/exercise-images/117/seated-leg-curl-large-1.png',
 
-  // Core
+  // ── Legs — Calves ─────────────────────────────────────────────
+  standing_calf:      'https://wger.de/media/exercise-images/146/8b284904-d072-4381-a256-4c81d8fd9c1f.png',
+  seated_calf:        'https://wger.de/media/exercise-images/146/8b284904-d072-4381-a256-4c81d8fd9c1f.png',
+
+  // ── Core ──────────────────────────────────────────────────────
   cable_crunch_wed:   'https://wger.de/media/exercise-images/91/Crunches-1.png',
   cable_crunch_sat:   'https://wger.de/media/exercise-images/91/Crunches-1.png',
-  plank_wed:          'https://wger.de/media/exercise-images/176/Cross-body-crunch-1.png',
+  plank_wed:          'https://wger.de/media/exercise-images/458/b7bd9c28-9f1d-4647-bd17-ab6a3adf5770.png',
   hanging_leg_raise:  'https://wger.de/media/exercise-images/125/Leg-raises-2.png',
 };
 
@@ -59,7 +72,6 @@ export async function getExerciseImageUrl(exerciseId: string): Promise<string | 
     return null;
   }
 
-  // When offline, trust the hardcoded URL
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
