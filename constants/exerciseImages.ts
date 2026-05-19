@@ -13,8 +13,8 @@ const IMAGE_URLS: Record<string, string> = {
   lateral_raises_fri: 'https://wger.de/media/exercise-images/148/lateral-dumbbell-raises-large-2.png',
 
   // ── Push — Triceps ────────────────────────────────────────────
-  rope_pushdown:      'https://wger.de/media/exercise-images/50/695ced5c-9961-4076-add2-cb250d01089e.png',
-  oh_tricep_ext:      'https://wger.de/media/exercise-images/50/695ced5c-9961-4076-add2-cb250d01089e.png',
+  rope_pushdown:      'https://wger.de/media/exercise-images/805/7a437824-e2cc-46e1-804a-674f0ea31d25.png',
+  oh_tricep_ext:      'https://wger.de/media/exercise-images/659/a60452f1-e2ea-43fe-baa6-c1a2208d060c.png',
   skull_crushers:     'https://wger.de/media/exercise-images/84/Lying-close-grip-triceps-press-to-chin-1.png',
 
   // ── Pull — Back ───────────────────────────────────────────────
@@ -27,8 +27,8 @@ const IMAGE_URLS: Record<string, string> = {
   db_shrugs:          'https://wger.de/media/exercise-images/151/Dumbbell-shrugs-2.png',
 
   // ── Pull — Rear Delt ──────────────────────────────────────────
-  face_pulls:         'https://wger.de/media/exercise-images/349/9d969203-9cb6-4d47-9c31-fef53bfe1de5.png',
-  rear_delt_fly:      'https://wger.de/media/exercise-images/81/a751a438-ae2d-4751-8d61-cef0e9292174.png',
+  face_pulls:         'https://wger.de/media/exercise-images/822/74affc0d-03b6-4f33-b5f4-a822a2615f68.png',
+  rear_delt_fly:      'https://wger.de/media/exercise-images/829/ad724e5c-b1ed-49e8-9279-a17545b0dd0b.png',
 
   // ── Pull — Biceps ─────────────────────────────────────────────
   bb_curl:            'https://wger.de/media/exercise-images/74/Bicep-curls-1.png',
