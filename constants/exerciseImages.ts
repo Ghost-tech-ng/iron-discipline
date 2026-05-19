@@ -59,6 +59,15 @@ const IMAGE_URLS: Record<string, string> = {
   cable_crunch_sat:   'https://wger.de/media/exercise-images/91/Crunches-1.png',
   plank_wed:          'https://wger.de/media/exercise-images/458/b7bd9c28-9f1d-4647-bd17-ab6a3adf5770.png',
   hanging_leg_raise:  'https://wger.de/media/exercise-images/125/Leg-raises-2.png',
+  ab_wheel_mon:       'https://wger.de/media/exercise-images/41/34b37423-269f-43d4-9d29-d2a90eeaa6b4.png',
+  ab_wheel_fri:       'https://wger.de/media/exercise-images/41/34b37423-269f-43d4-9d29-d2a90eeaa6b4.png',
+  side_plank:         'https://wger.de/media/exercise-images/1091/50c8912d-54ef-46c9-99d1-633b6196aa1e.jpg',
+  pallof_press_tue:   'https://wger.de/media/exercise-images/1194/074e1766-4208-4a67-a211-9721772d99b0.png',
+  pallof_press_sat:   'https://wger.de/media/exercise-images/1194/074e1766-4208-4a67-a211-9721772d99b0.png',
+  dead_bug:           'https://wger.de/media/exercise-images/978/d3ffe51f-7eb8-4cc9-9eae-105847af3005.png',
+  cable_woodchop_wed: 'https://wger.de/media/exercise-images/1089/49f51716-535d-41dd-aeb5-cff5bb906bc1.jpeg',
+  cable_woodchop_sat: 'https://wger.de/media/exercise-images/1089/49f51716-535d-41dd-aeb5-cff5bb906bc1.jpeg',
+  russian_twist:      'https://wger.de/media/exercise-images/1193/70ca5d80-3847-4a8c-8882-c6e9e485e29e.png',
 };
 
 const verified: Record<string, string | null> = {};
