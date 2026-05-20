@@ -6,7 +6,9 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withSequence,
+  withTiming,
   FadeInDown,
+  Easing,
 } from 'react-native-reanimated';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
@@ -29,29 +31,99 @@ function HabitRow({ id, label, completed, onToggle }: {
   onToggle: () => void;
 }) {
   const Colors = useColors();
-  const scale = useSharedValue(1);
 
-  const checkStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  // Checkbox container bounce
+  const boxScale = useSharedValue(1);
+  // Checkmark appears with a spring scale-in
+  const checkScale = useSharedValue(completed ? 1 : 0);
+  // Ripple ring: scale + opacity
+  const rippleScale = useSharedValue(0.3);
+  const rippleOpacity = useSharedValue(0);
+  // Row flash background
+  const flashOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (completed) {
+      checkScale.value = withSpring(1, { damping: 11, stiffness: 260 });
+    } else {
+      checkScale.value = withTiming(0, { duration: 150 });
+    }
+  }, [completed]);
 
   function handlePress() {
-    scale.value = withSequence(
-      withSpring(1.3, { damping: 10 }),
-      withSpring(1, { damping: 12 })
+    const togglingOn = !completed;
+
+    // Checkbox bounce
+    boxScale.value = withSequence(
+      withSpring(1.28, { damping: 8, stiffness: 300 }),
+      withSpring(1.0, { damping: 14, stiffness: 220 })
     );
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    if (togglingOn) {
+      // Ripple burst
+      rippleScale.value = 0.3;
+      rippleOpacity.value = 0.7;
+      rippleScale.value = withTiming(2.6, { duration: 500, easing: Easing.out(Easing.quad) });
+      rippleOpacity.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) });
+
+      // Row green flash
+      flashOpacity.value = 0.18;
+      flashOpacity.value = withTiming(0, { duration: 600, easing: Easing.out(Easing.quad) });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
     onToggle();
   }
 
+  const boxStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: boxScale.value }],
+  }));
+
+  const checkmarkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkScale.value }],
+    opacity: checkScale.value,
+  }));
+
+  const rippleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: rippleScale.value }],
+    opacity: rippleOpacity.value,
+  }));
+
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: flashOpacity.value,
+  }));
+
   const habitStyles = React.useMemo(() => StyleSheet.create({
+    outer: { overflow: 'hidden' },
+    flash: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: Colors.accentGreen,
+      borderRadius: 10,
+    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Spacing.md,
       paddingVertical: 14,
+      paddingHorizontal: Spacing.md,
     },
-    rowDone: { opacity: 0.7 },
+    checkboxWrap: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ripple: {
+      position: 'absolute',
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: Colors.accentGreen,
+    },
     checkbox: {
       width: 24,
       height: 24,
@@ -83,19 +155,34 @@ function HabitRow({ id, label, completed, onToggle }: {
 
   return (
     <PressableScale onPress={handlePress}>
-      <View style={[habitStyles.row, completed && habitStyles.rowDone]}>
-        <Animated.View
-          style={[
-            habitStyles.checkbox,
-            completed && habitStyles.checkboxDone,
-            checkStyle,
-          ]}
-        >
-          {completed && <Text style={habitStyles.checkmark}>✓</Text>}
-        </Animated.View>
-        <Text style={[habitStyles.label, completed && habitStyles.labelDone]}>
-          {label}
-        </Text>
+      <View style={habitStyles.outer}>
+        {/* Row green flash overlay */}
+        <Animated.View style={[habitStyles.flash, flashStyle]} pointerEvents="none" />
+
+        <View style={[habitStyles.row, completed && { opacity: 0.75 }]}>
+          {/* Checkbox + ripple */}
+          <View style={habitStyles.checkboxWrap}>
+            {/* Ripple ring */}
+            <Animated.View style={[habitStyles.ripple, rippleStyle]} pointerEvents="none" />
+
+            {/* Checkbox with bounce */}
+            <Animated.View
+              style={[
+                habitStyles.checkbox,
+                completed && habitStyles.checkboxDone,
+                boxStyle,
+              ]}
+            >
+              <Animated.Text style={[habitStyles.checkmark, checkmarkStyle]}>
+                ✓
+              </Animated.Text>
+            </Animated.View>
+          </View>
+
+          <Text style={[habitStyles.label, completed && habitStyles.labelDone]}>
+            {label}
+          </Text>
+        </View>
       </View>
     </PressableScale>
   );
