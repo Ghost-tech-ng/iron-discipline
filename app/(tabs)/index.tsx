@@ -270,7 +270,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Discipline Score — hero element */}
-        <Card style={styles.disciplineCard} glow={score > 70 ? Colors.accent : undefined}>
+        <Card style={styles.disciplineCard} accentColor={Colors.accent} gradient glow={score >= 50 ? Colors.accent : undefined}>
           <View style={styles.disciplineInner}>
             <GlowRing score={score} size={200} strokeWidth={14} />
             <View style={styles.disciplineStats}>
@@ -302,7 +302,9 @@ export default function DashboardScreen() {
         {session ? (
           <PressableScale onPress={() => router.push({ pathname: '/workout/[id]', params: { id: session.type } })}>
             <Card
-              style={[styles.sessionCard, { borderColor: (Colors as Record<string, string>)[session.type] ?? Colors.border }]}
+              style={styles.sessionCard}
+              accentColor={(Colors as Record<string, string>)[session.type] ?? Colors.accent}
+              gradient
             >
               <View style={styles.sessionHeader}>
                 <View
@@ -343,7 +345,7 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        <Card style={styles.nutritionCard}>
+        <Card style={styles.nutritionCard} accentColor={Colors.accentHeat} gradient>
           <View style={styles.macroGrid}>
             <StatBadge
               value={calories}

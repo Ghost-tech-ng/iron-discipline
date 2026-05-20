@@ -605,10 +605,10 @@ export const SESSION_LABELS: Record<string, string> = {
 };
 
 export const SESSION_COLORS: Record<string, string> = {
-  push: '#3b82f6',
+  push: '#2d9cff',
   pull: '#8b5cf6',
   legs: '#22c55e',
   upper: '#f59e0b',
   lower: '#ef4444',
-  rest: '#555555',
+  rest: '#4a5568',
 };
