@@ -170,6 +170,26 @@ export interface CoachingData {
   weightTrend: 'losing' | 'gaining' | 'stable' | 'unknown';
 }
 
+export async function askCoach(question: string, data: CoachingData): Promise<string> {
+  const text = await callGroq(TEXT_MODEL, [
+    {
+      role: 'system',
+      content: 'You are a direct, no-nonsense fitness and nutrition coach. Always respond with valid JSON only, no markdown.',
+    },
+    {
+      role: 'user',
+      content: `User context: ${data.protein}g protein (goal: ${data.proteinGoal}g), ${data.calories} kcal (goal: ${data.calorieGoal}), workout ${data.workoutDone ? 'done' : 'not done'}, ${data.streak}-day streak, discipline score: ${data.score}/100, weight trend: ${data.weightTrend}.
+
+Question: "${question}"
+
+Answer in 2-4 sentences. Be specific and direct. Reference their data where relevant. No filler.
+Return JSON: {"answer":"..."}`,
+    },
+  ]);
+  const parsed = JSON.parse(text) as { answer: string };
+  return parsed.answer ?? '';
+}
+
 export async function generateDailyCoaching(data: CoachingData): Promise<string> {
   const text = await callGroq(TEXT_MODEL, [
     {

@@ -41,9 +41,7 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
 
       const discipline = useDisciplineStore.getState();
       if (newProtein >= USER_TARGETS.protein) discipline.setProteinHit(true);
-      const calLow = USER_TARGETS.calories * 0.9;
-      const calHigh = USER_TARGETS.calories * 1.1;
-      discipline.setCalorieHit(newCalories >= calLow && newCalories <= calHigh);
+      discipline.setCalorieHit(newCalories >= USER_TARGETS.calories * 0.9);
 
       return {
         today: {
@@ -67,9 +65,7 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
 
       const discipline = useDisciplineStore.getState();
       if (newProtein < USER_TARGETS.protein) discipline.setProteinHit(false);
-      const calLow = USER_TARGETS.calories * 0.9;
-      const calHigh = USER_TARGETS.calories * 1.1;
-      discipline.setCalorieHit(newCalories >= calLow && newCalories <= calHigh);
+      discipline.setCalorieHit(newCalories >= USER_TARGETS.calories * 0.9);
 
       return {
         today: {
@@ -99,6 +95,9 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
       fat += m.foodItem.fat * m.quantity;
     }
     set({ today: { date, calories, protein, carbs, fat, entries: meals }, waterMl });
+    const discipline = useDisciplineStore.getState();
+    discipline.setProteinHit(protein >= USER_TARGETS.protein);
+    discipline.setCalorieHit(calories >= USER_TARGETS.calories * 0.9);
   },
 
   getTotals: () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -101,8 +101,10 @@ function HabitRow({ id, label, completed, onToggle }: {
 
 export default function HabitsScreen() {
   const Colors = useColors();
-  const { habits, toggleHabit, completionPercent } = useHabitStore();
+  const { habits, toggleHabit, completionPercent, checkNewDay } = useHabitStore();
   const { setSleepLogged, setCardioLogged } = useDisciplineStore();
+
+  useEffect(() => { checkNewDay(); }, []);
   const [resetting, setResetting] = useState(false);
   const pct = completionPercent();
 

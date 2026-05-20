@@ -1,5 +1,9 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { HabitItem } from '../types';
+
+const todayStr = () => new Date().toISOString().split('T')[0];
 
 const DEFAULT_HABITS: HabitItem[] = [
   { id: 'steps', label: '8,000+ Steps', completed: false, weight: 20 },
@@ -11,29 +15,51 @@ const DEFAULT_HABITS: HabitItem[] = [
 
 interface HabitStore {
   habits: HabitItem[];
+  date: string;
   toggleHabit: (id: string) => void;
   resetHabits: () => void;
   completionPercent: () => number;
+  checkNewDay: () => void;
 }
 
-export const useHabitStore = create<HabitStore>((set, get) => ({
-  habits: DEFAULT_HABITS,
+export const useHabitStore = create<HabitStore>()(
+  persist(
+    (set, get) => ({
+      habits: DEFAULT_HABITS,
+      date: todayStr(),
 
-  toggleHabit: (id) =>
-    set((state) => ({
-      habits: state.habits.map((h) =>
-        h.id === id ? { ...h, completed: !h.completed } : h
-      ),
-    })),
+      toggleHabit: (id) =>
+        set((state) => ({
+          habits: state.habits.map((h) =>
+            h.id === id ? { ...h, completed: !h.completed } : h
+          ),
+        })),
 
-  resetHabits: () =>
-    set({
-      habits: DEFAULT_HABITS.map((h) => ({ ...h, completed: false })),
+      resetHabits: () =>
+        set({
+          habits: DEFAULT_HABITS.map((h) => ({ ...h, completed: false })),
+          date: todayStr(),
+        }),
+
+      completionPercent: () => {
+        const { habits } = get();
+        const done = habits.filter((h) => h.completed).length;
+        return Math.round((done / habits.length) * 100);
+      },
+
+      checkNewDay: () => {
+        const today = todayStr();
+        if (get().date !== today) {
+          set({
+            habits: DEFAULT_HABITS.map((h) => ({ ...h, completed: false })),
+            date: today,
+          });
+        }
+      },
     }),
-
-  completionPercent: () => {
-    const { habits } = get();
-    const done = habits.filter((h) => h.completed).length;
-    return Math.round((done / habits.length) * 100);
-  },
-}));
+    {
+      name: 'habit-store-v1',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
