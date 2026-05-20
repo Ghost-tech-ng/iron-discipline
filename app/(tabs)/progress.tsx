@@ -34,6 +34,7 @@ import { isMongoConfigured } from '../../services/mongoService';
 import { SyncCard } from '../../components/ui/SyncCard';
 import { useSyncStore } from '../../store/syncStore';
 import { useColors } from '../../hooks/useColors';
+import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -261,6 +262,7 @@ export default function ProgressScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <NoiseOverlay />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}

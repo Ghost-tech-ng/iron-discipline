@@ -16,6 +16,7 @@ import { useNutritionStore } from '../../store/nutritionStore';
 import { useProgressStore } from '../../store/progressStore';
 import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
+import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import { resetAllData } from '../../services/db';
 import { router } from 'expo-router';
@@ -229,6 +230,7 @@ export default function HabitsScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <NoiseOverlay />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}

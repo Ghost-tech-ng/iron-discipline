@@ -22,6 +22,7 @@ import { loadDisciplineHistory } from '../../services/disciplineService';
 import { CoachCard } from '../../components/ai/CoachCard';
 import { WEEKLY_SPLIT } from '../../constants/workouts';
 import { useColors } from '../../hooks/useColors';
+import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 
@@ -250,6 +251,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <NoiseOverlay />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}

@@ -9,6 +9,7 @@ import { SupplementTracker } from '../../components/nutrition/SupplementTracker'
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
+import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import { DAILY_MEAL_PLAN, type MealSlot } from '../../constants/nutrition';
 import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
@@ -232,6 +233,7 @@ export default function NutritionScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <NoiseOverlay />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}

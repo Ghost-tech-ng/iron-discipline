@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
 import { useColors } from '../../hooks/useColors';
+import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 
@@ -101,6 +102,7 @@ export default function WorkoutsScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <NoiseOverlay />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
