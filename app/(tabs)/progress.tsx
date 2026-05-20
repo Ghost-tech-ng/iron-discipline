@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -268,57 +269,71 @@ export default function ProgressScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Progress</Text>
-        <Text style={styles.subtitle}>Weigh in every Monday morning</Text>
+        <Animated.View entering={FadeInDown.delay(0).duration(450)}>
+          <Text style={styles.title}>Progress</Text>
+          <Text style={styles.subtitle}>Weigh in every Monday morning</Text>
+        </Animated.View>
 
         {/* Weight trend chart */}
-        <Card style={styles.chartCard}>
-          <Text style={styles.cardTitle}>WEIGHT TREND — 12 WEEKS</Text>
-          {lost !== null && lost > 0 && (
-            <View style={styles.lostBadge}>
-              <Text style={styles.lostText}>−{lost}kg lost</Text>
-            </View>
-          )}
-          <WeightChart
-            checkIns={checkIns}
-            startWeight={profile.weightKg}
-            goalWeight={profile.goalWeightKg}
-          />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
+          <Card style={styles.chartCard}>
+            <Text style={styles.cardTitle}>WEIGHT TREND — 12 WEEKS</Text>
+            {lost !== null && lost > 0 && (
+              <View style={styles.lostBadge}>
+                <Text style={styles.lostText}>−{lost}kg lost</Text>
+              </View>
+            )}
+            <WeightChart
+              checkIns={checkIns}
+              startWeight={profile.weightKg}
+              goalWeight={profile.goalWeightKg}
+            />
+          </Card>
+        </Animated.View>
 
         {/* Goal progress bar */}
-        <Card style={styles.goalCard}>
-          <Text style={styles.cardTitle}>12-WEEK GOAL</Text>
-          <GoalBar
-            current={currentWeight}
-            start={profile.weightKg}
-            goal={profile.goalWeightKg}
-          />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(160).duration(450)}>
+          <Card style={styles.goalCard}>
+            <Text style={styles.cardTitle}>12-WEEK GOAL</Text>
+            <GoalBar
+              current={currentWeight}
+              start={profile.weightKg}
+              goal={profile.goalWeightKg}
+            />
+          </Card>
+        </Animated.View>
 
         {/* Discipline score chart */}
-        <Card style={styles.chartCard}>
-          <Text style={styles.cardTitle}>DISCIPLINE SCORE HISTORY</Text>
-          <ScoreChart history={scoreHistory} />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(240).duration(450)}>
+          <Card style={styles.chartCard}>
+            <Text style={styles.cardTitle}>DISCIPLINE SCORE HISTORY</Text>
+            <ScoreChart history={scoreHistory} />
+          </Card>
+        </Animated.View>
 
         {/* Workout consistency calendar */}
-        <Card style={styles.chartCard}>
-          <Text style={styles.cardTitle}>WORKOUT CONSISTENCY — 12 WEEKS</Text>
-          <ConsistencyCalendar workoutDates={workoutDates} weeks={12} />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(320).duration(450)}>
+          <Card style={styles.chartCard}>
+            <Text style={styles.cardTitle}>WORKOUT CONSISTENCY — 12 WEEKS</Text>
+            <ConsistencyCalendar workoutDates={workoutDates} weeks={12} />
+          </Card>
+        </Animated.View>
 
         {/* Strength progress */}
-        <Card style={styles.chartCard}>
-          <Text style={styles.cardTitle}>STRENGTH PROGRESS</Text>
-          <StrengthChart exercises={STRENGTH_EXERCISES} data={strengthData} />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(400).duration(450)}>
+          <Card style={styles.chartCard}>
+            <Text style={styles.cardTitle}>STRENGTH PROGRESS</Text>
+            <StrengthChart exercises={STRENGTH_EXERCISES} data={strengthData} />
+          </Card>
+        </Animated.View>
 
         {/* Calorie adherence */}
-        <Card style={styles.chartCard}>
-          <Text style={styles.cardTitle}>CALORIE ADHERENCE — 30 DAYS</Text>
-          <CalorieChart history={calorieHistory} target={profile.goalCalories} />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(480).duration(450)}>
+          <Card style={styles.chartCard}>
+            <Text style={styles.cardTitle}>CALORIE ADHERENCE — 30 DAYS</Text>
+            <CalorieChart history={calorieHistory} target={profile.goalCalories} />
+          </Card>
+        </Animated.View>
 
         {/* Progress photos */}
         {photos.length > 0 && (

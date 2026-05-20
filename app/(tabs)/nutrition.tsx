@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { GradientBar } from '../../components/ui/GradientBar';
@@ -239,14 +240,17 @@ export default function NutritionScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Fuel</Text>
-        <Text style={styles.subtitle}>
-          {remaining.protein > 0
-            ? `${remaining.protein}g protein to go`
-            : 'Protein target hit ✓'}
-        </Text>
+        <Animated.View entering={FadeInDown.delay(0).duration(450)}>
+          <Text style={styles.title}>Fuel</Text>
+          <Text style={styles.subtitle}>
+            {remaining.protein > 0
+              ? `${remaining.protein}g protein to go`
+              : 'Protein target hit ✓'}
+          </Text>
+        </Animated.View>
 
         {/* Calorie summary */}
+        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
         <Card style={styles.totalsCard}>
           <View style={styles.mainCalRow}>
             <View>
@@ -279,10 +283,11 @@ export default function NutritionScreen() {
             <GradientBar value={fat} max={profile.goalFat} label="Fat" unit="g" color={Colors.accent2} />
           </View>
         </Card>
+        </Animated.View>
 
         {/* Meals logged today */}
         {today.entries.length > 0 && (
-          <>
+          <Animated.View entering={FadeInDown.delay(160).duration(450)}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionLabel}>TODAY'S MEALS</Text>
               <Text style={styles.sectionCount}>{today.entries.length} entries</Text>
@@ -311,10 +316,11 @@ export default function NutritionScreen() {
                 </React.Fragment>
               ))}
             </Card>
-          </>
+          </Animated.View>
         )}
 
         {/* Meal plan */}
+        <Animated.View entering={FadeInDown.delay(200).duration(450)}>
         <View style={styles.sectionHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={styles.sectionLabel}>MEAL PLAN + TIMING</Text>
@@ -372,36 +378,45 @@ export default function NutritionScreen() {
             </Text>
           </View>
         </Card>
+        </Animated.View>
 
-        <Button
-          label="+ Log a Meal"
-          variant="primary"
-          fullWidth
-          onPress={() => router.push('/meal/log')}
-        />
+        <Animated.View entering={FadeInDown.delay(280).duration(450)}>
+          <Button
+            label="+ Log a Meal"
+            variant="primary"
+            fullWidth
+            onPress={() => router.push('/meal/log')}
+          />
+        </Animated.View>
 
         {/* Water logger */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>WATER INTAKE</Text>
-        </View>
-        <Card>
-          <WaterLogger />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(360).duration(450)}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>WATER INTAKE</Text>
+          </View>
+          <Card>
+            <WaterLogger />
+          </Card>
+        </Animated.View>
 
         {/* Supplements */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>DAILY SUPPLEMENTS</Text>
-        </View>
-        <SupplementTracker />
+        <Animated.View entering={FadeInDown.delay(440).duration(450)}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>DAILY SUPPLEMENTS</Text>
+          </View>
+          <SupplementTracker />
+        </Animated.View>
 
         {/* Protein note */}
-        <Card style={styles.noteCard}>
-          <Text style={styles.noteTitle}>Daily protein target</Text>
-          <Text style={styles.noteBody}>
-            <Text style={{ color: Colors.accent, fontWeight: '700' }}>{profile.goalProtein}g</Text>
-            {' '}at {profile.weightKg}kg — 1.8g/kg bodyweight. Hit this every day regardless of training. This single variable has the biggest impact on body recomposition.
-          </Text>
-        </Card>
+        <Animated.View entering={FadeInDown.delay(520).duration(450)}>
+          <Card style={styles.noteCard}>
+            <Text style={styles.noteTitle}>Daily protein target</Text>
+            <Text style={styles.noteBody}>
+              <Text style={{ color: Colors.accent, fontWeight: '700' }}>{profile.goalProtein}g</Text>
+              {' '}at {profile.weightKg}kg — 1.8g/kg bodyweight. Hit this every day regardless of training. This single variable has the biggest impact on body recomposition.
+            </Text>
+          </Card>
+        </Animated.View>
 
         <View style={{ height: 100 }} />
       </ScrollView>

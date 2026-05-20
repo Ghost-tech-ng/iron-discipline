@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
@@ -108,10 +109,12 @@ export default function WorkoutsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Training</Text>
-        <Text style={styles.subtitle}>5-Day PPL · Push / Pull / Legs / Upper / Lower</Text>
+        <Animated.View entering={FadeInDown.delay(0).duration(450)}>
+          <Text style={styles.title}>Training</Text>
+          <Text style={styles.subtitle}>5-Day PPL · Push / Pull / Legs / Upper / Lower</Text>
+        </Animated.View>
 
-        {DAYS.map(({ key, label }) => {
+        {DAYS.map(({ key, label }, idx) => {
           const session = WEEKLY_SPLIT[key];
           const isToday = key === todayKey;
           const accentColor = session
@@ -119,8 +122,8 @@ export default function WorkoutsScreen() {
             : Colors.muted;
 
           return (
+            <Animated.View key={key} entering={FadeInDown.delay(idx * 70).duration(400)}>
             <PressableScale
-              key={key}
               onPress={() => {
                 if (session) router.push({ pathname: '/workout/[id]', params: { id: session.type } });
               }}
@@ -165,6 +168,7 @@ export default function WorkoutsScreen() {
                 )}
               </Card>
             </PressableScale>
+            </Animated.View>
           );
         })}
 

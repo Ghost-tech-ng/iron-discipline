@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withSequence,
+  FadeInDown,
 } from 'react-native-reanimated';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
@@ -236,55 +237,63 @@ export default function HabitsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <Animated.View entering={FadeInDown.delay(0).duration(450)} style={styles.header}>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>Habits</Text>
             <Text style={styles.subtitle}>Daily non-negotiables</Text>
           </View>
           <ThemeToggle />
-        </View>
+        </Animated.View>
 
-        <Card style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressLabel}>TODAY</Text>
-            <Text style={[
-              styles.progressPct,
-              { color: pct === 100 ? Colors.accentGreen : pct > 60 ? Colors.accent : Colors.accentAmber }
-            ]}>
-              {pct}%
+        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
+          <Card style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>TODAY</Text>
+              <Text style={[
+                styles.progressPct,
+                { color: pct === 100 ? Colors.accentGreen : pct > 60 ? Colors.accent : Colors.accentAmber }
+              ]}>
+                {pct}%
+              </Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: pct === 100 ? Colors.accentGreen : Colors.accent }]} />
+            </View>
+          </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(160).duration(450)}>
+          <Card style={styles.habitsCard}>
+            {habits.map((habit, idx) => (
+              <React.Fragment key={habit.id}>
+                <HabitRow
+                  id={habit.id}
+                  label={habit.label}
+                  completed={habit.completed}
+                  onToggle={() => handleToggle(habit.id)}
+                />
+                {idx < habits.length - 1 && <View style={styles.separator} />}
+              </React.Fragment>
+            ))}
+          </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(240).duration(450)}>
+          <Card style={styles.noteCard}>
+            <Text style={styles.noteTitle}>Why these habits matter</Text>
+            <Text style={styles.noteBody}>
+              Each habit has a 20% weight in your Discipline Score. Miss all five = 30 pts off your score, regardless of your workout. Sleep and steps are the two most underestimated factors in body recomposition.
             </Text>
-          </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: pct === 100 ? Colors.accentGreen : Colors.accent }]} />
-          </View>
-        </Card>
+          </Card>
+        </Animated.View>
 
-        <Card style={styles.habitsCard}>
-          {habits.map((habit, idx) => (
-            <React.Fragment key={habit.id}>
-              <HabitRow
-                id={habit.id}
-                label={habit.label}
-                completed={habit.completed}
-                onToggle={() => handleToggle(habit.id)}
-              />
-              {idx < habits.length - 1 && <View style={styles.separator} />}
-            </React.Fragment>
-          ))}
-        </Card>
-
-        <Card style={styles.noteCard}>
-          <Text style={styles.noteTitle}>Why these habits matter</Text>
-          <Text style={styles.noteBody}>
-            Each habit has a 20% weight in your Discipline Score. Miss all five = 30 pts off your score, regardless of your workout. Sleep and steps are the two most underestimated factors in body recomposition.
-          </Text>
-        </Card>
-
-        <PressableScale onPress={handleReset} style={styles.resetBtn}>
-          <Text style={styles.resetText}>
-            {resetting ? 'Resetting…' : 'Reset All Data'}
-          </Text>
-        </PressableScale>
+        <Animated.View entering={FadeInDown.delay(320).duration(450)}>
+          <PressableScale onPress={handleReset} style={styles.resetBtn}>
+            <Text style={styles.resetText}>
+              {resetting ? 'Resetting…' : 'Reset All Data'}
+            </Text>
+          </PressableScale>
+        </Animated.View>
 
         <View style={{ height: 100 }} />
       </ScrollView>

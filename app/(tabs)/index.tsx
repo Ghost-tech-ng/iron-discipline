@@ -25,6 +25,7 @@ import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 function computeStreak(history: { date: string; score: number }[]): number {
   if (history.length === 0) return 0;
@@ -258,7 +259,7 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View entering={FadeInDown.delay(0).duration(450)} style={styles.header}>
           <View>
             <Text style={styles.greeting}>{getGreeting(profile.name)}</Text>
             <Text style={styles.date}>{formatDate()}</Text>
@@ -267,9 +268,10 @@ export default function DashboardScreen() {
             <Ionicons name="flame" size={16} color={Colors.accentAmber} />
             <Text style={styles.streakCount}>{streak}</Text>
           </PressableScale>
-        </View>
+        </Animated.View>
 
         {/* Discipline Score — hero element */}
+        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
         <Card style={styles.disciplineCard} accentColor={Colors.accent} gradient glow={score >= 50 ? Colors.accent : undefined}>
           <View style={styles.disciplineInner}>
             <GlowRing score={score} size={200} strokeWidth={14} />
@@ -293,151 +295,110 @@ export default function DashboardScreen() {
             </View>
           </View>
         </Card>
+        </Animated.View>
 
         {/* Today's session */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>TODAY'S SESSION</Text>
-        </View>
-
-        {session ? (
-          <PressableScale onPress={() => router.push({ pathname: '/workout/[id]', params: { id: session.type } })}>
-            <Card
-              style={styles.sessionCard}
-              accentColor={(Colors as Record<string, string>)[session.type] ?? Colors.accent}
-              gradient
-            >
-              <View style={styles.sessionHeader}>
-                <View
-                  style={[
-                    styles.sessionDot,
-                    { backgroundColor: Colors[session.type] || Colors.accent },
-                  ]}
-                />
-                <Text style={styles.sessionLabel}>{session.label}</Text>
-                {workoutDone && (
-                  <View style={styles.doneBadge}>
-                    <Text style={styles.doneText}>DONE</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.exerciseCount}>
-                {session.exercises.length} exercises
-              </Text>
-              <Text style={styles.sessionCta}>
-                {workoutDone ? 'View completed workout' : 'Tap to begin →'}
-              </Text>
+        <Animated.View entering={FadeInDown.delay(160).duration(450)}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>TODAY'S SESSION</Text>
+          </View>
+          {session ? (
+            <PressableScale onPress={() => router.push({ pathname: '/workout/[id]', params: { id: session.type } })}>
+              <Card
+                style={styles.sessionCard}
+                accentColor={(Colors as Record<string, string>)[session.type] ?? Colors.accent}
+                gradient
+              >
+                <View style={styles.sessionHeader}>
+                  <View style={[styles.sessionDot, { backgroundColor: Colors[session.type] || Colors.accent }]} />
+                  <Text style={styles.sessionLabel}>{session.label}</Text>
+                  {workoutDone && (
+                    <View style={styles.doneBadge}>
+                      <Text style={styles.doneText}>DONE</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.exerciseCount}>{session.exercises.length} exercises</Text>
+                <Text style={styles.sessionCta}>{workoutDone ? 'View completed workout' : 'Tap to begin →'}</Text>
+              </Card>
+            </PressableScale>
+          ) : (
+            <Card style={styles.restCard}>
+              <Text style={styles.restLabel}>REST DAY</Text>
+              <Text style={styles.restSub}>30-min walk + active recovery.</Text>
             </Card>
-          </PressableScale>
-        ) : (
-          <Card style={styles.restCard}>
-            <Text style={styles.restLabel}>REST DAY</Text>
-            <Text style={styles.restSub}>30-min walk + active recovery.</Text>
-          </Card>
-        )}
+          )}
+        </Animated.View>
 
         {/* Nutrition summary */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>NUTRITION</Text>
-          <Text style={styles.sectionSub}>
-            {calorieRemaining > 0
-              ? `${calorieRemaining} kcal remaining`
-              : 'Target reached'}
-          </Text>
-        </View>
-
-        <Card style={styles.nutritionCard} accentColor={Colors.accentHeat} gradient>
-          <View style={styles.macroGrid}>
-            <StatBadge
-              value={calories}
-              label="kcal"
-              color={Colors.accentAmber}
-            />
-            <StatBadge
-              value={`${protein}g`}
-              label="protein"
-              color={Colors.accent}
-            />
-            <StatBadge
-              value={`${carbs}g`}
-              label="carbs"
-              color={Colors.accentGreen}
-            />
-            <StatBadge
-              value={`${fat}g`}
-              label="fat"
-              color={Colors.accent2}
-            />
+        <Animated.View entering={FadeInDown.delay(240).duration(450)}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>NUTRITION</Text>
+            <Text style={styles.sectionSub}>
+              {calorieRemaining > 0 ? `${calorieRemaining} kcal remaining` : 'Target reached'}
+            </Text>
           </View>
-
-          <Divider />
-
-          <View style={styles.bars}>
-            <GradientBar
-              value={calories}
-              max={profile.goalCalories}
-              label="Calories"
-              unit="kcal"
-              color={Colors.accentAmber}
-            />
-            <GradientBar
-              value={protein}
-              max={profile.goalProtein}
-              label="Protein"
-              unit="g"
-              color={Colors.accent}
-            />
-            <GradientBar
-              value={waterMl}
-              max={profile.goalWaterMl}
-              label="Water"
-              unit="ml"
-              color={Colors.accent2}
-            />
-          </View>
-        </Card>
+          <Card style={styles.nutritionCard} accentColor={Colors.accentHeat} gradient>
+            <View style={styles.macroGrid}>
+              <StatBadge value={calories} label="kcal" color={Colors.accentAmber} />
+              <StatBadge value={`${protein}g`} label="protein" color={Colors.accent} />
+              <StatBadge value={`${carbs}g`} label="carbs" color={Colors.accentGreen} />
+              <StatBadge value={`${fat}g`} label="fat" color={Colors.accent2} />
+            </View>
+            <Divider />
+            <View style={styles.bars}>
+              <GradientBar value={calories} max={profile.goalCalories} label="Calories" unit="kcal" color={Colors.accentAmber} />
+              <GradientBar value={protein} max={profile.goalProtein} label="Protein" unit="g" color={Colors.accent} />
+              <GradientBar value={waterMl} max={profile.goalWaterMl} label="Water" unit="ml" color={Colors.accent2} />
+            </View>
+          </Card>
+        </Animated.View>
 
         {/* AI Coach */}
-        <CoachCard
-          data={{
-            score,
-            protein,
-            proteinGoal: profile.goalProtein,
-            calories,
-            calorieGoal: profile.goalCalories,
-            workoutDone,
-            streak,
-            weightTrend: 'unknown',
-          }}
-        />
-
-        {/* Quick actions */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
-        </View>
-
-        <View style={styles.quickActions}>
-          <QuickAction
-            label="Log Meal"
-            iconName="restaurant-outline"
-            color={Colors.accentAmber}
-            onPress={() => router.push('/meal/log')}
-          />
-          <QuickAction
-            label="Start Workout"
-            iconName="barbell-outline"
-            color={Colors.accent}
-            onPress={() => {
-              const s = getTodaySession();
-              if (s.session) router.push({ pathname: '/workout/[id]', params: { id: s.session.type } });
+        <Animated.View entering={FadeInDown.delay(320).duration(450)}>
+          <CoachCard
+            data={{
+              score,
+              protein,
+              proteinGoal: profile.goalProtein,
+              calories,
+              calorieGoal: profile.goalCalories,
+              workoutDone,
+              streak,
+              weightTrend: 'unknown',
             }}
           />
-          <QuickAction
-            label="Add Water"
-            iconName="water-outline"
-            color={Colors.accent2}
-            onPress={() => router.push('/nutrition')}
-          />
-        </View>
+        </Animated.View>
+
+        {/* Quick actions */}
+        <Animated.View entering={FadeInDown.delay(400).duration(450)}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
+          </View>
+          <View style={styles.quickActions}>
+            <QuickAction
+              label="Log Meal"
+              iconName="restaurant-outline"
+              color={Colors.accentAmber}
+              onPress={() => router.push('/meal/log')}
+            />
+            <QuickAction
+              label="Start Workout"
+              iconName="barbell-outline"
+              color={Colors.accent}
+              onPress={() => {
+                const s = getTodaySession();
+                if (s.session) router.push({ pathname: '/workout/[id]', params: { id: s.session.type } });
+              }}
+            />
+            <QuickAction
+              label="Add Water"
+              iconName="water-outline"
+              color={Colors.accent2}
+              onPress={() => router.push('/nutrition')}
+            />
+          </View>
+        </Animated.View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
