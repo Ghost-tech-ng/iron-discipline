@@ -129,11 +129,10 @@ export default function NutritionScreen() {
     mealsCard: { padding: 0, overflow: 'hidden' },
     mealRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 12,
+      paddingVertical: 10,
       paddingHorizontal: Spacing.md,
-      gap: 12,
+      gap: 8,
     },
     mealInfo: { flex: 1, gap: 2 },
     mealName: {
@@ -163,8 +162,8 @@ export default function NutritionScreen() {
       marginLeft: Spacing.md,
     },
     deleteBtn: {
-      padding: 8,
-      marginRight: -4,
+      padding: 2,
+      marginBottom: 2,
     },
     noteCard: { gap: 6 },
     noteTitle: {
@@ -324,6 +323,13 @@ export default function NutritionScreen() {
                       </Text>
                     </View>
                     <View style={styles.mealMacros}>
+                      <Pressable
+                        onPress={() => handleDeleteMeal(entry.id, entry.foodItem.name)}
+                        hitSlop={8}
+                        style={styles.deleteBtn}
+                      >
+                        <Ionicons name="trash-outline" size={14} color={Colors.accentRed} />
+                      </Pressable>
                       <Text style={styles.mealCal}>
                         {Math.round(entry.foodItem.calories * entry.quantity)} kcal
                       </Text>
@@ -331,13 +337,6 @@ export default function NutritionScreen() {
                         {Math.round(entry.foodItem.protein * entry.quantity)}g P
                       </Text>
                     </View>
-                    <Pressable
-                      style={styles.deleteBtn}
-                      onPress={() => handleDeleteMeal(entry.id, entry.foodItem.name)}
-                      hitSlop={8}
-                    >
-                      <Ionicons name="trash-outline" size={16} color={Colors.accentRed} />
-                    </Pressable>
                   </View>
                   {idx < today.entries.length - 1 && <View style={styles.mealSep} />}
                 </React.Fragment>
