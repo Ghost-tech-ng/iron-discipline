@@ -286,7 +286,7 @@ export default function HabitsScreen() {
     separator: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: Colors.border,
-      marginLeft: 56,
+      marginLeft: 64,
     },
     noteCard: { gap: 6 },
     noteTitle: {

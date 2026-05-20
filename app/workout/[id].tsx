@@ -302,24 +302,11 @@ export default function WorkoutScreen() {
     getLastSessionByType(id).then((log) => setPreviousSession(log));
   }, [id]);
 
-  if (!session) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>No session found.</Text>
-          <Button label="Go Back" onPress={() => router.back()} variant="secondary" />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Animated progress bar
   const progressAnim = useSharedValue(0);
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressAnim.value * 100}%` as `${number}%`,
   }));
 
-  // Pulsing type pill dot while session is live
   const pillPulse = useSharedValue(1);
   useEffect(() => {
     pillPulse.value = withRepeat(
@@ -337,19 +324,30 @@ export default function WorkoutScreen() {
 
   const completedExerciseCount = [...exerciseLogs.values()].filter(
     (sets) => {
-      const exercise = session.exercises.find((e) =>
+      const exercise = session?.exercises.find((e) =>
         [...exerciseLogs.entries()].find(([k, v]) => v === sets)?.[0] === e.id
       );
       return exercise && sets.length >= exercise.sets;
     }
   ).length;
 
-  const totalExercises = session.exercises.length;
+  const totalExercises = session?.exercises.length ?? 0;
   const progressPct = totalExercises > 0 ? completedExerciseCount / totalExercises : 0;
 
   useEffect(() => {
     progressAnim.value = withTiming(progressPct, { duration: 600, easing: Easing.out(Easing.quad) });
   }, [progressPct]);
+
+  if (!session) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>No session found.</Text>
+          <Button label="Go Back" onPress={() => router.back()} variant="secondary" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   function handleSetsUpdate(exerciseId: string, sets: SetLog[]) {
     setExerciseLogs((prev) => new Map(prev).set(exerciseId, sets));
