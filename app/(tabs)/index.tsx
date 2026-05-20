@@ -27,7 +27,10 @@ import type { DayOfWeek } from '../../types';
 
 function computeStreak(history: { date: string; score: number }[]): number {
   if (history.length === 0) return 0;
-  const sorted = [...history].sort((a, b) => b.date.localeCompare(a.date));
+  const todayDate = new Date().toISOString().split('T')[0];
+  const sorted = [...history]
+    .filter((h) => h.date !== todayDate)
+    .sort((a, b) => b.date.localeCompare(a.date));
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < sorted.length; i++) {
