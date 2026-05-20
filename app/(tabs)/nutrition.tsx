@@ -130,9 +130,9 @@ export default function NutritionScreen() {
     mealRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 10,
+      paddingVertical: 12,
       paddingHorizontal: Spacing.md,
-      gap: 8,
+      gap: 10,
     },
     mealInfo: { flex: 1, gap: 2 },
     mealName: {
@@ -145,7 +145,7 @@ export default function NutritionScreen() {
       color: Colors.muted,
       textTransform: 'capitalize',
     },
-    mealMacros: { alignItems: 'flex-end', gap: 2 },
+    mealMacros: { alignItems: 'flex-end', gap: 2, minWidth: 70 },
     mealCal: {
       ...Typography.small,
       color: Colors.accentAmber,
@@ -162,8 +162,7 @@ export default function NutritionScreen() {
       marginLeft: Spacing.md,
     },
     deleteBtn: {
-      padding: 2,
-      marginBottom: 2,
+      flexShrink: 0,
     },
     noteCard: { gap: 6 },
     noteTitle: {
@@ -315,6 +314,13 @@ export default function NutritionScreen() {
               {today.entries.map((entry, idx) => (
                 <React.Fragment key={entry.id}>
                   <View style={styles.mealRow}>
+                    <Pressable
+                      onPress={() => handleDeleteMeal(entry.id, entry.foodItem.name)}
+                      hitSlop={12}
+                      style={styles.deleteBtn}
+                    >
+                      <Ionicons name="remove-circle" size={22} color={Colors.accentRed} />
+                    </Pressable>
                     <View style={styles.mealInfo}>
                       <Text style={styles.mealName}>{entry.foodItem.name}</Text>
                       <Text style={styles.mealCategory}>
@@ -323,13 +329,6 @@ export default function NutritionScreen() {
                       </Text>
                     </View>
                     <View style={styles.mealMacros}>
-                      <Pressable
-                        onPress={() => handleDeleteMeal(entry.id, entry.foodItem.name)}
-                        hitSlop={8}
-                        style={styles.deleteBtn}
-                      >
-                        <Ionicons name="trash-outline" size={14} color={Colors.accentRed} />
-                      </Pressable>
                       <Text style={styles.mealCal}>
                         {Math.round(entry.foodItem.calories * entry.quantity)} kcal
                       </Text>
