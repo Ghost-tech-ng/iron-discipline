@@ -25,7 +25,11 @@ const emptyDay = (date: string): DailyNutrition => ({
   entries: [],
 });
 
-const todayStr = new Date().toISOString().split('T')[0];
+function localDateStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+const todayStr = localDateStr();
 
 export const useNutritionStore = create<NutritionStore>((set, get) => ({
   today: emptyDay(todayStr),
@@ -86,7 +90,7 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
   loadHistory: (history) => set({ history }),
 
   hydrateToday: (meals, waterMl) => {
-    const date = new Date().toISOString().split('T')[0];
+    const date = localDateStr();
     let calories = 0, protein = 0, carbs = 0, fat = 0;
     for (const m of meals) {
       calories += m.foodItem.calories * m.quantity;

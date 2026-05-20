@@ -62,6 +62,9 @@ export default function RootLayout() {
         await useThemeStore.getState().loadTheme();
         await initDatabase();
 
+        // Reset daily state before loading so hydrateToday always wins
+        await checkAndRunDailyReset();
+
         const [savedProfile, meals, waterMl, supplements, disciplineState, checkIns] =
           await Promise.all([
             loadUserProfile(),
@@ -79,8 +82,6 @@ export default function RootLayout() {
         useDisciplineStore.getState().hydrateSupplements(supplements);
         if (disciplineState) useDisciplineStore.getState().hydrateFlags(disciplineState);
         useProgressStore.getState().loadCheckIns(checkIns);
-
-        await checkAndRunDailyReset();
 
         const granted = await requestNotificationPermissions();
         if (granted) {

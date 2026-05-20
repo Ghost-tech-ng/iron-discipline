@@ -162,9 +162,10 @@ export default function LogMealScreen() {
 
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const entry = {
       id: `meal_${Date.now()}`,
-      date: now.toISOString().split('T')[0],
+      date: localDate,
       time,
       category,
       foodItem: selected,

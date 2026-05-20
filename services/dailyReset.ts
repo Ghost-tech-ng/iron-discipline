@@ -7,7 +7,8 @@ import { useNutritionStore } from '../store/nutritionStore';
 const LAST_RESET_KEY = 'iron_last_reset_date';
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export async function checkAndRunDailyReset(): Promise<void> {
