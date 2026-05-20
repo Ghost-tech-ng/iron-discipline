@@ -4,6 +4,11 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSpring,
+  withRepeat,
+  withSequence,
+  FadeInDown,
+  Easing,
 } from 'react-native-reanimated';
 import { SetRow } from './SetRow';
 import { getExerciseImageUrl } from '../../constants/exerciseImages';
@@ -18,19 +23,14 @@ function calcRecommendation(
   previousLog: ExerciseLog | undefined
 ): { weight: number; direction: 'up' | 'hold' | 'none' } {
   if (!previousLog || previousLog.sets.length === 0) return { weight: 0, direction: 'none' };
-
   const completedSets = previousLog.sets.filter((s) => s.completed);
   if (completedSets.length === 0) return { weight: 0, direction: 'none' };
-
   const maxWeight = Math.max(...completedSets.map((s) => s.weight));
   const allHitReps = completedSets.every((s) => s.reps >= exercise.repsMin);
-
   if (allHitReps) {
     const isLeg = exercise.muscleGroups.some((m) => LEG_MUSCLES.includes(m));
-    const increment = isLeg ? 5 : 2.5;
-    return { weight: maxWeight + increment, direction: 'up' };
+    return { weight: maxWeight + (isLeg ? 5 : 2.5), direction: 'up' };
   }
-
   return { weight: maxWeight, direction: 'hold' };
 }
 
@@ -40,6 +40,7 @@ interface ExerciseCardProps {
   onSetsUpdate: (exerciseId: string, sets: SetLog[]) => void;
   onRestStart: (seconds: number) => void;
   isActive: boolean;
+  enterDelay?: number;
 }
 
 export function ExerciseCard({
@@ -48,45 +49,72 @@ export function ExerciseCard({
   onSetsUpdate,
   onRestStart,
   isActive,
+  enterDelay = 0,
 }: ExerciseCardProps) {
   const Colors = useColors();
   const [completedSets, setCompletedSets] = useState<SetLog[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const completedCount = completedSets.length;
-
   const recommendation = calcRecommendation(exercise, previousLog);
 
   useEffect(() => {
     getExerciseImageUrl(exercise.id).then(setImageUrl);
   }, [exercise.id]);
+
   const totalSets = exercise.sets;
   const allDone = completedCount >= totalSets;
+  const inProgress = completedCount > 0 && !allDone;
 
+  // Border color: idle → accent → green
   const borderAnim = useSharedValue(0);
+  // Pulsing left bar opacity when in-progress
+  const pulseOpacity = useSharedValue(0);
+  // Scale bounce when done
+  const doneScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (allDone) {
+      borderAnim.value = withTiming(1, { duration: 300 });
+      pulseOpacity.value = withTiming(0, { duration: 200 });
+      doneScale.value = withSequence(
+        withSpring(1.025, { damping: 8, stiffness: 260 }),
+        withSpring(1.0, { damping: 14, stiffness: 200 })
+      );
+    } else if (inProgress) {
+      borderAnim.value = withTiming(0, { duration: 200 });
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0.35, { duration: 900, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1
+      );
+    } else {
+      pulseOpacity.value = withTiming(0, { duration: 200 });
+    }
+  }, [allDone, inProgress]);
+
   const cardStyle = useAnimatedStyle(() => ({
     borderColor: borderAnim.value === 1 ? Colors.accentGreen : Colors.border,
+    transform: [{ scale: doneScale.value }],
+  }));
+
+  const accentBarStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value,
   }));
 
   function handleSetComplete(set: SetLog) {
     const updated = [...completedSets.filter((s) => s.setNumber !== set.setNumber), set];
     setCompletedSets(updated);
     onSetsUpdate(exercise.id, updated);
-
-    if (updated.length >= totalSets) {
-      borderAnim.value = withTiming(1, { duration: 400 });
-    }
-
-    // Trigger rest timer (not on last set if all done)
-    if (updated.length < totalSets) {
-      onRestStart(exercise.restSeconds);
-    }
+    if (updated.length < totalSets) onRestStart(exercise.restSeconds);
   }
 
-  function getPreviousSet(setNum: number): { weight: number; reps: number } | undefined {
+  function getPreviousSet(setNum: number) {
     return previousLog?.sets.find((s) => s.setNumber === setNum);
   }
 
-  function isSetCompleted(setNum: number): boolean {
+  function isSetCompleted(setNum: number) {
     return completedSets.some((s) => s.setNumber === setNum);
   }
 
@@ -95,8 +123,16 @@ export function ExerciseCard({
       backgroundColor: Colors.surface,
       borderRadius: Radius.lg,
       borderWidth: 1,
-      borderColor: Colors.border,
       overflow: 'hidden',
+    },
+    accentBar: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 3,
+      backgroundColor: Colors.accent,
+      zIndex: 1,
     },
     imageContainer: {
       width: '100%',
@@ -105,13 +141,7 @@ export function ExerciseCard({
       alignItems: 'center',
       justifyContent: 'center',
     },
-    exerciseImage: {
-      width: '100%',
-      height: '100%',
-    },
-    cardDone: {
-      backgroundColor: Colors.surface,
-    },
+    exerciseImage: { width: '100%', height: '100%' },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -173,10 +203,7 @@ export function ExerciseCard({
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: Colors.border,
     },
-    specText: {
-      ...Typography.caption,
-      color: Colors.muted,
-    },
+    specText: { ...Typography.caption, color: Colors.muted },
     targetBadge: {
       alignSelf: 'flex-start',
       paddingHorizontal: 8,
@@ -198,24 +225,22 @@ export function ExerciseCard({
       fontSize: 11,
       letterSpacing: 0.3,
     },
-    targetTextUp: {
-      color: Colors.accentGreen,
-    },
-    targetTextHold: {
-      color: '#f59e0b',
-    },
+    targetTextUp: { color: Colors.accentGreen },
+    targetTextHold: { color: '#f59e0b' },
   }), [Colors]);
 
   return (
-    <Animated.View style={[styles.card, cardStyle, allDone && styles.cardDone]}>
+    <Animated.View
+      entering={FadeInDown.delay(enterDelay).duration(400)}
+      style={[styles.card, cardStyle]}
+    >
+      {/* Pulsing left accent bar — visible only while in-progress */}
+      <Animated.View style={[styles.accentBar, accentBarStyle]} />
+
       {/* Exercise image */}
       {imageUrl && (
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.exerciseImage}
-            resizeMode="contain"
-          />
+          <Image source={{ uri: imageUrl }} style={styles.exerciseImage} resizeMode="contain" />
         </View>
       )}
 
@@ -223,9 +248,7 @@ export function ExerciseCard({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={[styles.name, allDone && styles.nameDone]}>{exercise.name}</Text>
-          {exercise.notes && (
-            <Text style={styles.notes}>{exercise.notes}</Text>
-          )}
+          {exercise.notes && <Text style={styles.notes}>{exercise.notes}</Text>}
           {recommendation.direction !== 'none' && (
             <View style={[
               styles.targetBadge,

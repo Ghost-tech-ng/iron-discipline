@@ -8,6 +8,15 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedProps,
+  withTiming,
+  withRepeat,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 import type { Stretch } from '../../types';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -297,6 +306,29 @@ export default function WorkoutScreen() {
   }
 
   const accentColor = SESSION_COLORS[session.type] ?? Colors.accent;
+
+  // Animated progress bar
+  const progressAnim = useSharedValue(0);
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressAnim.value * 100}%` as `${number}%`,
+  }));
+
+  // Pulsing type pill dot while session is live
+  const pillPulse = useSharedValue(1);
+  useEffect(() => {
+    pillPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.5, { duration: 900, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1.0, { duration: 900, easing: Easing.inOut(Easing.quad) })
+      ),
+      -1
+    );
+  }, []);
+  const pillDotStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pillPulse.value }],
+    opacity: 0.85,
+  }));
+
   const completedExerciseCount = [...exerciseLogs.values()].filter(
     (sets) => {
       const exercise = session.exercises.find((e) =>
@@ -308,6 +340,10 @@ export default function WorkoutScreen() {
 
   const totalExercises = session.exercises.length;
   const progressPct = totalExercises > 0 ? completedExerciseCount / totalExercises : 0;
+
+  useEffect(() => {
+    progressAnim.value = withTiming(progressPct, { duration: 600, easing: Easing.out(Easing.quad) });
+  }, [progressPct]);
 
   function handleSetsUpdate(exerciseId: string, sets: SetLog[]) {
     setExerciseLogs((prev) => new Map(prev).set(exerciseId, sets));
@@ -376,7 +412,7 @@ export default function WorkoutScreen() {
 
         <View style={styles.topCenter}>
           <View style={[styles.typePill, { backgroundColor: accentColor + '20' }]}>
-            <View style={[styles.typeDot, { backgroundColor: accentColor }]} />
+            <Animated.View style={[styles.typeDot, pillDotStyle, { backgroundColor: accentColor }]} />
             <Text style={[styles.typeText, { color: accentColor }]}>
               {session.type.toUpperCase()}
             </Text>
@@ -389,13 +425,10 @@ export default function WorkoutScreen() {
         </Pressable>
       </View>
 
-      {/* Progress bar */}
+      {/* Progress bar — animated */}
       <View style={styles.progressTrack}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${progressPct * 100}%`, backgroundColor: accentColor },
-          ]}
+        <Animated.View
+          style={[styles.progressFill, progressBarStyle, { backgroundColor: accentColor }]}
         />
       </View>
 
@@ -430,7 +463,7 @@ export default function WorkoutScreen() {
           <StretchSection title="WARM-UP" stretches={session.warmUp} accentColor={accentColor} />
         )}
 
-        {session.exercises.map((exercise) => (
+        {session.exercises.map((exercise, idx) => (
           <ExerciseCard
             key={exercise.id}
             exercise={exercise}
@@ -438,6 +471,7 @@ export default function WorkoutScreen() {
             onSetsUpdate={handleSetsUpdate}
             onRestStart={(secs) => setRestTimerSecs(secs)}
             isActive={true}
+            enterDelay={idx * 60}
           />
         ))}
 
