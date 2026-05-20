@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator, Pressable, Alert } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
 import { GradientBar } from '../../components/ui/GradientBar';
 import { Button } from '../../components/ui/Button';
 import { WaterLogger } from '../../components/nutrition/WaterLogger';
 import { SupplementTracker } from '../../components/nutrition/SupplementTracker';
 import { useNutritionStore } from '../../store/nutritionStore';
+import { deleteMealEntry } from '../../services/nutritionService';
 import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
@@ -17,7 +19,7 @@ import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
 
 export default function NutritionScreen() {
   const Colors = useColors();
-  const { getTotals, today, waterMl } = useNutritionStore();
+  const { getTotals, today, waterMl, removeMeal } = useNutritionStore();
   const { profile } = useUserStore();
   const { calories, protein, carbs, fat } = getTotals();
   const [expandedMeal, setExpandedMeal] = useState<number | null>(null);
@@ -52,6 +54,20 @@ export default function NutritionScreen() {
     } finally {
       setRefreshing(false);
     }
+  }
+
+  function handleDeleteMeal(entryId: string, name: string) {
+    Alert.alert('Remove entry?', name, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          removeMeal(entryId);
+          deleteMealEntry(entryId);
+        },
+      },
+    ]);
   }
 
   const remaining = {
@@ -145,6 +161,10 @@ export default function NutritionScreen() {
       height: StyleSheet.hairlineWidth,
       backgroundColor: Colors.border,
       marginLeft: Spacing.md,
+    },
+    deleteBtn: {
+      padding: 8,
+      marginRight: -4,
     },
     noteCard: { gap: 6 },
     noteTitle: {
@@ -311,6 +331,13 @@ export default function NutritionScreen() {
                         {Math.round(entry.foodItem.protein * entry.quantity)}g P
                       </Text>
                     </View>
+                    <Pressable
+                      style={styles.deleteBtn}
+                      onPress={() => handleDeleteMeal(entry.id, entry.foodItem.name)}
+                      hitSlop={8}
+                    >
+                      <Ionicons name="trash-outline" size={16} color={Colors.accentRed} />
+                    </Pressable>
                   </View>
                   {idx < today.entries.length - 1 && <View style={styles.mealSep} />}
                 </React.Fragment>
