@@ -307,6 +307,7 @@ export default function DashboardScreen() {
               <Card
                 style={styles.sessionCard}
                 accentColor={(Colors as Record<string, string>)[session.type] ?? Colors.accent}
+                glow={!workoutDone ? ((Colors as Record<string, string>)[session.type] ?? Colors.accent) : undefined}
                 gradient
               >
                 <View style={styles.sessionHeader}>

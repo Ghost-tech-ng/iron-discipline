@@ -153,6 +153,9 @@ export default function WorkoutScreen() {
   const { completeWorkout } = useWorkoutStore();
   const { setWorkoutDone } = useDisciplineStore();
 
+  // Resolved early so styles useMemo can consume it
+  const accentColor = SESSION_COLORS[id as string] ?? Colors.accent;
+
   const [exerciseLogs, setExerciseLogs] = useState<Map<string, SetLog[]>>(new Map());
   const [restTimerSecs, setRestTimerSecs] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -172,6 +175,7 @@ export default function WorkoutScreen() {
       paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: Colors.border,
+      backgroundColor: accentColor + '0c',
     },
     cancelBtn: {
       width: 40,
@@ -223,7 +227,7 @@ export default function WorkoutScreen() {
       fontWeight: '700',
     },
     progressTrack: {
-      height: 2,
+      height: 3,
       backgroundColor: Colors.surface2,
     },
     progressFill: {
@@ -233,7 +237,11 @@ export default function WorkoutScreen() {
     sessionHeader: {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.md,
+      paddingLeft: Spacing.md + 4,
       gap: 3,
+      borderLeftWidth: 3,
+      borderLeftColor: accentColor,
+      backgroundColor: accentColor + '08',
     },
     sessionTitle: {
       ...Typography.h2,
@@ -282,7 +290,7 @@ export default function WorkoutScreen() {
       ...Typography.body,
       color: Colors.secondary,
     },
-  }), [Colors]);
+  }), [Colors, accentColor]);
 
   useEffect(() => {
     timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
@@ -304,8 +312,6 @@ export default function WorkoutScreen() {
       </SafeAreaView>
     );
   }
-
-  const accentColor = SESSION_COLORS[session.type] ?? Colors.accent;
 
   // Animated progress bar
   const progressAnim = useSharedValue(0);

@@ -128,7 +128,14 @@ export default function WorkoutsScreen() {
                 if (session) router.push({ pathname: '/workout/[id]', params: { id: session.type } });
               }}
             >
-              <Card style={[styles.dayCard, isToday ? { borderColor: accentColor } : null]}>
+              <Card
+                style={[
+                  styles.dayCard,
+                  isToday ? { borderColor: accentColor, backgroundColor: accentColor + '08' } : null,
+                ]}
+                accentColor={isToday && session ? accentColor : undefined}
+                glow={isToday && session ? accentColor : undefined}
+              >
                 <View style={styles.dayHeader}>
                   <View style={styles.dayLeft}>
                     <Text style={[styles.dayLabel, isToday ? { color: accentColor } : null]}>
