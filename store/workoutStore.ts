@@ -1,9 +1,19 @@
 import { create } from 'zustand';
 import type { WorkoutLog, ExerciseLog, SetLog } from '../types';
 
+export interface ActiveSession {
+  sessionType: string;
+  startedAt: number;
+  exerciseLogs: Record<string, SetLog[]>;
+}
+
 interface WorkoutStore {
   activeWorkout: WorkoutLog | null;
+  activeSession: ActiveSession | null;
   history: WorkoutLog[];
+  startSession: (sessionType: string) => void;
+  updateSessionLog: (exerciseId: string, sets: SetLog[]) => void;
+  clearActiveSession: () => void;
   startWorkout: (log: Omit<WorkoutLog, 'id' | 'durationMinutes' | 'completed'>) => void;
   logSet: (exerciseId: string, set: SetLog) => void;
   completeWorkout: (durationMinutes: number) => void;
@@ -14,7 +24,25 @@ interface WorkoutStore {
 
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   activeWorkout: null,
+  activeSession: null,
   history: [],
+
+  startSession: (sessionType) =>
+    set((s) => ({
+      activeSession:
+        s.activeSession?.sessionType === sessionType
+          ? s.activeSession
+          : { sessionType, startedAt: Date.now(), exerciseLogs: {} },
+    })),
+
+  updateSessionLog: (exerciseId, sets) =>
+    set((s) => ({
+      activeSession: s.activeSession
+        ? { ...s.activeSession, exerciseLogs: { ...s.activeSession.exerciseLogs, [exerciseId]: sets } }
+        : s.activeSession,
+    })),
+
+  clearActiveSession: () => set({ activeSession: null }),
 
   startWorkout: (log) =>
     set({

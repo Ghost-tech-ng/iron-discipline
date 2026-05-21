@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Platform, View, StyleSheet, Text, Pressable, Dimensions } from 'react-native';
+import { router } from 'expo-router';
+import { useWorkoutStore } from '../../store/workoutStore';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useColors } from '../../hooks/useColors';
 import { BlurView } from 'expo-blur';
@@ -75,6 +77,7 @@ const INDICATOR_H = BAR_H - INDICATOR_INSET * 2;
 function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const C = useColors();
   const translateX = useSharedValue(state.index * TAB_W);
+  const activeSession = useWorkoutStore((s) => s.activeSession);
 
   useEffect(() => {
     translateX.value = withSpring(state.index * TAB_W, {
@@ -90,6 +93,17 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   return (
     <View style={barStyles.outer}>
+      {activeSession && (
+        <Pressable
+          onPress={() => router.push({ pathname: '/workout/[id]', params: { id: activeSession.sessionType } })}
+          style={[barStyles.workoutBanner, { backgroundColor: C.accent + '18', borderColor: C.accent + '50' }]}
+        >
+          <View style={[barStyles.workoutDot, { backgroundColor: C.accent }]} />
+          <Text style={[barStyles.workoutBannerText, { color: C.accent }]}>
+            {activeSession.sessionType.toUpperCase()} in session — tap to resume
+          </Text>
+        </Pressable>
+      )}
       <View style={barStyles.pill}>
         {/* Blur or solid background */}
         {Platform.OS === 'ios' ? (
@@ -142,7 +156,7 @@ const barStyles = StyleSheet.create({
     bottom: BOTTOM,
     left: BAR_MARGIN,
     right: BAR_MARGIN,
-    height: BAR_H,
+    gap: 8,
     // Shadow (iOS)
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
@@ -150,6 +164,26 @@ const barStyles = StyleSheet.create({
     shadowRadius: 28,
     // Android elevation
     elevation: 20,
+  },
+  workoutBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderWidth: 1,
+    height: 38,
+  },
+  workoutDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  workoutBannerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   pill: {
     flex: 1,

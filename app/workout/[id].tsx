@@ -8,6 +8,7 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -150,15 +151,21 @@ export default function WorkoutScreen() {
     ? WEEKLY_SPLIT[ALL_DAYS.find((d) => WEEKLY_SPLIT[d]?.type === id) ?? 'monday']
     : null;
 
-  const { completeWorkout } = useWorkoutStore();
+  const { completeWorkout, activeSession, startSession, updateSessionLog, clearActiveSession } = useWorkoutStore();
   const { setWorkoutDone } = useDisciplineStore();
 
   // Resolved early so styles useMemo can consume it
   const accentColor = SESSION_COLORS[id as string] ?? Colors.accent;
 
-  const [exerciseLogs, setExerciseLogs] = useState<Map<string, SetLog[]>>(new Map());
+  const isResume = activeSession?.sessionType === id;
+
+  const [exerciseLogs, setExerciseLogs] = useState<Map<string, SetLog[]>>(() =>
+    isResume ? new Map(Object.entries(activeSession!.exerciseLogs)) : new Map()
+  );
   const [restTimerSecs, setRestTimerSecs] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed] = useState(() =>
+    isResume ? Math.floor((Date.now() - activeSession!.startedAt) / 1000) : 0
+  );
   const [previousSession, setPreviousSession] = useState<WorkoutLog | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -186,7 +193,13 @@ export default function WorkoutScreen() {
     cancelText: {
       ...Typography.body,
       color: Colors.muted,
-      fontSize: 18,
+      fontSize: 22,
+    },
+    minimizeBtn: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     topCenter: {
       alignItems: 'center',
@@ -293,6 +306,7 @@ export default function WorkoutScreen() {
   }), [Colors, accentColor]);
 
   useEffect(() => {
+    if (id) startSession(id);
     timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
@@ -351,6 +365,11 @@ export default function WorkoutScreen() {
 
   function handleSetsUpdate(exerciseId: string, sets: SetLog[]) {
     setExerciseLogs((prev) => new Map(prev).set(exerciseId, sets));
+    updateSessionLog(exerciseId, sets);
+  }
+
+  function handleMinimize() {
+    router.back();
   }
 
   function handleFinish() {
@@ -381,6 +400,7 @@ export default function WorkoutScreen() {
 
             await saveWorkoutLog(log);
             completeWorkout(durationMinutes);
+            clearActiveSession();
             setWorkoutDone(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.back();
@@ -391,9 +411,14 @@ export default function WorkoutScreen() {
   }
 
   function handleCancel() {
-    Alert.alert('Cancel Workout?', 'Progress will not be saved.', [
+    Alert.alert('Workout Options', undefined, [
       { text: 'Keep Going', style: 'cancel' },
-      { text: 'Cancel Workout', style: 'destructive', onPress: () => router.back() },
+      { text: 'Minimize — return to app', onPress: () => router.back() },
+      {
+        text: 'Cancel Workout',
+        style: 'destructive',
+        onPress: () => { clearActiveSession(); router.back(); },
+      },
     ]);
   }
 
@@ -410,8 +435,8 @@ export default function WorkoutScreen() {
 
       {/* Top bar */}
       <View style={styles.topBar}>
-        <Pressable onPress={handleCancel} style={styles.cancelBtn}>
-          <Text style={styles.cancelText}>✕</Text>
+        <Pressable onPress={handleMinimize} style={styles.cancelBtn}>
+          <Ionicons name="chevron-down" size={24} color={Colors.muted} />
         </Pressable>
 
         <View style={styles.topCenter}>
@@ -424,9 +449,14 @@ export default function WorkoutScreen() {
           <Text style={styles.elapsed}>{formatElapsed(elapsed)}</Text>
         </View>
 
-        <Pressable onPress={handleFinish} style={styles.finishBtn}>
-          <Text style={styles.finishText}>Done</Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Pressable onPress={handleCancel} style={styles.minimizeBtn}>
+            <Ionicons name="ellipsis-horizontal" size={20} color={Colors.muted} />
+          </Pressable>
+          <Pressable onPress={handleFinish} style={styles.finishBtn}>
+            <Text style={styles.finishText}>Done</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Progress bar — animated */}

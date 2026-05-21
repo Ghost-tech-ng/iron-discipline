@@ -75,7 +75,7 @@ function formatDate(): string {
 
 export default function DashboardScreen() {
   const Colors = useColors();
-  const { score, workoutDone, proteinHit, calorieHit, supplementsTaken } = useDisciplineStore();
+  const { score, workoutDone, proteinHit, calorieHit, supplementsTaken, setWorkoutDone } = useDisciplineStore();
   const { getTotals, waterMl } = useNutritionStore();
   const { profile } = useUserStore();
   const { activeWorkout } = useWorkoutStore();
@@ -85,9 +85,15 @@ export default function DashboardScreen() {
     loadDisciplineHistory().then((history) => {
       setStreak(computeStreak(history));
     });
-  }, [score]); // re-run when today's score updates
+  }, [score]);
 
   const { session } = getTodaySession();
+  const isRestDay = !session;
+
+  // Rest day counts as workout done automatically
+  useEffect(() => {
+    if (isRestDay && !workoutDone) setWorkoutDone(true);
+  }, [isRestDay]);
   const { calories, protein, carbs, fat } = getTotals();
   const calorieRemaining = profile.goalCalories - calories;
   const proteinRemaining = profile.goalProtein - protein;
@@ -289,7 +295,7 @@ export default function DashboardScreen() {
                 <ScoreRow label="Workout" done={workoutDone} pts={25} />
                 <ScoreRow label="Protein" done={proteinHit} pts={20} />
                 <ScoreRow label="Calories" done={calorieHit} pts={15} />
-                <ScoreRow label="Supplements" done={supplementsTaken.length >= 5} pts={15} />
+                <ScoreRow label="Supplements" done={supplementsTaken.length >= 6} partial={supplementsTaken.length > 0 && supplementsTaken.length < 6} pts={15} earnedPts={Math.round((supplementsTaken.length / 6) * 15)} />
                 <ScoreRow label="Water" done={waterPct >= 1} pts={10} />
               </View>
             </View>
@@ -407,7 +413,9 @@ export default function DashboardScreen() {
   );
 }
 
-function ScoreRow({ label, done, pts }: { label: string; done: boolean; pts: number }) {
+function ScoreRow({ label, done, partial, pts, earnedPts }: {
+  label: string; done: boolean; partial?: boolean; pts: number; earnedPts?: number;
+}) {
   const Colors = useColors();
   const scoreRowStyles = React.useMemo(() => StyleSheet.create({
     row: {
@@ -433,16 +441,14 @@ function ScoreRow({ label, done, pts }: { label: string; done: boolean; pts: num
     },
   }), [Colors]);
 
+  const dotColor = done ? Colors.accentGreen : partial ? Colors.accentAmber : Colors.surface2;
+  const ptsLabel = partial && earnedPts !== undefined ? `+${earnedPts}/${pts}` : `+${pts}`;
+
   return (
     <View style={scoreRowStyles.row}>
-      <View
-        style={[
-          scoreRowStyles.indicator,
-          { backgroundColor: done ? Colors.accentGreen : Colors.surface2 },
-        ]}
-      />
+      <View style={[scoreRowStyles.indicator, { backgroundColor: dotColor }]} />
       <Text style={scoreRowStyles.label}>{label}</Text>
-      <Text style={scoreRowStyles.pts}>+{pts}</Text>
+      <Text style={scoreRowStyles.pts}>{ptsLabel}</Text>
     </View>
   );
 }
