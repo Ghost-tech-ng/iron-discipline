@@ -186,7 +186,7 @@ const barStyles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   pill: {
-    flex: 1,
+    height: BAR_H,
     flexDirection: 'row',
     borderRadius: BAR_H / 2,
     overflow: 'hidden',
