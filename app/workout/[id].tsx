@@ -32,7 +32,7 @@ import { useColors } from '../../hooks/useColors';
 import { Spacing, Typography } from '../../constants/theme';
 import type { SessionType, SetLog, WorkoutLog } from '../../types';
 
-type RouteParams = { id: SessionType };
+type RouteParams = { id: SessionType; makeupDate?: string };
 
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -146,7 +146,7 @@ function StretchSection({
 
 export default function WorkoutScreen() {
   const Colors = useColors();
-  const { id } = useLocalSearchParams<RouteParams>();
+  const { id, makeupDate } = useLocalSearchParams<RouteParams>();
   const session = id
     ? WEEKLY_SPLIT[ALL_DAYS.find((d) => WEEKLY_SPLIT[d]?.type === id) ?? 'monday']
     : null;
@@ -386,7 +386,7 @@ export default function WorkoutScreen() {
             const durationMinutes = Math.round(elapsed / 60);
             const log: WorkoutLog = {
               id: `workout_${Date.now()}`,
-              date: new Date().toISOString().split('T')[0],
+              date: makeupDate ?? new Date().toISOString().split('T')[0],
               sessionType: session.type,
               sessionLabel: session.label,
               durationMinutes,
@@ -502,6 +502,7 @@ export default function WorkoutScreen() {
             key={exercise.id}
             exercise={exercise}
             previousLog={previousSession?.exerciseLogs.find((el) => el.exerciseId === exercise.id)}
+            initialSets={exerciseLogs.get(exercise.id)}
             onSetsUpdate={handleSetsUpdate}
             onRestStart={(secs) => setRestTimerSecs(secs)}
             isActive={true}

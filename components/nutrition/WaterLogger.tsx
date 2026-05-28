@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
+import { useHabitStore } from '../../store/habitStore';
 import { logWater } from '../../services/nutritionService';
 import { useColors } from '../../hooks/useColors';
 import { Typography, Spacing } from '../../constants/theme';
@@ -35,6 +36,11 @@ export function WaterLogger() {
     await logWater(ml);
     if (waterMl + ml >= GOAL_ML) {
       setWaterGoalHit(true);
+      const habitStore = useHabitStore.getState();
+      const waterHabit = habitStore.habits.find((h) => h.id === 'water');
+      if (waterHabit && !waterHabit.completed) {
+        habitStore.toggleHabit('water');
+      }
     }
   }
 

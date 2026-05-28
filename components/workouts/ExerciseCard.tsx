@@ -22,14 +22,14 @@ function calcRecommendation(
   exercise: Exercise,
   previousLog: ExerciseLog | undefined
 ): { weight: number; direction: 'up' | 'hold' | 'none' } {
+  if (exercise.bodyweight) return { weight: 0, direction: 'none' };
   if (!previousLog || previousLog.sets.length === 0) return { weight: 0, direction: 'none' };
   const completedSets = previousLog.sets.filter((s) => s.completed);
   if (completedSets.length === 0) return { weight: 0, direction: 'none' };
   const maxWeight = Math.max(...completedSets.map((s) => s.weight));
   const allHitReps = completedSets.every((s) => s.reps >= exercise.repsMin);
   if (allHitReps) {
-    const isLeg = exercise.muscleGroups.some((m) => LEG_MUSCLES.includes(m));
-    return { weight: maxWeight + (isLeg ? 5 : 2.5), direction: 'up' };
+    return { weight: maxWeight + 5, direction: 'up' };
   }
   return { weight: maxWeight, direction: 'hold' };
 }
@@ -37,6 +37,7 @@ function calcRecommendation(
 interface ExerciseCardProps {
   exercise: Exercise;
   previousLog?: ExerciseLog;
+  initialSets?: SetLog[];
   onSetsUpdate: (exerciseId: string, sets: SetLog[]) => void;
   onRestStart: (seconds: number) => void;
   isActive: boolean;
@@ -46,13 +47,14 @@ interface ExerciseCardProps {
 export function ExerciseCard({
   exercise,
   previousLog,
+  initialSets,
   onSetsUpdate,
   onRestStart,
   isActive,
   enterDelay = 0,
 }: ExerciseCardProps) {
   const Colors = useColors();
-  const [completedSets, setCompletedSets] = useState<SetLog[]>([]);
+  const [completedSets, setCompletedSets] = useState<SetLog[]>(initialSets ?? []);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const completedCount = completedSets.length;
   const recommendation = calcRecommendation(exercise, previousLog);
@@ -65,11 +67,8 @@ export function ExerciseCard({
   const allDone = completedCount >= totalSets;
   const inProgress = completedCount > 0 && !allDone;
 
-  // Border color: idle → accent → green
   const borderAnim = useSharedValue(0);
-  // Pulsing left bar opacity when in-progress
   const pulseOpacity = useSharedValue(0);
-  // Scale bounce when done
   const doneScale = useSharedValue(1);
 
   useEffect(() => {
@@ -108,6 +107,12 @@ export function ExerciseCard({
     setCompletedSets(updated);
     onSetsUpdate(exercise.id, updated);
     if (updated.length < totalSets) onRestStart(exercise.restSeconds);
+  }
+
+  function handleSetUndo(setNumber: number) {
+    const updated = completedSets.filter((s) => s.setNumber !== setNumber);
+    setCompletedSets(updated);
+    onSetsUpdate(exercise.id, updated);
   }
 
   function getPreviousSet(setNum: number) {
@@ -227,6 +232,13 @@ export function ExerciseCard({
     },
     targetTextUp: { color: Colors.accentGreen },
     targetTextHold: { color: '#f59e0b' },
+    undoHint: {
+      ...Typography.caption,
+      color: Colors.muted,
+      textAlign: 'center',
+      paddingBottom: 6,
+      fontStyle: 'italic',
+    },
   }), [Colors]);
 
   return (
@@ -234,17 +246,14 @@ export function ExerciseCard({
       entering={FadeInDown.delay(enterDelay).duration(400)}
       style={[styles.card, cardStyle]}
     >
-      {/* Pulsing left accent bar — visible only while in-progress */}
       <Animated.View style={[styles.accentBar, accentBarStyle]} />
 
-      {/* Exercise image */}
       {imageUrl && (
         <View style={styles.imageContainer}>
           <Image source={{ uri: imageUrl }} style={styles.exerciseImage} resizeMode="contain" />
         </View>
       )}
 
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={[styles.name, allDone && styles.nameDone]}>{exercise.name}</Text>
@@ -276,7 +285,11 @@ export function ExerciseCard({
       <View style={styles.colHeaders}>
         <View style={{ width: 24 }} />
         <Text style={[styles.colHead, { width: 52, textAlign: 'center' }]}>PREV</Text>
-        <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>KG</Text>
+        {exercise.bodyweight ? (
+          <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>BW</Text>
+        ) : (
+          <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>KG</Text>
+        )}
         <View style={{ width: 12 }} />
         <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>REPS</Text>
         <View style={{ width: 36 }} />
@@ -296,17 +309,22 @@ export function ExerciseCard({
                 : (previousLog?.sets[i]?.weight ?? 0)
             }
             onComplete={handleSetComplete}
+            onUndo={handleSetUndo}
             completed={isSetCompleted(i + 1)}
             existingLog={completedSets.find((s) => s.setNumber === i + 1)}
+            noWeight={exercise.bodyweight}
           />
           {i < totalSets - 1 && <View style={styles.setSep} />}
         </React.Fragment>
       ))}
 
-      {/* Spec line */}
+      {completedCount > 0 && (
+        <Text style={styles.undoHint}>Tap ✓ to undo a set</Text>
+      )}
+
       <View style={styles.specRow}>
         <Text style={styles.specText}>
-          {totalSets} sets · {exercise.repsMin}–{exercise.repsMax} reps · {exercise.restSeconds}s rest
+          {totalSets} sets · {exercise.repsMin}–{exercise.repsMax} {exercise.bodyweight ? 'reps/secs' : 'reps'} · {exercise.restSeconds}s rest
         </Text>
       </View>
     </Animated.View>

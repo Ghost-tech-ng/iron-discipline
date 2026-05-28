@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
+import { loadRecentCompletedDates } from '../../services/workoutService';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
@@ -20,10 +21,35 @@ const DAYS: { key: DayOfWeek; label: string }[] = [
   { key: 'sunday', label: 'Sun' },
 ];
 
+function localDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default function WorkoutsScreen() {
   const Colors = useColors();
   const todayIndex = new Date().getDay();
   const todayKey = DAYS[todayIndex === 0 ? 6 : todayIndex - 1].key;
+  const [missedSessions, setMissedSessions] = useState<{ key: DayOfWeek; label: string; daysAgo: number }[]>([]);
+
+  useEffect(() => {
+    loadRecentCompletedDates(7).then((completed) => {
+      const completedDates = new Set(completed.map((c) => c.date));
+      const missed: { key: DayOfWeek; label: string; daysAgo: number }[] = [];
+
+      for (let i = 1; i <= 6; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = localDate(d);
+        const jsDay = d.getDay(); // 0=Sun
+        const dayKey = DAYS[jsDay === 0 ? 6 : jsDay - 1].key;
+        const session = WEEKLY_SPLIT[dayKey];
+        if (session && !completedDates.has(dateStr)) {
+          missed.push({ key: dayKey, label: DAYS[jsDay === 0 ? 6 : jsDay - 1].label, daysAgo: i });
+        }
+      }
+      setMissedSessions(missed.slice(0, 3));
+    });
+  }, []);
 
   const styles = React.useMemo(() => StyleSheet.create({
     safe: { flex: 1, backgroundColor: Colors.base },
@@ -88,6 +114,30 @@ export default function WorkoutsScreen() {
       color: Colors.muted,
       fontStyle: 'italic',
     },
+    sectionLabel: {
+      ...Typography.label,
+      color: Colors.muted,
+      letterSpacing: 1.5,
+      marginBottom: 2,
+    },
+    makeupCard: {
+      gap: 6,
+      borderWidth: 1,
+      borderColor: Colors.accentAmber + '60',
+      backgroundColor: Colors.accentAmber + '08',
+    },
+    makeupBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
+      backgroundColor: Colors.accentAmber + '25',
+    },
+    makeupBadgeText: {
+      ...Typography.caption,
+      color: Colors.accentAmber,
+      fontWeight: '700',
+      letterSpacing: 0.8,
+    },
     sessionName: {
       ...Typography.body,
       color: Colors.primary,
@@ -113,6 +163,50 @@ export default function WorkoutsScreen() {
           <Text style={styles.title}>Training</Text>
           <Text style={styles.subtitle}>5-Day PPL · Push / Pull / Legs / Upper / Lower</Text>
         </Animated.View>
+
+        {/* Missed sessions — make up today */}
+        {missedSessions.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(50).duration(400)} style={{ gap: Spacing.sm }}>
+            <Text style={styles.sectionLabel}>MAKE UP A MISSED SESSION</Text>
+            {missedSessions.map(({ key, label, daysAgo }) => {
+              const session = WEEKLY_SPLIT[key]!;
+              const accentColor = SESSION_COLORS[session.type] ?? Colors.accentAmber;
+              return (
+                <PressableScale
+                  key={`makeup_${key}`}
+                  onPress={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - daysAgo);
+                    router.push({ pathname: '/workout/[id]', params: { id: session.type, makeupDate: localDate(d) } });
+                  }}
+                >
+                  <Card style={styles.makeupCard}>
+                    <View style={styles.dayHeader}>
+                      <View style={styles.dayLeft}>
+                        <Text style={[styles.dayLabel, { color: Colors.accentAmber }]}>{label}</Text>
+                        <View style={styles.makeupBadge}>
+                          <Text style={styles.makeupBadgeText}>
+                            {daysAgo === 1 ? 'YESTERDAY' : `${daysAgo}D AGO`}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[styles.typeTag, { backgroundColor: accentColor + '15' }]}>
+                        <Text style={[styles.typeText, { color: accentColor }]}>
+                          {session.type.toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.sessionName}>{session.label}</Text>
+                    <Text style={styles.exerciseList}>
+                      {session.exercises.slice(0, 4).map((e) => e.name).join('  ·  ')}
+                      {session.exercises.length > 4 && `  +${session.exercises.length - 4} more`}
+                    </Text>
+                  </Card>
+                </PressableScale>
+              );
+            })}
+          </Animated.View>
+        )}
 
         {DAYS.map(({ key, label }, idx) => {
           const session = WEEKLY_SPLIT[key];

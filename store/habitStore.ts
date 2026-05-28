@@ -6,11 +6,12 @@ import type { HabitItem } from '../types';
 const todayStr = () => new Date().toISOString().split('T')[0];
 
 const DEFAULT_HABITS: HabitItem[] = [
-  { id: 'steps', label: '8,000+ Steps', completed: false, weight: 20 },
-  { id: 'sleep', label: '7–8 Hours Sleep', completed: false, weight: 20 },
-  { id: 'no_junk', label: 'No Junk Food', completed: false, weight: 20 },
-  { id: 'water', label: 'Water Goal (3.5L)', completed: false, weight: 20 },
-  { id: 'cardio', label: 'Cardio / Active Rest', completed: false, weight: 20 },
+  { id: 'steps', label: '8,000+ Steps', completed: false, weight: 17 },
+  { id: 'sleep', label: '7–8 Hours Sleep', completed: false, weight: 17 },
+  { id: 'no_junk', label: 'No Junk Food', completed: false, weight: 17 },
+  { id: 'water', label: 'Water Goal (3.5L)', completed: false, weight: 17 },
+  { id: 'cardio', label: 'Cardio / Active Rest', completed: false, weight: 16 },
+  { id: 'core', label: '2-Min Core', completed: false, weight: 16 },
 ];
 
 interface HabitStore {
@@ -58,7 +59,7 @@ export const useHabitStore = create<HabitStore>()(
       },
     }),
     {
-      name: 'habit-store-v1',
+      name: 'habit-store-v2',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

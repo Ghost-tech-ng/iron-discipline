@@ -48,6 +48,13 @@ const SCHEDULE: Array<{
   body: string;
   trigger: WeeklyTrigger | DailyTrigger;
 }> = [
+  // --- Daily core ---
+  {
+    identifier: 'core_daily',
+    title: '2-Min Core',
+    body: 'Dead bug · Bird-dog · Side plank. Two minutes. Do it now.',
+    trigger: { type: 'daily', hour: 7, minute: 30 },
+  },
   // --- Supplements ---
   {
     identifier: 'supp_morning',

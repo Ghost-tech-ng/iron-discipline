@@ -83,6 +83,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMin: 8,
         repsMax: 10,
         restSeconds: 60,
+        bodyweight: true,
         notes: 'Go slow — stop before lower back arches',
       },
       {
@@ -93,6 +94,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMin: 30,
         repsMax: 45,
         restSeconds: 45,
+        bodyweight: true,
         notes: 'Seconds each side — obliques + hip abductors',
       },
     ],
@@ -212,6 +214,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMin: 10,
         repsMax: 12,
         restSeconds: 45,
+        bodyweight: true,
         notes: 'Each side — lower back stays flat on floor throughout',
       },
     ],
@@ -321,6 +324,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMin: 45,
         repsMax: 60,
         restSeconds: 60,
+        bodyweight: true,
         notes: 'Seconds — squeeze everything',
       },
       {
@@ -444,6 +448,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMin: 8,
         repsMax: 10,
         restSeconds: 60,
+        bodyweight: true,
         notes: 'Go slow — stop before lower back arches',
       },
       {
@@ -544,6 +549,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMin: 12,
         repsMax: 15,
         restSeconds: 60,
+        bodyweight: true,
         notes: 'Lower abs',
       },
       {

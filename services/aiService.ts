@@ -3,7 +3,7 @@ import type { MealSlot } from '../constants/nutrition';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const TEXT_MODEL = 'llama-3.3-70b-versatile';
-const VISION_MODEL = 'llama-3.2-11b-vision-preview';
+const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
 function getKey(): string {
   const key = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? '';
@@ -188,6 +188,37 @@ Return JSON: {"answer":"..."}`,
   ]);
   const parsed = JSON.parse(text) as { answer: string };
   return parsed.answer ?? '';
+}
+
+export async function suggestMealsForRemaining(
+  consumed: { calories: number; protein: number; carbs: number; fat: number },
+  targets: { calories: number; protein: number; carbs: number; fat: number },
+  mealLabel: string
+): Promise<MealEstimate[]> {
+  const remCal = Math.max(0, targets.calories - consumed.calories);
+  const remProtein = Math.max(0, targets.protein - consumed.protein);
+  const remCarbs = Math.max(0, targets.carbs - consumed.carbs);
+  const remFat = Math.max(0, targets.fat - consumed.fat);
+
+  const text = await callGroq(TEXT_MODEL, [
+    {
+      role: 'system',
+      content: 'You are a Nigerian sports nutritionist. Always respond with valid JSON only, no markdown.',
+    },
+    {
+      role: 'user',
+      content: `The user has eaten ${consumed.calories} kcal and ${consumed.protein}g protein today.
+Remaining targets: ${remCal} kcal, ${remProtein}g protein, ${remCarbs}g carbs, ${remFat}g fat.
+This is for their ${mealLabel}.
+
+Suggest exactly 3 different meal options that fit this remaining budget. Use Nigerian foods (rice, beans, plantain, yam, chicken, fish, eggs, etc.) in realistic portion sizes. Each option should cover a sensible portion of the remaining budget — not necessarily all of it if multiple meals remain in the day.
+
+Return JSON: {"suggestions":[{"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"servingSize":"..."},...]}`
+    },
+  ]);
+
+  const parsed = JSON.parse(text) as { suggestions: MealEstimate[] };
+  return parsed.suggestions ?? [];
 }
 
 export async function generateDailyCoaching(data: CoachingData): Promise<string> {

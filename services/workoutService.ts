@@ -110,13 +110,25 @@ export async function loadWorkoutDates(days = 84): Promise<string[]> {
   const db = getDb();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
 
   const rows = await db.getAllAsync<{ date: string }>(
     `SELECT DISTINCT date FROM workout_logs WHERE completed = 1 AND date >= ? ORDER BY date ASC;`,
     [cutoffStr]
   );
   return rows.map((r) => r.date);
+}
+
+export async function loadRecentCompletedDates(days = 7): Promise<{ date: string; sessionType: string }[]> {
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+  const rows = await db.getAllAsync<{ date: string; session_type: string }>(
+    `SELECT date, session_type FROM workout_logs WHERE completed = 1 AND date >= ? ORDER BY date DESC;`,
+    [cutoffStr]
+  );
+  return rows.map((r) => ({ date: r.date, sessionType: r.session_type }));
 }
 
 export async function getLastSessionByType(sessionType: string): Promise<WorkoutLog | null> {

@@ -1,3 +1,5 @@
+import * as FileSystem from 'expo-file-system/legacy';
+
 // All URLs sourced from wger.de live scan — open-source fitness DB (CC licence)
 const IMAGE_URLS: Record<string, string> = {
   // ── Push — Chest ──────────────────────────────────────────────
@@ -70,26 +72,52 @@ const IMAGE_URLS: Record<string, string> = {
   russian_twist:      'https://wger.de/media/exercise-images/1193/70ca5d80-3847-4a8c-8882-c6e9e485e29e.png',
 };
 
-const verified: Record<string, string | null> = {};
+const memCache: Record<string, string | null> = {};
+
+function ext(url: string): string {
+  const match = url.match(/\.(png|jpg|jpeg|webp)(\?|$)/i);
+  return match ? `.${match[1].toLowerCase()}` : '.png';
+}
 
 export async function getExerciseImageUrl(exerciseId: string): Promise<string | null> {
-  if (exerciseId in verified) return verified[exerciseId];
+  if (exerciseId in memCache) return memCache[exerciseId];
 
-  const url = IMAGE_URLS[exerciseId];
-  if (!url) {
-    verified[exerciseId] = null;
+  const remoteUrl = IMAGE_URLS[exerciseId];
+  if (!remoteUrl) {
+    memCache[exerciseId] = null;
     return null;
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
-    clearTimeout(timeout);
-    verified[exerciseId] = res.ok ? url : null;
+    const cacheDir = FileSystem.documentDirectory
+      ? `${FileSystem.documentDirectory}exercise_images/`
+      : null;
+
+    if (cacheDir) {
+      const localPath = `${cacheDir}${exerciseId}${ext(remoteUrl)}`;
+
+      const info = await FileSystem.getInfoAsync(localPath);
+      if (info.exists) {
+        memCache[exerciseId] = localPath;
+        return localPath;
+      }
+
+      const dirInfo = await FileSystem.getInfoAsync(cacheDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+      }
+
+      const result = await FileSystem.downloadAsync(remoteUrl, localPath);
+      if (result.status === 200) {
+        memCache[exerciseId] = result.uri;
+        return result.uri;
+      }
+    }
   } catch {
-    verified[exerciseId] = url;
+    // fall through to remote URL
   }
 
-  return verified[exerciseId];
+  // Always fall back to remote so images work online even if caching fails
+  memCache[exerciseId] = remoteUrl;
+  return remoteUrl;
 }

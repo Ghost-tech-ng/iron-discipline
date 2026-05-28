@@ -24,6 +24,7 @@ export interface Exercise {
   repsMax: number;
   restSeconds: number;
   notes?: string;
+  bodyweight?: boolean;
 }
 
 export interface Stretch {

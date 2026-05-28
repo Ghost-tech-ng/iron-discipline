@@ -16,8 +16,10 @@ interface SetRowProps {
   previous?: { weight: number; reps: number };
   defaultWeight?: number;
   onComplete: (set: SetLog) => void;
+  onUndo: (setNumber: number) => void;
   completed: boolean;
   existingLog?: SetLog;
+  noWeight?: boolean;
 }
 
 export function SetRow({
@@ -25,8 +27,10 @@ export function SetRow({
   previous,
   defaultWeight = 0,
   onComplete,
+  onUndo,
   completed,
   existingLog,
+  noWeight = false,
 }: SetRowProps) {
   const Colors = useColors();
   const [weight, setWeight] = useState(
@@ -40,7 +44,13 @@ export function SetRow({
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   function handleComplete() {
-    if (!weight || !reps) return;
+    if (completed) {
+      // Undo — tap again to re-enter
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onUndo(setNumber);
+      return;
+    }
+    if (!reps || (!noWeight && !weight)) return;
     scale.value = withSequence(
       withSpring(0.92, { damping: 10 }),
       withSpring(1, { damping: 12 })
@@ -48,7 +58,7 @@ export function SetRow({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onComplete({
       setNumber,
-      weight: parseFloat(weight) || 0,
+      weight: noWeight ? 0 : parseFloat(weight) || 0,
       reps: parseInt(reps, 10) || 0,
       completed: true,
     });
@@ -63,7 +73,7 @@ export function SetRow({
       paddingHorizontal: Spacing.md,
     },
     rowDone: {
-      opacity: 0.55,
+      opacity: 0.6,
     },
     setNum: {
       width: 24,
@@ -108,6 +118,14 @@ export function SetRow({
       backgroundColor: 'transparent',
       color: Colors.secondary,
     },
+    bwLabel: {
+      flex: 1,
+      textAlign: 'center',
+      ...Typography.small,
+      color: Colors.muted,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
     x: {
       ...Typography.small,
       color: Colors.muted,
@@ -149,25 +167,29 @@ export function SetRow({
       <View style={styles.prevCol}>
         {previous ? (
           <Text style={styles.prevText}>
-            {previous.weight}×{previous.reps}
+            {noWeight ? `${previous.reps}r` : `${previous.weight}×${previous.reps}`}
           </Text>
         ) : (
           <Text style={styles.prevEmpty}>—</Text>
         )}
       </View>
 
-      {/* Weight input */}
-      <TextInput
-        style={[styles.input, completed && styles.inputDone]}
-        value={weight}
-        onChangeText={setWeight}
-        keyboardType="decimal-pad"
-        placeholder="kg"
-        placeholderTextColor={Colors.muted}
-        editable={!completed}
-        selectTextOnFocus
-        selectionColor={Colors.accent}
-      />
+      {/* Weight input or BW label */}
+      {noWeight ? (
+        <Text style={styles.bwLabel}>BW</Text>
+      ) : (
+        <TextInput
+          style={[styles.input, completed && styles.inputDone]}
+          value={weight}
+          onChangeText={setWeight}
+          keyboardType="decimal-pad"
+          placeholder="kg"
+          placeholderTextColor={Colors.muted}
+          editable={!completed}
+          selectTextOnFocus
+          selectionColor={Colors.accent}
+        />
+      )}
 
       <Text style={styles.x}>×</Text>
 
@@ -184,10 +206,9 @@ export function SetRow({
         selectionColor={Colors.accent}
       />
 
-      {/* Complete button */}
+      {/* Complete / undo button */}
       <Pressable
         onPress={handleComplete}
-        disabled={completed}
         style={[styles.checkBtn, completed && styles.checkBtnDone]}
       >
         <Text style={[styles.checkText, completed && styles.checkTextDone]}>

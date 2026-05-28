@@ -22,12 +22,14 @@ import { MacroPill } from '../../components/nutrition/MacroPill';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
-import { FOOD_LIBRARY } from '../../constants/nutrition';
+import { FOOD_LIBRARY, USER_TARGETS } from '../../constants/nutrition';
 import { useNutritionStore } from '../../store/nutritionStore';
+import { useCustomFoodStore } from '../../store/customFoodStore';
 import { saveMealEntry } from '../../services/nutritionService';
 import {
   estimateMealFromText,
   estimateMealFromPhoto,
+  suggestMealsForRemaining,
   type MealEstimate,
 } from '../../services/aiService';
 import { useColors } from '../../hooks/useColors';
@@ -64,7 +66,7 @@ function estimateToFoodItem(e: MealEstimate): FoodItem {
   };
 }
 
-type InputMode = 'library' | 'describe' | 'photo';
+type InputMode = 'library' | 'describe' | 'photo' | 'suggest';
 
 export default function LogMealScreen() {
   const Colors = useColors();
@@ -93,8 +95,11 @@ export default function LogMealScreen() {
   // AI describe mode
   const [description, setDescription] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<MealEstimate[]>([]);
+  const [fromAI, setFromAI] = useState(false);
 
-  const { addMeal } = useNutritionStore();
+  const { addMeal, getTotals } = useNutritionStore();
+  const { foods: myFoods, addFood: saveToMyFoods, removeFood } = useCustomFoodStore();
   const qty = parseFloat(quantity) || 1;
 
   const filtered = useMemo(() => {
@@ -110,7 +115,8 @@ export default function LogMealScreen() {
     try {
       const estimate = await estimateMealFromText(desc);
       setSelected(estimateToFoodItem(estimate));
-      setInputMode('library'); // show the selected card
+      setFromAI(true);
+      setInputMode('library');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
       Alert.alert('AI Error', msg.includes('API key') ? msg : 'Could not estimate meal. Check connection and try again.');
@@ -119,23 +125,53 @@ export default function LogMealScreen() {
     }
   }
 
-  async function handlePhotoAnalysis() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.7,
-      base64: true,
-    });
+  async function handleSuggest() {
+    setAiLoading(true);
+    setSuggestions([]);
+    try {
+      const consumed = getTotals();
+      const mealLabel = CATEGORIES.find((c) => c.key === category)?.label ?? 'this meal';
+      const results = await suggestMealsForRemaining(consumed, USER_TARGETS, mealLabel);
+      setSuggestions(results);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      Alert.alert('AI Error', msg.includes('API key') ? msg : 'Could not get suggestions. Check connection.');
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  async function handlePhotoAnalysis(source: 'camera' | 'library') {
+    if (aiLoading) return;
+
+    let result: ImagePicker.ImagePickerResult;
+
+    if (source === 'camera') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Camera Permission', 'Camera access is needed to take a photo of your meal.');
+        return;
+      }
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.7,
+        base64: true,
+      });
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.7,
+        base64: true,
+      });
+    }
 
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
     let base64 = asset.base64;
 
-    // Fallback: read from file system if base64 not returned
     if (!base64 && asset.uri) {
-      base64 = await readAsStringAsync(asset.uri, {
-        encoding: EncodingType.Base64,
-      });
+      base64 = await readAsStringAsync(asset.uri, { encoding: EncodingType.Base64 });
     }
 
     if (!base64) {
@@ -148,10 +184,11 @@ export default function LogMealScreen() {
       const mimeType = asset.mimeType ?? 'image/jpeg';
       const estimate = await estimateMealFromPhoto(base64, mimeType);
       setSelected(estimateToFoodItem(estimate));
+      setFromAI(true);
       setInputMode('library');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
-      Alert.alert('AI Error', msg.includes('API key') ? msg : 'Could not analyse photo. Check connection and try again.');
+      Alert.alert('AI Error', msg.includes('API key') ? msg : `Could not analyse photo. ${msg}`);
     } finally {
       setAiLoading(false);
     }
@@ -235,6 +272,7 @@ export default function LogMealScreen() {
       borderColor: Colors.border,
     },
     photoSub: { ...Typography.small, color: Colors.secondary, lineHeight: 20 },
+    photoButtons: { flexDirection: 'row', gap: 8 },
     aiLoadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' },
     aiLoadingText: { ...Typography.small, color: Colors.muted },
     selectedCard: { gap: Spacing.md },
@@ -265,9 +303,35 @@ export default function LogMealScreen() {
       backgroundColor: Colors.surface, borderRadius: 12,
       gap: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
     },
-    foodInfo: { gap: 2 },
+    foodRowAccent: { borderColor: Colors.accent + '60' },
+    foodRowInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    foodInfo: { gap: 2, flex: 1 },
     foodName: { ...Typography.body, color: Colors.primary, fontWeight: '600' },
     foodServing: { ...Typography.caption, color: Colors.muted },
+    deleteBtn: { padding: 8 },
+    saveBtn: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 12, paddingVertical: 6,
+      backgroundColor: Colors.accentGreen + '20',
+      borderRadius: 8, borderWidth: 1, borderColor: Colors.accentGreen + '50',
+    },
+    saveBtnText: { ...Typography.caption, color: Colors.accentGreen, fontWeight: '700' },
+    remainingCard: { gap: 12 },
+    remainingLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    remainingGrid: { flexDirection: 'row', gap: 8 },
+    remainingItem: {
+      flex: 1, alignItems: 'center', gap: 2,
+      backgroundColor: Colors.surface2, borderRadius: 10, paddingVertical: 10,
+    },
+    remainingVal: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    remainingUnit: { ...Typography.caption, color: Colors.muted },
+    suggestRow: {
+      paddingVertical: 14, paddingHorizontal: Spacing.md,
+      backgroundColor: Colors.surface, borderRadius: 12,
+      gap: 8, borderWidth: 1, borderColor: Colors.accent + '40',
+    },
+    suggestName: { ...Typography.body, color: Colors.primary, fontWeight: '600' },
+    suggestSub: { ...Typography.caption, color: Colors.muted },
   }), [Colors]);
 
   return (
@@ -323,6 +387,7 @@ export default function LogMealScreen() {
               { key: 'library', label: 'Library' },
               { key: 'describe', label: 'Describe' },
               { key: 'photo', label: 'Photo AI' },
+              { key: 'suggest', label: 'Suggest' },
             ] as { key: InputMode; label: string }[]).map((m) => (
               <Pressable
                 key={m.key}
@@ -364,23 +429,94 @@ export default function LogMealScreen() {
             </Card>
           )}
 
+          {/* Suggest mode */}
+          {inputMode === 'suggest' && (
+            <Card style={styles.remainingCard}>
+              <Text style={styles.remainingLabel}>REMAINING TODAY</Text>
+              {(() => {
+                const consumed = getTotals();
+                const remCal = Math.max(0, USER_TARGETS.calories - consumed.calories);
+                const remP = Math.max(0, USER_TARGETS.protein - consumed.protein);
+                const remC = Math.max(0, USER_TARGETS.carbs - consumed.carbs);
+                const remF = Math.max(0, USER_TARGETS.fat - consumed.fat);
+                return (
+                  <View style={styles.remainingGrid}>
+                    {[
+                      { label: 'kcal', val: remCal },
+                      { label: 'protein', val: `${remP}g` },
+                      { label: 'carbs', val: `${remC}g` },
+                      { label: 'fat', val: `${remF}g` },
+                    ].map((item) => (
+                      <View key={item.label} style={styles.remainingItem}>
+                        <Text style={styles.remainingVal}>{item.val}</Text>
+                        <Text style={styles.remainingUnit}>{item.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                );
+              })()}
+              <Button
+                label={aiLoading ? 'Thinking...' : `Suggest for ${CATEGORIES.find(c => c.key === category)?.label ?? 'this meal'}`}
+                variant="primary"
+                fullWidth
+                onPress={handleSuggest}
+              />
+              {aiLoading && (
+                <View style={styles.aiLoadingRow}>
+                  <ActivityIndicator size="small" color={Colors.accent} />
+                  <Text style={styles.aiLoadingText}>Finding best options for you...</Text>
+                </View>
+              )}
+              {suggestions.length > 0 && (
+                <View style={styles.foodList}>
+                  <Text style={styles.listHeader}>TAP TO SELECT</Text>
+                  {suggestions.map((s, i) => (
+                    <PressableScale
+                      key={i}
+                      onPress={() => { setSelected(estimateToFoodItem(s)); setFromAI(true); setInputMode('library'); }}
+                    >
+                      <View style={styles.suggestRow}>
+                        <Text style={styles.suggestName}>{s.name}</Text>
+                        <MacroPill calories={s.calories} protein={s.protein} carbs={s.carbs} fat={s.fat} />
+                        <Text style={styles.suggestSub}>{s.servingSize}</Text>
+                      </View>
+                    </PressableScale>
+                  ))}
+                </View>
+              )}
+            </Card>
+          )}
+
           {/* Photo AI mode */}
           {inputMode === 'photo' && (
             <Card style={styles.describeCard}>
               <Text style={styles.describeLabel}>PHOTO MEAL ANALYSIS</Text>
               <Text style={styles.photoSub}>
-                Pick a photo of your meal and Gemini will estimate the macros.
+                Take a photo or choose from your gallery — AI will estimate the macros.
               </Text>
-              <Button
-                label={aiLoading ? 'Analysing...' : 'Pick Photo to Analyse'}
-                variant="primary"
-                fullWidth
-                onPress={handlePhotoAnalysis}
-              />
-              {aiLoading && (
+              {aiLoading ? (
                 <View style={styles.aiLoadingRow}>
                   <ActivityIndicator size="small" color={Colors.accent} />
-                  <Text style={styles.aiLoadingText}>Gemini is analysing your photo...</Text>
+                  <Text style={styles.aiLoadingText}>AI is analysing your photo...</Text>
+                </View>
+              ) : (
+                <View style={styles.photoButtons}>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Take Photo"
+                      variant="primary"
+                      fullWidth
+                      onPress={() => handlePhotoAnalysis('camera')}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Gallery"
+                      variant="secondary"
+                      fullWidth
+                      onPress={() => handlePhotoAnalysis('library')}
+                    />
+                  </View>
                 </View>
               )}
             </Card>
@@ -391,7 +527,7 @@ export default function LogMealScreen() {
             <Card style={styles.selectedCard} glow={Colors.accent}>
               <View style={styles.selectedHeader}>
                 <Text style={styles.selectedName}>{selected.name}</Text>
-                <Pressable onPress={() => setSelected(null)}>
+                <Pressable onPress={() => { setSelected(null); setFromAI(false); }}>
                   <Text style={styles.clearSelected}>Change</Text>
                 </Pressable>
               </View>
@@ -405,6 +541,19 @@ export default function LogMealScreen() {
                 fat={selected.fat}
                 multiplier={qty}
               />
+
+              {fromAI && (
+                <Pressable
+                  style={styles.saveBtn}
+                  onPress={() => {
+                    saveToMyFoods(selected);
+                    setFromAI(false);
+                    Alert.alert('Saved', `"${selected.name}" added to My Foods.`);
+                  }}
+                >
+                  <Text style={styles.saveBtnText}>+ Save to My Foods</Text>
+                </Pressable>
+              )}
 
               <View style={styles.qtyRow}>
                 <Text style={styles.qtyLabel}>Servings</Text>
@@ -448,9 +597,47 @@ export default function LogMealScreen() {
           {inputMode === 'library' && !selected && (
             <View style={styles.foodList}>
               <FoodSearchBar value={search} onChange={setSearch} onClear={() => setSearch('')} />
-              <Text style={styles.listHeader}>
-                {search ? `${filtered.length} results` : 'All foods'}
-              </Text>
+
+              {/* My Foods section */}
+              {myFoods.length > 0 && !search && (
+                <>
+                  <Text style={styles.listHeader}>MY FOODS</Text>
+                  {myFoods.map((food) => (
+                    <PressableScale key={food.id} onPress={() => setSelected(food)}>
+                      <View style={[styles.foodRow, styles.foodRowAccent]}>
+                        <View style={styles.foodRowInner}>
+                          <View style={styles.foodInfo}>
+                            <Text style={styles.foodName}>{food.name}</Text>
+                            <Text style={styles.foodServing}>{food.servingSize}</Text>
+                          </View>
+                          <Pressable
+                            style={styles.deleteBtn}
+                            onPress={() => removeFood(food.id)}
+                            hitSlop={8}
+                          >
+                            <Ionicons name="trash-outline" size={16} color={Colors.muted} />
+                          </Pressable>
+                        </View>
+                        <MacroPill
+                          calories={food.calories}
+                          protein={food.protein}
+                          carbs={food.carbs}
+                          fat={food.fat}
+                        />
+                      </View>
+                    </PressableScale>
+                  ))}
+                  <Text style={styles.listHeader}>ALL FOODS</Text>
+                </>
+              )}
+
+              {!search && myFoods.length === 0 && (
+                <Text style={styles.listHeader}>ALL FOODS</Text>
+              )}
+              {search && (
+                <Text style={styles.listHeader}>{filtered.length} results</Text>
+              )}
+
               {filtered.map((food) => (
                 <PressableScale key={food.id} onPress={() => setSelected(food)}>
                   <View style={styles.foodRow}>

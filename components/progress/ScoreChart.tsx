@@ -17,6 +17,10 @@ type Range = '7D' | '28D' | '90D';
 const DAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const BAR_H = 64;
 
+function localDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function getRange(range: Range): { label: string; dateStr: string }[] {
   const days = range === '7D' ? 7 : range === '28D' ? 28 : 90;
   const result = [];
@@ -27,7 +31,7 @@ function getRange(range: Range): { label: string; dateStr: string }[] {
       label: range === '90D'
         ? (i % 7 === 0 ? `W${Math.floor((days - 1 - i) / 7) + 1}` : '')
         : DAYS_SHORT[d.getDay()],
-      dateStr: d.toISOString().split('T')[0],
+      dateStr: localDate(d),
     });
   }
   return result;
@@ -47,7 +51,7 @@ export function ScoreChart({ history }: Props) {
   const scoreMap: Record<string, number> = {};
   history.forEach((d) => { scoreMap[d.date] = d.score; });
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate(new Date());
   const days = getRange(range);
 
   const scores = days.map((d) => scoreMap[d.dateStr] ?? 0);
@@ -105,6 +109,7 @@ export function ScoreChart({ history }: Props) {
     },
     barTrack: {
       height: BAR_H,
+      width: '100%',
       justifyContent: 'flex-end',
     },
     barFill: {
@@ -168,9 +173,10 @@ export function ScoreChart({ history }: Props) {
       >
         {days.map(({ dateStr, label }) => {
           const score = scoreMap[dateStr] ?? 0;
-          const barH = score > 0 ? Math.max(3, Math.round((score / 100) * BAR_H)) : 3;
+          const barH = score > 0 ? Math.max(4, Math.round((score / 100) * BAR_H)) : 4;
           const isToday = dateStr === today;
-          const color = isToday && score === 0 ? Colors.border : scoreColor(score);
+          const isFuture = dateStr > today;
+          const color = score > 0 ? scoreColor(score) : isToday ? Colors.border : Colors.surface2;
 
           return (
             <View key={dateStr} style={[styles.bar, { width: barWidth }]}>
@@ -181,7 +187,9 @@ export function ScoreChart({ history }: Props) {
                     {
                       height: barH,
                       backgroundColor: color,
-                      opacity: isToday && score === 0 ? 1 : 1,
+                      borderWidth: score === 0 && !isFuture ? StyleSheet.hairlineWidth : 0,
+                      borderColor: Colors.border,
+                      opacity: isFuture ? 0 : 1,
                     },
                   ]}
                 />

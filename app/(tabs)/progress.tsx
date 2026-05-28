@@ -395,6 +395,11 @@ export default function ProgressScreen() {
           </>
         )}
 
+        {/* Coaching insight */}
+        <Animated.View entering={FadeInDown.delay(560).duration(450)}>
+          <CoachingCard sessionCount={workoutDates.length} checkIns={checkIns} />
+        </Animated.View>
+
         {/* Weigh-in protocol */}
         <Card style={styles.protocolCard}>
           <Text style={styles.cardTitle}>WEIGH-IN PROTOCOL</Text>
@@ -501,6 +506,91 @@ export default function ProgressScreen() {
         </Pressable>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+import type { WeeklyCheckIn } from '../../types';
+
+function CoachingCard({ sessionCount, checkIns }: { sessionCount: number; checkIns: WeeklyCheckIn[] }) {
+  const Colors = useColors();
+
+  const weeksElapsed = 12;
+  const sessionsPerWeek = sessionCount / weeksElapsed;
+  const weightChange = checkIns.length >= 2
+    ? checkIns[0].weightKg - checkIns[checkIns.length - 1].weightKg
+    : null;
+
+  let urgency: 'red' | 'amber' | 'green' = 'red';
+  let headline = '';
+  let body = '';
+  let action = '';
+
+  if (sessionsPerWeek < 2) {
+    urgency = 'red';
+    headline = 'Training frequency is the bottleneck';
+    body = `${sessionCount} sessions in 12 weeks = ${sessionsPerWeek.toFixed(1)}/week. Fat loss and muscle retention both require consistent mechanical stimulus — 4–5 sessions per week minimum. Without it, there is nothing to drive progressive overload, and your body has no reason to spare muscle while in a calorie deficit.`;
+    action = 'Target: 4 sessions every week, no exceptions. Set the session time in your calendar like a meeting.';
+  } else if (sessionsPerWeek < 3.5) {
+    urgency = 'amber';
+    headline = 'Frequency is improving — dial in consistency';
+    body = `${sessionsPerWeek.toFixed(1)} sessions/week is a start. You need 4–5 to optimise body recomposition. Each missed session is a missed progressive overload opportunity that compounds over 12 weeks.`;
+    action = 'Add one more training day. Push/pull/legs/upper/lower covers everything — pick the session you skip most and lock it in.';
+  } else {
+    urgency = 'green';
+    headline = 'Training frequency is solid';
+    body = `${sessionsPerWeek.toFixed(1)} sessions/week. Now focus on progressive overload — adding 5kg to a lift every 1–2 weeks. If you hit the rep target on all sets, go up next session.`;
+    action = 'Log your weights every set. The app tracks your PRs — beat them each time.';
+  }
+
+  const dotColor = urgency === 'red' ? Colors.accentRed : urgency === 'amber' ? Colors.accentAmber : Colors.accentGreen;
+
+  const s = React.useMemo(() => StyleSheet.create({
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: dotColor + '40',
+      borderLeftWidth: 3,
+      borderLeftColor: dotColor,
+      padding: Spacing.md,
+      gap: 10,
+    },
+    tag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    tagDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: dotColor },
+    tagText: { ...Typography.label, color: dotColor, letterSpacing: 1.2 },
+    headline: { ...Typography.h4, color: Colors.primary, fontWeight: '700', letterSpacing: -0.3 },
+    body: { ...Typography.small, color: Colors.secondary, lineHeight: 20 },
+    actionBox: {
+      backgroundColor: dotColor + '12',
+      borderRadius: 8,
+      padding: 10,
+    },
+    actionText: { ...Typography.small, color: Colors.primary, lineHeight: 18, fontWeight: '600' },
+    stat: { ...Typography.caption, color: Colors.muted },
+  }), [Colors, dotColor]);
+
+  return (
+    <View style={s.card}>
+      <View style={s.tag}>
+        <View style={s.tagDot} />
+        <Text style={s.tagText}>COACH ANALYSIS</Text>
+      </View>
+      <Text style={s.headline}>{headline}</Text>
+      <Text style={s.body}>{body}</Text>
+      {weightChange !== null && (
+        <Text style={s.stat}>
+          Weight change over check-ins: {weightChange > 0 ? '+' : ''}{weightChange.toFixed(2)}kg
+          {weightChange > 0.5 ? ' — reduce calories by 300 kcal' : weightChange < -0.75 ? ' — good deficit rate' : ' — deficit is working, stay consistent'}
+        </Text>
+      )}
+      <View style={s.actionBox}>
+        <Text style={s.actionText}>{action}</Text>
+      </View>
+    </View>
   );
 }
 

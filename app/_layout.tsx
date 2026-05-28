@@ -26,6 +26,7 @@ import { useDisciplineStore } from '../store/disciplineStore';
 import { useProgressStore } from '../store/progressStore';
 import { useSyncStore } from '../store/syncStore';
 import { useThemeStore } from '../store/themeStore';
+import { useCustomFoodStore } from '../store/customFoodStore';
 import { useColors } from '../hooks/useColors';
 import { Colors } from '../constants/theme';
 
@@ -78,10 +79,11 @@ export default function RootLayout() {
         if (savedProfile) loadProfile(savedProfile);
         useUserStore.getState().setHydrated();
 
-        useNutritionStore.getState().hydrateToday(meals, waterMl);
         useDisciplineStore.getState().hydrateSupplements(supplements);
         if (disciplineState) useDisciplineStore.getState().hydrateFlags(disciplineState);
+        useNutritionStore.getState().hydrateToday(meals, waterMl);
         useProgressStore.getState().loadCheckIns(checkIns);
+        useCustomFoodStore.getState().hydrate();
 
         const granted = await requestNotificationPermissions();
         if (granted) {
