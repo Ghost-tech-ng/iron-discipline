@@ -110,6 +110,29 @@ export async function loadDailyCalorieHistory(
   return rows;
 }
 
+export async function loadDailyMacroHistory(
+  days = 14
+): Promise<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]> {
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days + 1);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+
+  const rows = await db.getAllAsync<{ date: string; calories: number; protein: number; carbs: number; fat: number }>(
+    `SELECT date,
+       ROUND(SUM(food_calories * quantity)) as calories,
+       ROUND(SUM(food_protein * quantity)) as protein,
+       ROUND(SUM(food_carbs * quantity)) as carbs,
+       ROUND(SUM(food_fat * quantity)) as fat
+     FROM meal_entries
+     WHERE date >= ?
+     GROUP BY date
+     ORDER BY date ASC;`,
+    [cutoffStr]
+  );
+  return rows;
+}
+
 export async function loadTodaySupplements(): Promise<string[]> {
   const db = getDb();
   const rows = await db.getAllAsync<{ supplement_id: string }>(

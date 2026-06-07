@@ -16,6 +16,7 @@ import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import { DAILY_MEAL_PLAN, type MealSlot } from '../../constants/nutrition';
 import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
+import { loadDailyMacroHistory } from '../../services/nutritionService';
 
 export default function NutritionScreen() {
   const Colors = useColors();
@@ -26,6 +27,7 @@ export default function NutritionScreen() {
   const [mealPlan, setMealPlan] = useState<MealSlot[]>(DAILY_MEAL_PLAN);
   const [refreshing, setRefreshing] = useState(false);
   const [aiGenerated, setAiGenerated] = useState(false);
+  const [weeklyMacros, setWeeklyMacros] = useState<{ avgProtein: number | null; avgCalories: number | null; daysLogged: number }>({ avgProtein: null, avgCalories: null, daysLogged: 0 });
 
   useEffect(() => {
     loadCachedMealPlan().then((cached) => {
@@ -33,6 +35,13 @@ export default function NutritionScreen() {
         setMealPlan(cached);
         setAiGenerated(true);
       }
+    });
+    loadDailyMacroHistory(7).then((history) => {
+      const days = history.filter((d) => d.protein > 0 || d.calories > 0);
+      if (days.length === 0) return;
+      const avgProtein = Math.round(days.reduce((s, d) => s + d.protein, 0) / days.length);
+      const avgCalories = Math.round(days.reduce((s, d) => s + d.calories, 0) / days.length);
+      setWeeklyMacros({ avgProtein, avgCalories, daysLogged: days.length });
     });
   }, []);
 
@@ -260,11 +269,14 @@ export default function NutritionScreen() {
       >
         <Animated.View entering={FadeInDown.delay(0).duration(450)}>
           <Text style={styles.title}>Fuel</Text>
-          <Text style={styles.subtitle}>
-            {remaining.protein > 0
-              ? `${remaining.protein}g protein to go`
-              : 'Protein target hit ✓'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={styles.subtitle}>
+              {remaining.protein > 0 ? `${remaining.protein}g protein to go` : 'Protein target hit'}
+            </Text>
+            {remaining.protein <= 0 && (
+              <Ionicons name="checkmark-circle" size={14} color={Colors.accentGreen} />
+            )}
+          </View>
         </Animated.View>
 
         {/* Calorie summary */}
@@ -300,6 +312,23 @@ export default function NutritionScreen() {
             <GradientBar value={carbs} max={profile.goalCarbs} label="Carbs" unit="g" color={Colors.accentGreen} />
             <GradientBar value={fat} max={profile.goalFat} label="Fat" unit="g" color={Colors.accent2} />
           </View>
+
+          {weeklyMacros.daysLogged > 0 && (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border }}>
+              <Text style={{ ...Typography.caption, color: Colors.muted }}>
+                7-day avg · {weeklyMacros.daysLogged}d logged
+              </Text>
+              <Text style={{ ...Typography.caption, color: Colors.secondary }}>
+                <Text style={{ color: weeklyMacros.avgProtein != null && weeklyMacros.avgProtein >= profile.goalProtein * 0.9 ? Colors.accentGreen : Colors.accentAmber }}>
+                  {weeklyMacros.avgProtein}g P
+                </Text>
+                {' · '}
+                <Text style={{ color: Colors.secondary }}>
+                  {weeklyMacros.avgCalories} kcal
+                </Text>
+              </Text>
+            </View>
+          )}
         </Card>
         </Animated.View>
 
@@ -370,24 +399,27 @@ export default function NutritionScreen() {
               >
                 <View style={styles.mealSlotHeader}>
                   <Text style={styles.mealSlotTime}>{slot.time}</Text>
-                  <Text style={styles.mealSlotEmoji}>{slot.emoji}</Text>
+                  <Ionicons name={(slot.icon || 'restaurant-outline') as any} size={18} color={Colors.accent} style={{ marginRight: 2 }} />
                   <View style={styles.mealSlotInfo}>
                     <Text style={styles.mealSlotLabel}>{slot.label}</Text>
                     <Text style={styles.mealSlotMacros}>
                       {slot.protein}g protein · {slot.calories} kcal
                     </Text>
                   </View>
-                  <Text style={styles.mealSlotChevron}>
-                    {expandedMeal === idx ? '▲' : '▼'}
-                  </Text>
+                  <Ionicons
+                    name={expandedMeal === idx ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={Colors.muted}
+                  />
                 </View>
                 {expandedMeal === idx && (
                   <View style={styles.mealSlotExpanded}>
                     <Text style={styles.mealSlotWhy}>{slot.why}</Text>
                     {slot.foods.map((food) => (
-                      <Text key={food} style={styles.mealSlotFood}>
-                        <Text style={styles.mealSlotDot}>· </Text>{food}
-                      </Text>
+                      <View key={food} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="ellipse" size={4} color={Colors.muted} />
+                        <Text style={styles.mealSlotFood}>{food}</Text>
+                      </View>
                     ))}
                   </View>
                 )}
@@ -405,13 +437,29 @@ export default function NutritionScreen() {
         </Card>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(280).duration(450)}>
-          <Button
-            label="+ Log a Meal"
-            variant="primary"
-            fullWidth
-            onPress={() => router.push('/meal/log')}
-          />
+        <Animated.View entering={FadeInDown.delay(280).duration(450)} style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="+ Log a Meal"
+              variant="primary"
+              fullWidth
+              onPress={() => router.push('/meal/log')}
+            />
+          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/advisor' as any)}
+            style={{
+              width: 48,
+              borderRadius: 12,
+              backgroundColor: Colors.surface2,
+              borderWidth: 1,
+              borderColor: Colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="sparkles" size={20} color={Colors.accent} />
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Water logger */}

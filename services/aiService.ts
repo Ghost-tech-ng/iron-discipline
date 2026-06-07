@@ -56,13 +56,29 @@ export async function estimateMealFromText(description: string): Promise<MealEst
   const text = await callGroq(TEXT_MODEL, [
     {
       role: 'system',
-      content:
-        'You are a sports nutritionist. Always respond with valid JSON only, no markdown.',
+      content: 'You are a Nigerian sports nutritionist based in Abuja. You know local food portions precisely. Always respond with valid JSON only, no markdown.',
     },
     {
       role: 'user',
       content: `Estimate the nutritional content of this meal: "${description}".
-Use realistic home or restaurant portion sizes.
+
+Context: The person is in Abuja, Nigeria. Use these realistic local portion references:
+- "one portion of rice" at a local restaurant = ~350-400g cooked rice (~470-530 kcal, ~9-11g protein)
+- "one plate of rice and stew" = rice + tomato stew + small protein (total ~600-750 kcal)
+- "one portion of jollof rice" = ~300-350g (~400-470 kcal)
+- "one wrap of moi moi" = ~150g (~160 kcal, 10g protein)
+- "one plate of eba and soup" = ~200g eba + ~250ml soup with protein (~550-700 kcal)
+- "one stick of suya" = ~80-100g meat (~180-220 kcal, 20-25g protein)
+- Chicken Republic: full chicken leg = ~250g (~350 kcal, 30g protein); 1 piece chicken = ~120g
+- Mr Biggs / fast food: standard plate = ~600-800 kcal
+- "one wrap / one pack" = single serve from street food vendor
+- Indomie (one pack 70g dry): ~330 kcal, 8g protein, 55g carbs, 11g fat
+- Nigerian bread slice = ~40g (~110 kcal, 3g protein)
+- Groundnut (small pack ~50g): ~280 kcal, 13g protein, 12g fat
+
+If the description is vague (e.g. "one portion"), use the HIGHER end of the range to avoid underestimating.
+Be accurate — this person is tracking their macros for body recomposition.
+
 Return JSON with exactly this shape:
 {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"servingSize":"..."}
 All macros in grams, calories in kcal as integers.`,
@@ -87,8 +103,10 @@ export async function estimateMealFromPhoto(
           },
           {
             type: 'text',
-            text: `You are a sports nutritionist. Estimate the nutritional content of the food in this photo.
-Base estimates on typical portion sizes visible.
+            text: `You are a Nigerian sports nutritionist based in Abuja. Estimate the nutritional content of the food in this photo.
+The person is in Abuja, Nigeria — recognize Nigerian foods (jollof rice, eba, egusi, suya, moi moi, plantain, etc.) and use realistic Nigerian portion sizes.
+If you see a plate of rice, a typical Nigerian restaurant portion is 350-400g cooked. If you see a wrapped food item, estimate accordingly.
+Do not underestimate — use the higher end of your estimate range.
 Return JSON only, no markdown, with exactly this shape:
 {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"servingSize":"..."}
 All macros in grams, calories in kcal as integers.`,
@@ -132,7 +150,7 @@ Return exactly 3 meals as a JSON array. Meals should be at 10:00 AM, 2:00 PM, an
 Each meal must have:
 - time: string e.g. "10:00 AM"
 - label: short name e.g. "First Meal"
-- emoji: one relevant emoji
+- icon: one of "sunny-outline", "restaurant-outline", "barbell-outline", "moon-outline", "cafe-outline"
 - why: 1-2 sentences on WHY this meal and timing matters for the goal
 - foods: array of 3-5 items with exact amounts e.g. ["200g grilled chicken breast", "250g cooked white rice", "2 boiled eggs"]
 - protein: integer — calculate from amounts using: chicken breast 31g/100g, chicken thigh 26g/100g, beef 26g/100g, egg 6g each, tilapia 26g/100g, mackerel 19g/100g, sardines 25g/100g, beans cooked 9g/100g, moi moi 7g/100g, rice cooked 2.7g/100g, oats dry 17g/100g, plantain 1.3g/100g, yam 1.5g/100g, peanut butter 25g/100g, milk 3.4g/100ml, whey 25g per 30g scoop
@@ -153,7 +171,12 @@ export async function loadCachedMealPlan(): Promise<MealSlot[] | null> {
   try {
     const raw = await AsyncStorage.getItem(MEAL_PLAN_CACHE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as MealSlot[];
+    const slots = JSON.parse(raw) as (MealSlot & { emoji?: string })[];
+    // Migrate old emoji field to icon
+    return slots.map((s) => ({
+      ...s,
+      icon: s.icon ?? 'restaurant-outline',
+    }));
   } catch {
     return null;
   }
@@ -219,6 +242,82 @@ Return JSON: {"suggestions":[{"name":"...","calories":0,"protein":0,"carbs":0,"f
 
   const parsed = JSON.parse(text) as { suggestions: MealEstimate[] };
   return parsed.suggestions ?? [];
+}
+
+export interface AdvisorContext {
+  goals: { calories: number; protein: number; carbs: number; fat: number };
+  todayConsumed: { calories: number; protein: number; carbs: number; fat: number };
+  question: string;
+}
+
+export interface AdvisorResult {
+  verdict: 'eat' | 'avoid' | 'moderate' | 'compare';
+  headline: string;
+  reasoning: string;
+  recommendation: string;
+  macroNote?: string;
+  winner?: string;
+}
+
+export async function adviseOnFood(
+  images: { base64: string; mimeType?: string }[],
+  ctx: AdvisorContext
+): Promise<AdvisorResult> {
+  const remCal = Math.max(0, ctx.goals.calories - ctx.todayConsumed.calories);
+  const remProtein = Math.max(0, ctx.goals.protein - ctx.todayConsumed.protein);
+
+  const imageContent = images.map((img) => ({
+    type: 'image_url',
+    image_url: { url: `data:${img.mimeType ?? 'image/jpeg'};base64,${img.base64}` },
+  }));
+
+  const comparing = images.length > 1;
+
+  const systemPrompt = `You are a no-nonsense Nigerian fitness coach and nutritionist based in Abuja.
+You help a 95kg male doing body recomposition — losing fat while building muscle.
+Goal: 2500 kcal/day, 200g protein/day, minimize junk, high protein efficiency.
+Always respond with valid JSON only, no markdown.`;
+
+  const userPrompt = `${comparing ? 'The user is comparing these ' + images.length + ' products/foods.' : 'The user wants to know if they should eat/buy this food or product.'}
+
+Today so far: ${ctx.todayConsumed.calories} kcal eaten, ${ctx.todayConsumed.protein}g protein consumed.
+Remaining budget: ${remCal} kcal, ${remProtein}g protein still needed.
+User's question: "${ctx.question}"
+
+${comparing
+  ? 'Analyze both items in the image(s). Compare their nutritional value, protein content, ingredients quality, and suitability for body recomposition. Pick the better one and explain why clearly.'
+  : 'Analyze the food/product in the image. Check if it fits the remaining daily budget and supports the recomposition goal.'}
+
+Be direct and honest. Nigerian foods and products are valid — do not be biased toward Western products.
+If it is a packaged product, read the nutrition label if visible.
+
+Return JSON exactly:
+{
+  "verdict": "eat" | "avoid" | "moderate" | "compare",
+  "headline": "one short sentence summary",
+  "reasoning": "2-3 sentences on nutritional content and why it does or doesn't fit the goal",
+  "recommendation": "specific action — how much to eat, when, what to pair with it, or which to buy",
+  "macroNote": "optional — how this fits today's remaining budget",
+  ${comparing ? '"winner": "describe which item wins and why in one sentence"' : '"winner": null'}
+}`;
+
+  const text = await callGroq(
+    VISION_MODEL,
+    [
+      {
+        role: 'user',
+        content: [
+          ...imageContent,
+          { type: 'text', text: userPrompt },
+        ],
+      },
+    ],
+    false
+  );
+
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Could not parse advisor response');
+  return JSON.parse(match[0]) as AdvisorResult;
 }
 
 export async function generateDailyCoaching(data: CoachingData): Promise<string> {

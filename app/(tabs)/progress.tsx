@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/progress/WeightChart';
@@ -27,7 +28,7 @@ import {
   loadDisciplineHistory,
 } from '../../services/disciplineService';
 import { loadStrengthHistory, loadWorkoutDates } from '../../services/workoutService';
-import { loadDailyCalorieHistory } from '../../services/nutritionService';
+import { loadDailyCalorieHistory, loadDailyMacroHistory } from '../../services/nutritionService';
 import { exportAllData } from '../../services/exportService';
 import { syncToCloud, isOnline } from '../../services/syncService';
 import { getUserId } from '../../services/db';
@@ -88,12 +89,13 @@ export default function ProgressScreen() {
   const [calorieHistory, setCalorieHistory] = useState<{ date: string; calories: number }[]>([]);
   const [workoutDates, setWorkoutDates] = useState<string[]>([]);
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
+  const [macroHistory, setMacroHistory] = useState<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>([]);
 
   const currentWeight = latestWeight() ?? profile.weightKg;
   const lost = totalLost();
   const photos = checkIns.filter((c) => !!c.photoUri);
 
-  useEffect(() => {
+  const loadAllData = useCallback(() => {
     loadWeeklyCheckIns().then((data) => {
       loadCheckIns(
         data.map((d) => ({
@@ -111,8 +113,8 @@ export default function ProgressScreen() {
     loadDisciplineHistory().then(setScoreHistory);
     loadDailyCalorieHistory(30).then(setCalorieHistory);
     loadWorkoutDates(84).then(setWorkoutDates);
+    loadDailyMacroHistory(14).then(setMacroHistory);
 
-    // Load strength history for all tracked exercises
     Promise.all(
       STRENGTH_EXERCISES.map(async (ex) => {
         const history = await loadStrengthHistory(ex.id, 12);
@@ -124,6 +126,12 @@ export default function ProgressScreen() {
       setStrengthData(map);
     });
   }, []);
+
+  useEffect(() => { loadAllData(); }, []);
+
+  useFocusEffect(useCallback(() => {
+    loadWorkoutDates(84).then(setWorkoutDates);
+  }, []));
 
   const THUMB_SIZE = (SCREEN_W - Spacing.md * 2 - 8) / 3;
 
@@ -303,8 +311,19 @@ export default function ProgressScreen() {
           </Card>
         </Animated.View>
 
-        {/* Discipline score chart */}
+        {/* Weekly analytics summary */}
         <Animated.View entering={FadeInDown.delay(240).duration(450)}>
+          <WeeklyAnalyticsCard
+            macroHistory={macroHistory}
+            scoreHistory={scoreHistory}
+            workoutDates={workoutDates}
+            proteinGoal={profile.goalProtein}
+            calorieGoal={profile.goalCalories}
+          />
+        </Animated.View>
+
+        {/* Discipline score chart */}
+        <Animated.View entering={FadeInDown.delay(300).duration(450)}>
           <Card style={styles.chartCard}>
             <Text style={styles.cardTitle}>DISCIPLINE SCORE HISTORY</Text>
             <ScoreChart history={scoreHistory} />
@@ -397,7 +416,7 @@ export default function ProgressScreen() {
 
         {/* Coaching insight */}
         <Animated.View entering={FadeInDown.delay(560).duration(450)}>
-          <CoachingCard sessionCount={workoutDates.length} checkIns={checkIns} />
+          <CoachingCard sessionCount={workoutDates.length} checkIns={checkIns} workoutDates={workoutDates} />
         </Animated.View>
 
         {/* Weigh-in protocol */}
@@ -511,10 +530,13 @@ export default function ProgressScreen() {
 
 import type { WeeklyCheckIn } from '../../types';
 
-function CoachingCard({ sessionCount, checkIns }: { sessionCount: number; checkIns: WeeklyCheckIn[] }) {
+function CoachingCard({ sessionCount, checkIns, workoutDates }: { sessionCount: number; checkIns: WeeklyCheckIn[]; workoutDates: string[] }) {
   const Colors = useColors();
 
-  const weeksElapsed = 12;
+  // Calculate actual weeks since first workout (min 1 to avoid division by zero)
+  const firstDate = workoutDates.length > 0 ? new Date(workoutDates[0] + 'T00:00:00') : new Date();
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const weeksElapsed = Math.max(1, Math.ceil((Date.now() - firstDate.getTime()) / msPerWeek));
   const sessionsPerWeek = sessionCount / weeksElapsed;
   const weightChange = checkIns.length >= 2
     ? checkIns[0].weightKg - checkIns[checkIns.length - 1].weightKg
@@ -528,12 +550,12 @@ function CoachingCard({ sessionCount, checkIns }: { sessionCount: number; checkI
   if (sessionsPerWeek < 2) {
     urgency = 'red';
     headline = 'Training frequency is the bottleneck';
-    body = `${sessionCount} sessions in 12 weeks = ${sessionsPerWeek.toFixed(1)}/week. Fat loss and muscle retention both require consistent mechanical stimulus — 4–5 sessions per week minimum. Without it, there is nothing to drive progressive overload, and your body has no reason to spare muscle while in a calorie deficit.`;
+    body = `${sessionCount} sessions in ${weeksElapsed} week${weeksElapsed !== 1 ? 's' : ''} = ${sessionsPerWeek.toFixed(1)}/week. Fat loss and muscle retention both require consistent mechanical stimulus — 4–5 sessions per week minimum. Without it, there is nothing to drive progressive overload, and your body has no reason to spare muscle while in a calorie deficit.`;
     action = 'Target: 4 sessions every week, no exceptions. Set the session time in your calendar like a meeting.';
   } else if (sessionsPerWeek < 3.5) {
     urgency = 'amber';
     headline = 'Frequency is improving — dial in consistency';
-    body = `${sessionsPerWeek.toFixed(1)} sessions/week is a start. You need 4–5 to optimise body recomposition. Each missed session is a missed progressive overload opportunity that compounds over 12 weeks.`;
+    body = `${sessionsPerWeek.toFixed(1)} sessions/week is a start. You need 4–5 to optimise body recomposition. Each missed session is a missed progressive overload opportunity that compounds over your training period.`;
     action = 'Add one more training day. Push/pull/legs/upper/lower covers everything — pick the session you skip most and lock it in.';
   } else {
     urgency = 'green';
@@ -591,6 +613,136 @@ function CoachingCard({ sessionCount, checkIns }: { sessionCount: number; checkI
         <Text style={s.actionText}>{action}</Text>
       </View>
     </View>
+  );
+}
+
+function WeeklyAnalyticsCard({
+  macroHistory,
+  scoreHistory,
+  workoutDates,
+  proteinGoal,
+  calorieGoal,
+}: {
+  macroHistory: { date: string; calories: number; protein: number }[];
+  scoreHistory: { date: string; score: number }[];
+  workoutDates: string[];
+  proteinGoal: number;
+  calorieGoal: number;
+}) {
+  const Colors = useColors();
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  const cutoff = sevenDaysAgo.toISOString().split('T')[0];
+
+  const recentMacros = macroHistory.filter((d) => d.date >= cutoff);
+  const recentScores = scoreHistory.filter((d) => d.date >= cutoff);
+  const recentWorkouts = workoutDates.filter((d) => d >= cutoff);
+
+  const daysLogged = recentMacros.length;
+  const avgProtein = daysLogged > 0 ? Math.round(recentMacros.reduce((s, d) => s + d.protein, 0) / daysLogged) : null;
+  const avgCalories = daysLogged > 0 ? Math.round(recentMacros.reduce((s, d) => s + d.calories, 0) / daysLogged) : null;
+  const avgScore = recentScores.length > 0 ? Math.round(recentScores.reduce((s, d) => s + d.score, 0) / recentScores.length) : null;
+  const workoutsThisWeek = recentWorkouts.length;
+
+  const proteinPct = avgProtein != null ? Math.min(Math.round((avgProtein / proteinGoal) * 100), 100) : 0;
+  const calPct = avgCalories != null ? Math.min(Math.round((avgCalories / calorieGoal) * 100), 100) : 0;
+  const workoutPct = Math.min(Math.round((workoutsThisWeek / 5) * 100), 100);
+  const scorePct = avgScore ?? 0;
+
+  function statusColor(pct: number, inverse = false) {
+    if (inverse) return pct > 110 ? Colors.accentRed : pct >= 90 ? Colors.accentGreen : Colors.accentAmber;
+    return pct >= 90 ? Colors.accentGreen : pct >= 70 ? Colors.accentAmber : Colors.accentRed;
+  }
+
+  const s = React.useMemo(() => StyleSheet.create({
+    card: { gap: 14 },
+    title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    tile: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: Colors.surface2,
+      borderRadius: 12,
+      padding: 12,
+      gap: 6,
+    },
+    tileLabel: { ...Typography.caption, color: Colors.muted, letterSpacing: 0.5 },
+    tileValue: { ...Typography.h3, fontWeight: '700', letterSpacing: -0.5 },
+    tileBar: {
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: Colors.border,
+      overflow: 'hidden',
+    },
+    tileBarFill: { height: '100%', borderRadius: 2 },
+    tileSub: { ...Typography.caption, color: Colors.muted },
+    noData: { ...Typography.small, color: Colors.muted, textAlign: 'center', paddingVertical: 12 },
+  }), [Colors]);
+
+  if (daysLogged === 0 && recentWorkouts.length === 0) {
+    return (
+      <Card style={s.card}>
+        <Text style={s.title}>7-DAY AVERAGES</Text>
+        <Text style={s.noData}>No data logged yet. Start tracking meals and workouts.</Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Card style={s.card}>
+      <Text style={s.title}>7-DAY AVERAGES</Text>
+      <View style={s.grid}>
+        <View style={s.tile}>
+          <Text style={s.tileLabel}>AVG PROTEIN</Text>
+          <Text style={[s.tileValue, { color: statusColor(proteinPct) }]}>
+            {avgProtein != null ? `${avgProtein}g` : '--'}
+          </Text>
+          <View style={s.tileBar}>
+            <View style={[s.tileBarFill, { width: `${proteinPct}%`, backgroundColor: statusColor(proteinPct) }]} />
+          </View>
+          <Text style={s.tileSub}>{proteinPct}% of {proteinGoal}g target</Text>
+        </View>
+
+        <View style={s.tile}>
+          <Text style={s.tileLabel}>AVG CALORIES</Text>
+          <Text style={[s.tileValue, { color: statusColor(calPct, true) }]}>
+            {avgCalories != null ? `${avgCalories}` : '--'}
+          </Text>
+          <View style={s.tileBar}>
+            <View style={[s.tileBarFill, { width: `${calPct}%`, backgroundColor: statusColor(calPct, true) }]} />
+          </View>
+          <Text style={s.tileSub}>{calPct}% of {calorieGoal} kcal target</Text>
+        </View>
+
+        <View style={s.tile}>
+          <Text style={s.tileLabel}>WORKOUTS</Text>
+          <Text style={[s.tileValue, { color: statusColor(workoutPct) }]}>
+            {workoutsThisWeek} / 5
+          </Text>
+          <View style={s.tileBar}>
+            <View style={[s.tileBarFill, { width: `${workoutPct}%`, backgroundColor: statusColor(workoutPct) }]} />
+          </View>
+          <Text style={s.tileSub}>this week</Text>
+        </View>
+
+        <View style={s.tile}>
+          <Text style={s.tileLabel}>AVG DISCIPLINE</Text>
+          <Text style={[s.tileValue, { color: statusColor(scorePct) }]}>
+            {avgScore != null ? `${avgScore}` : '--'}
+          </Text>
+          <View style={s.tileBar}>
+            <View style={[s.tileBarFill, { width: `${scorePct}%`, backgroundColor: statusColor(scorePct) }]} />
+          </View>
+          <Text style={s.tileSub}>/ 100 score</Text>
+        </View>
+      </View>
+      {daysLogged > 0 && (
+        <Text style={{ ...Typography.caption, color: Colors.muted }}>
+          Based on {daysLogged} day{daysLogged !== 1 ? 's' : ''} of logged meals this week
+        </Text>
+      )}
+    </Card>
   );
 }
 

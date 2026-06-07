@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
@@ -31,25 +32,27 @@ export default function WorkoutsScreen() {
   const todayKey = DAYS[todayIndex === 0 ? 6 : todayIndex - 1].key;
   const [missedSessions, setMissedSessions] = useState<{ key: DayOfWeek; label: string; daysAgo: number }[]>([]);
 
-  useEffect(() => {
-    loadRecentCompletedDates(7).then((completed) => {
-      const completedDates = new Set(completed.map((c) => c.date));
-      const missed: { key: DayOfWeek; label: string; daysAgo: number }[] = [];
+  useFocusEffect(
+    useCallback(() => {
+      loadRecentCompletedDates(7).then((completed) => {
+        const completedDates = new Set(completed.map((c) => c.date));
+        const missed: { key: DayOfWeek; label: string; daysAgo: number }[] = [];
 
-      for (let i = 1; i <= 6; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = localDate(d);
-        const jsDay = d.getDay(); // 0=Sun
-        const dayKey = DAYS[jsDay === 0 ? 6 : jsDay - 1].key;
-        const session = WEEKLY_SPLIT[dayKey];
-        if (session && !completedDates.has(dateStr)) {
-          missed.push({ key: dayKey, label: DAYS[jsDay === 0 ? 6 : jsDay - 1].label, daysAgo: i });
+        for (let i = 1; i <= 6; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = localDate(d);
+          const jsDay = d.getDay();
+          const dayKey = DAYS[jsDay === 0 ? 6 : jsDay - 1].key;
+          const session = WEEKLY_SPLIT[dayKey];
+          if (session && !completedDates.has(dateStr)) {
+            missed.push({ key: dayKey, label: DAYS[jsDay === 0 ? 6 : jsDay - 1].label, daysAgo: i });
+          }
         }
-      }
-      setMissedSessions(missed.slice(0, 3));
-    });
-  }, []);
+        setMissedSessions(missed.slice(0, 3));
+      });
+    }, [])
+  );
 
   const styles = React.useMemo(() => StyleSheet.create({
     safe: { flex: 1, backgroundColor: Colors.base },
