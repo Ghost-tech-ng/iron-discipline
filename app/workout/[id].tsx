@@ -168,6 +168,9 @@ export default function WorkoutScreen() {
   );
   const [previousSession, setPreviousSession] = useState<WorkoutLog | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionStartRef = useRef<number>(
+    isResume ? activeSession!.startedAt : Date.now()
+  );
 
   const styles = React.useMemo(() => StyleSheet.create({
     safe: {
@@ -306,8 +309,13 @@ export default function WorkoutScreen() {
   }), [Colors, accentColor]);
 
   useEffect(() => {
-    if (id) startSession(id);
-    timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
+    if (id) {
+      startSession(id);
+      if (!isResume) sessionStartRef.current = Date.now();
+    }
+    timerRef.current = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - sessionStartRef.current) / 1000));
+    }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
