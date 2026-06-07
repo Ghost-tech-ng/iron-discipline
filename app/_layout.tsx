@@ -87,7 +87,8 @@ export default function RootLayout() {
 
         const granted = await requestNotificationPermissions();
         if (granted) {
-          await scheduleAllNotifications();
+          const goal = savedProfile?.goalProtein ?? 200;
+          await scheduleAllNotifications(goal);
         }
 
         // Auto-sync on startup if online

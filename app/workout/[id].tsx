@@ -163,6 +163,7 @@ export default function WorkoutScreen() {
     isResume ? new Map(Object.entries(activeSession!.exerciseLogs)) : new Map()
   );
   const [restTimerSecs, setRestTimerSecs] = useState<number | null>(null);
+  const [restExerciseName, setRestExerciseName] = useState<string | undefined>();
   const [elapsed, setElapsed] = useState(() =>
     isResume ? Math.floor((Date.now() - activeSession!.startedAt) / 1000) : 0
   );
@@ -436,6 +437,7 @@ export default function WorkoutScreen() {
       {restTimerSecs !== null && (
         <RestTimer
           seconds={restTimerSecs}
+          exerciseName={restExerciseName}
           onComplete={() => setRestTimerSecs(null)}
           onDismiss={() => setRestTimerSecs(null)}
         />
@@ -512,7 +514,7 @@ export default function WorkoutScreen() {
             previousLog={previousSession?.exerciseLogs.find((el) => el.exerciseId === exercise.id)}
             initialSets={exerciseLogs.get(exercise.id)}
             onSetsUpdate={handleSetsUpdate}
-            onRestStart={(secs) => setRestTimerSecs(secs)}
+            onRestStart={(secs) => { setRestTimerSecs(secs); setRestExerciseName(exercise.name); }}
             isActive={true}
             enterDelay={idx * 60}
           />

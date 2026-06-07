@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, AppState } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, {
   useSharedValue,
@@ -11,51 +12,86 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useColors } from '../../hooks/useColors';
 import { Typography } from '../../constants/theme';
+import { sendImmediateNotification } from '../../services/notificationService';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface RestTimerProps {
   seconds: number;
+  exerciseName?: string;
   onComplete: () => void;
   onDismiss: () => void;
 }
 
-export function RestTimer({ seconds, onComplete, onDismiss }: RestTimerProps) {
+export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: RestTimerProps) {
   const Colors = useColors();
   const [remaining, setRemaining] = useState(seconds);
   const [done, setDone] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const endTimeRef = useRef(Date.now() + seconds * 1000);
+  const completedRef = useRef(false);
   const progress = useSharedValue(1);
   const SIZE = 200;
   const STROKE = 10;
   const radius = (SIZE - STROKE) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  const handleComplete = useCallback(() => {
+  const triggerComplete = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     setDone(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    sendImmediateNotification(
+      'Rest complete',
+      exerciseName ? `Time to hit your next set of ${exerciseName}.` : 'Rest is over — next set.'
+    );
     onComplete();
-  }, [onComplete]);
+  }, [onComplete, exerciseName]);
+
+  function restartAnimation(remSeconds: number) {
+    const fraction = remSeconds / seconds;
+    progress.value = fraction;
+    progress.value = withTiming(0, {
+      duration: remSeconds * 1000,
+      easing: Easing.linear,
+    });
+  }
 
   useEffect(() => {
+    // Start ring animation
     progress.value = withTiming(0, {
       duration: seconds * 1000,
       easing: Easing.linear,
     });
 
+    // Interval checks remaining time from wall clock
     intervalRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current!);
-          runOnJS(handleComplete)();
-          return 0;
+      const rem = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+      setRemaining(rem);
+      if (rem <= 0) {
+        clearInterval(intervalRef.current!);
+        runOnJS(triggerComplete)();
+      }
+    }, 500);
+
+    // When app comes back to foreground (screen unlock), re-check immediately
+    const appStateSub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        const rem = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+        setRemaining(rem);
+        if (rem <= 0) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          runOnJS(triggerComplete)();
+        } else {
+          // Re-sync the ring animation to actual remaining time
+          restartAnimation(rem);
         }
-        return prev - 1;
-      });
-    }, 1000);
+      }
+    });
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      appStateSub.remove();
     };
   }, []);
 
@@ -114,6 +150,12 @@ export function RestTimer({ seconds, onComplete, onDismiss }: RestTimerProps) {
       letterSpacing: 1.5,
       textTransform: 'uppercase',
     },
+    exerciseHint: {
+      ...Typography.caption,
+      color: Colors.muted,
+      textAlign: 'center',
+      paddingHorizontal: 8,
+    },
     skipBtn: {
       paddingVertical: 10,
       paddingHorizontal: 24,
@@ -149,15 +191,24 @@ export function RestTimer({ seconds, onComplete, onDismiss }: RestTimerProps) {
             />
           </Svg>
           <View style={styles.center}>
-            <Text style={[styles.time, { color: done ? Colors.accentGreen : Colors.primary }]}>
-              {done ? '✓' : timeStr}
-            </Text>
+            {done ? (
+              <Ionicons name="checkmark" size={40} color={Colors.accentGreen} />
+            ) : (
+              <Text style={[styles.time, { color: Colors.primary }]}>{timeStr}</Text>
+            )}
             {!done && <Text style={styles.sub}>rest</Text>}
           </View>
         </View>
 
+        {exerciseName && !done && (
+          <Text style={styles.exerciseHint}>Next: {exerciseName}</Text>
+        )}
+
         <Pressable onPress={onDismiss} style={styles.skipBtn}>
-          <Text style={styles.skipText}>{done ? 'Continue →' : 'Skip rest'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={styles.skipText}>{done ? 'Continue' : 'Skip rest'}</Text>
+            {done && <Ionicons name="arrow-forward" size={14} color={Colors.accent} />}
+          </View>
         </Pressable>
       </View>
     </View>
