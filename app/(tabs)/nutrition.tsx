@@ -17,12 +17,16 @@ import { Colors, Spacing, Typography } from '../../constants/theme';
 import { DAILY_MEAL_PLAN, type MealSlot } from '../../constants/nutrition';
 import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
 import { loadDailyMacroHistory } from '../../services/nutritionService';
+import { useShoppingListStore } from '../../store/shoppingListStore';
 
 export default function NutritionScreen() {
   const Colors = useColors();
   const { getTotals, today, waterMl, removeMeal } = useNutritionStore();
   const { profile } = useUserStore();
   const { calories, protein, carbs, fat } = getTotals();
+  const { totalCount, checkedCount } = useShoppingListStore();
+  const shopTotal = totalCount();
+  const shopChecked = checkedCount();
   const [expandedMeal, setExpandedMeal] = useState<number | null>(null);
   const [mealPlan, setMealPlan] = useState<MealSlot[]>(DAILY_MEAL_PLAN);
   const [refreshing, setRefreshing] = useState(false);
@@ -312,6 +316,42 @@ export default function NutritionScreen() {
                 {' '}({mealsRemaining} left today) to hit {profile.goalProtein}g
               </Text>
             </View>
+          </Animated.View>
+        )}
+
+        {/* Shopping list teaser */}
+        {shopChecked < shopTotal && (
+          <Animated.View entering={FadeInDown.delay(60).duration(450)}>
+            <TouchableOpacity onPress={() => router.push('/shopping-list' as any)} activeOpacity={0.8}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                backgroundColor: Colors.surface,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: Colors.border,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+              }}>
+                <View style={{
+                  width: 36, height: 36, borderRadius: 18,
+                  backgroundColor: Colors.accentGreen + '15',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Ionicons name="cart" size={18} color={Colors.accentGreen} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...Typography.small, color: Colors.primary, fontWeight: '700' }}>
+                    Weekly Shopping List
+                  </Text>
+                  <Text style={{ ...Typography.caption, color: Colors.muted }}>
+                    {shopChecked}/{shopTotal} stocked — get your protein sources
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+              </View>
+            </TouchableOpacity>
           </Animated.View>
         )}
 
