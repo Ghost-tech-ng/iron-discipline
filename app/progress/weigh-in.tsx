@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useProgressStore } from '../../store/progressStore';
@@ -142,6 +143,20 @@ export default function WeighInScreen() {
           });
 
     if (!result.canceled && result.assets[0]) {
+      try {
+        const cacheDir = FileSystem.documentDirectory ? `${FileSystem.documentDirectory}progress_photos/` : null;
+        if (cacheDir) {
+          const dirInfo = await FileSystem.getInfoAsync(cacheDir);
+          if (!dirInfo.exists) await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+          const ext = result.assets[0].uri.split('.').pop() ?? 'jpg';
+          const destPath = `${cacheDir}checkin_${Date.now()}.${ext}`;
+          await FileSystem.copyAsync({ from: result.assets[0].uri, to: destPath });
+          setPhotoUri(destPath);
+          return;
+        }
+      } catch {
+        // fall through to raw uri if copy fails
+      }
       setPhotoUri(result.assets[0].uri);
     }
   }
