@@ -10,10 +10,13 @@ import {
   Modal,
   Alert,
   Dimensions,
+  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/progress/WeightChart';
@@ -28,7 +31,8 @@ import {
   loadDisciplineHistory,
 } from '../../services/disciplineService';
 import { loadStrengthHistory, loadWorkoutDates } from '../../services/workoutService';
-import { loadDailyCalorieHistory, loadDailyMacroHistory } from '../../services/nutritionService';
+import { loadDailyCalorieHistory, loadDailyMacroHistory, loadMealEntriesForRange } from '../../services/nutritionService';
+import { generateWeeklyDietAudit, type DietAuditResult } from '../../services/aiService';
 import { exportAllData } from '../../services/exportService';
 import { syncToCloud, isOnline } from '../../services/syncService';
 import { getUserId } from '../../services/db';
@@ -90,10 +94,40 @@ export default function ProgressScreen() {
   const [workoutDates, setWorkoutDates] = useState<string[]>([]);
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
   const [macroHistory, setMacroHistory] = useState<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>([]);
+  const [dietAudit, setDietAudit] = useState<DietAuditResult | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  async function handleDietAudit() {
+    setAuditLoading(true);
+    setDietAudit(null);
+    try {
+      const entries = await loadMealEntriesForRange(7);
+      if (entries.length === 0) {
+        Alert.alert('Not enough data', 'Log some meals this week first, then run the audit.');
+        return;
+      }
+      const result = await generateWeeklyDietAudit(entries, {
+        calories: profile.goalCalories,
+        protein: profile.goalProtein,
+        carbs: profile.goalCarbs,
+        fat: profile.goalFat,
+      });
+      setDietAudit(result);
+    } catch (e) {
+      Alert.alert('Error', 'Could not generate audit. Check your internet connection.');
+    } finally {
+      setAuditLoading(false);
+    }
+  }
 
   const currentWeight = latestWeight() ?? profile.weightKg;
   const lost = totalLost();
   const photos = checkIns.filter((c) => !!c.photoUri);
+
+  const daysSinceCheckIn = checkIns.length > 0
+    ? Math.floor((Date.now() - new Date(checkIns[0].date + 'T00:00:00').getTime()) / 86400000)
+    : null;
+  const checkInOverdue = daysSinceCheckIn !== null && daysSinceCheckIn > 7;
 
   const loadAllData = useCallback(() => {
     loadWeeklyCheckIns().then((data) => {
@@ -282,6 +316,27 @@ export default function ProgressScreen() {
           <Text style={styles.subtitle}>Weigh in every Monday morning</Text>
         </Animated.View>
 
+        {checkInOverdue && (
+          <Animated.View entering={FadeInDown.delay(40).duration(450)}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: Colors.accentRed + '15',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: Colors.accentRed + '40',
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+            }}>
+              <Ionicons name="warning" size={20} color={Colors.accentRed} />
+              <Text style={{ ...Typography.small, color: Colors.primary, flex: 1, lineHeight: 18 }}>
+                <Text style={{ fontWeight: '700', color: Colors.accentRed }}>{daysSinceCheckIn} days</Text> since your last weigh-in. You can't track progress you're not measuring — log one now.
+              </Text>
+            </View>
+          </Animated.View>
+        )}
+
         {/* Weight trend chart */}
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
           <Card style={styles.chartCard}>
@@ -319,6 +374,15 @@ export default function ProgressScreen() {
             workoutDates={workoutDates}
             proteinGoal={profile.goalProtein}
             calorieGoal={profile.goalCalories}
+          />
+        </Animated.View>
+
+        {/* Weekly AI diet audit */}
+        <Animated.View entering={FadeInDown.delay(270).duration(450)}>
+          <DietAuditCard
+            result={dietAudit}
+            loading={auditLoading}
+            onRun={handleDietAudit}
           />
         </Animated.View>
 
@@ -741,6 +805,104 @@ function WeeklyAnalyticsCard({
         <Text style={{ ...Typography.caption, color: Colors.muted }}>
           Based on {daysLogged} day{daysLogged !== 1 ? 's' : ''} of logged meals this week
         </Text>
+      )}
+    </Card>
+  );
+}
+
+function DietAuditCard({
+  result,
+  loading,
+  onRun,
+}: {
+  result: DietAuditResult | null;
+  loading: boolean;
+  onRun: () => void;
+}) {
+  const Colors = useColors();
+
+  const s = React.useMemo(() => StyleSheet.create({
+    card: { gap: 12 },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    runBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: Colors.accent,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+    },
+    runBtnText: { ...Typography.caption, color: '#fff', fontWeight: '700' },
+    sub: { ...Typography.small, color: Colors.muted, lineHeight: 18 },
+    summary: { ...Typography.small, color: Colors.primary, fontWeight: '600', lineHeight: 19 },
+    sectionTitle: { ...Typography.caption, fontWeight: '700', letterSpacing: 1, marginTop: 4 },
+    itemRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 6 },
+    itemText: { ...Typography.small, color: Colors.secondary, flex: 1, lineHeight: 18 },
+    itemBold: { color: Colors.primary, fontWeight: '600' },
+  }), [Colors]);
+
+  return (
+    <Card style={s.card}>
+      <View style={s.headerRow}>
+        <Text style={s.title}>AI WEEKLY DIET AUDIT</Text>
+        <TouchableOpacity style={s.runBtn} onPress={onRun} disabled={loading}>
+          {loading ? <ActivityIndicator size="small" color="#fff" /> : (
+            <>
+              <Ionicons name="sparkles" size={13} color="#fff" />
+              <Text style={s.runBtnText}>{result ? 'Re-run' : 'Analyze my week'}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {!result && !loading && (
+        <Text style={s.sub}>
+          AI reviews everything you actually ate this week and tells you exactly what to cut and what to add — not generic advice.
+        </Text>
+      )}
+
+      {result && (
+        <>
+          <Text style={s.summary}>{result.summary}</Text>
+
+          {result.wins.length > 0 && (
+            <>
+              <Text style={[s.sectionTitle, { color: Colors.accentGreen }]}>WINS</Text>
+              {result.wins.map((w, i) => (
+                <View key={i} style={s.itemRow}>
+                  <Ionicons name="checkmark-circle" size={14} color={Colors.accentGreen} style={{ marginTop: 2 }} />
+                  <Text style={s.itemText}>{w}</Text>
+                </View>
+              ))}
+            </>
+          )}
+
+          {result.cuts.length > 0 && (
+            <>
+              <Text style={[s.sectionTitle, { color: Colors.accentRed }]}>CUT THESE</Text>
+              {result.cuts.map((c, i) => (
+                <View key={i} style={s.itemRow}>
+                  <Ionicons name="close-circle" size={14} color={Colors.accentRed} style={{ marginTop: 2 }} />
+                  <Text style={s.itemText}><Text style={s.itemBold}>{c.item}</Text> — {c.reason}</Text>
+                </View>
+              ))}
+            </>
+          )}
+
+          {result.adds.length > 0 && (
+            <>
+              <Text style={[s.sectionTitle, { color: Colors.accent }]}>ADD THESE</Text>
+              {result.adds.map((a, i) => (
+                <View key={i} style={s.itemRow}>
+                  <Ionicons name="add-circle" size={14} color={Colors.accent} style={{ marginTop: 2 }} />
+                  <Text style={s.itemText}><Text style={s.itemBold}>{a.item}</Text> — {a.reason}</Text>
+                </View>
+              ))}
+            </>
+          )}
+        </>
       )}
     </Card>
   );

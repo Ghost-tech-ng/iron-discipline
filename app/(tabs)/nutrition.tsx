@@ -84,6 +84,20 @@ export default function NutritionScreen() {
     protein: Math.max(0, profile.goalProtein - protein),
   };
 
+  function parseSlotTime(timeStr: string): number {
+    const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!m) return 0;
+    let h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    return h * 60 + min;
+  }
+
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const mealsRemaining = Math.max(1, mealPlan.filter((s) => parseSlotTime(s.time) >= nowMinutes - 30).length);
+  const proteinPerMeal = remaining.protein > 0 ? Math.ceil(remaining.protein / mealsRemaining) : 0;
+
   const styles = React.useMemo(() => StyleSheet.create({
     safe: { flex: 1, backgroundColor: Colors.base },
     scroll: { flex: 1 },
@@ -278,6 +292,28 @@ export default function NutritionScreen() {
             )}
           </View>
         </Animated.View>
+
+        {remaining.protein > 0 && (
+          <Animated.View entering={FadeInDown.delay(40).duration(450)}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: Colors.accent + '12',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: Colors.accent + '30',
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+            }}>
+              <Ionicons name="flag" size={18} color={Colors.accent} />
+              <Text style={{ ...Typography.small, color: Colors.primary, flex: 1, lineHeight: 18 }}>
+                <Text style={{ fontWeight: '700' }}>{proteinPerMeal}g protein</Text> needed per remaining meal
+                {' '}({mealsRemaining} left today) to hit {profile.goalProtein}g
+              </Text>
+            </View>
+          </Animated.View>
+        )}
 
         {/* Calorie summary */}
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>

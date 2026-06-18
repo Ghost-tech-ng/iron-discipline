@@ -133,6 +133,38 @@ export async function loadDailyMacroHistory(
   return rows;
 }
 
+export async function loadMealEntriesForRange(
+  days = 7
+): Promise<{ date: string; name: string; calories: number; protein: number; carbs: number; fat: number; quantity: number }[]> {
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days + 1);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+
+  const rows = await db.getAllAsync<{
+    date: string;
+    food_name: string;
+    food_calories: number;
+    food_protein: number;
+    food_carbs: number;
+    food_fat: number;
+    quantity: number;
+  }>(
+    `SELECT date, food_name, food_calories, food_protein, food_carbs, food_fat, quantity
+     FROM meal_entries WHERE date >= ? ORDER BY date ASC, rowid ASC;`,
+    [cutoffStr]
+  );
+  return rows.map((r) => ({
+    date: r.date,
+    name: r.food_name,
+    calories: r.food_calories,
+    protein: r.food_protein,
+    carbs: r.food_carbs,
+    fat: r.food_fat,
+    quantity: r.quantity,
+  }));
+}
+
 export async function loadTodaySupplements(): Promise<string[]> {
   const db = getDb();
   const rows = await db.getAllAsync<{ supplement_id: string }>(

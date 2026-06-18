@@ -320,6 +320,47 @@ Return JSON exactly:
   return JSON.parse(match[0]) as AdvisorResult;
 }
 
+export interface DietAuditResult {
+  summary: string;
+  wins: string[];
+  cuts: { item: string; reason: string }[];
+  adds: { item: string; reason: string }[];
+}
+
+export async function generateWeeklyDietAudit(
+  entries: { date: string; name: string; calories: number; protein: number; carbs: number; fat: number; quantity: number }[],
+  targets: { calories: number; protein: number; carbs: number; fat: number }
+): Promise<DietAuditResult> {
+  const foodList = entries
+    .map((e) => `${e.date}: ${e.name} (${Math.round(e.calories * e.quantity)} kcal, ${Math.round(e.protein * e.quantity)}g protein)`)
+    .join('\n');
+
+  const text = await callGroq(TEXT_MODEL, [
+    {
+      role: 'system',
+      content: 'You are a direct, no-nonsense Nigerian sports nutritionist based in Abuja reviewing a client\'s actual week of eating. Always respond with valid JSON only, no markdown.',
+    },
+    {
+      role: 'user',
+      content: `Here is everything this person ate over the last 7 days:
+${foodList}
+
+Daily targets: ${targets.calories} kcal, ${targets.protein}g protein, ${targets.carbs}g carbs, ${targets.fat}g fat.
+
+Review this like a coach doing a weekly check-in. Be specific and reference actual foods they ate by name — don't give generic advice.
+Identify:
+1. wins: 1-3 things they did well (specific foods/patterns that supported the goal)
+2. cuts: 1-3 specific foods/patterns to cut or reduce, with a concrete reason (e.g. oversized single meals, low-protein-density choices, repeated splurges)
+3. adds: 1-3 specific Nigerian-available foods or swaps to add, with a concrete reason tied to what they're missing (protein density, fiber, micronutrients)
+
+Return JSON exactly:
+{"summary":"one direct sentence on the week overall","wins":["..."],"cuts":[{"item":"...","reason":"..."}],"adds":[{"item":"...","reason":"..."}]}`,
+    },
+  ]);
+
+  return JSON.parse(text) as DietAuditResult;
+}
+
 export async function generateDailyCoaching(data: CoachingData): Promise<string> {
   const text = await callGroq(TEXT_MODEL, [
     {

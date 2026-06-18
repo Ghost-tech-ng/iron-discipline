@@ -194,9 +194,8 @@ export default function LogMealScreen() {
     }
   }
 
-  async function handleAdd() {
+  function commitMeal() {
     if (!selected) return;
-
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -210,9 +209,33 @@ export default function LogMealScreen() {
     };
 
     addMeal(entry);
-    await saveMealEntry(entry);
+    saveMealEntry(entry);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
+  }
+
+  async function handleAdd() {
+    if (!selected) return;
+
+    const mealCalories = selected.calories * qty;
+    const dailyBudget = USER_TARGETS.calories;
+    const pctOfDay = mealCalories / dailyBudget;
+
+    if (pctOfDay >= 0.35) {
+      const pct = Math.round(pctOfDay * 100);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Alert.alert(
+        'Big meal — heads up',
+        `This is ${Math.round(mealCalories)} kcal — ${pct}% of your entire day's budget in one sitting. Consider splitting it across two meals, or cutting the portion by a third.`,
+        [
+          { text: 'Go back and adjust', style: 'cancel' },
+          { text: 'Add anyway', style: 'destructive', onPress: commitMeal },
+        ]
+      );
+      return;
+    }
+
+    commitMeal();
   }
 
   const styles = React.useMemo(() => StyleSheet.create({
