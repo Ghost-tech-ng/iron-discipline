@@ -42,6 +42,7 @@ import { useSyncStore } from '../../store/syncStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { getActivePlanStatus } from '../../constants/plan';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -336,6 +337,11 @@ export default function ProgressScreen() {
             </View>
           </Animated.View>
         )}
+
+        {/* 21-Day Push Plan countdown */}
+        <Animated.View entering={FadeInDown.delay(60).duration(450)}>
+          <PushCountdownCard />
+        </Animated.View>
 
         {/* Weight trend chart */}
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
@@ -905,6 +911,187 @@ function DietAuditCard({
         </>
       )}
     </Card>
+  );
+}
+
+function PushCountdownCard() {
+  const Colors = useColors();
+  const status = getActivePlanStatus();
+
+  if (!status.isActive) return null;
+
+  const { phase, dayNumber, daysRemaining, totalDays, isRefeedDay, isPeakDay } = status;
+
+  const phaseColor =
+    phase.week === 1 ? Colors.accentHeat
+    : phase.week === 2 ? Colors.accent
+    : Colors.accentGreen;
+
+  const progressPct = Math.round(((dayNumber - 1) / totalDays) * 100);
+
+  // Override macros on special days
+  const displayCalories = isRefeedDay ? 2400 : phase.calories;
+  const displayCarbs    = isRefeedDay ? 340 : phase.carbs;
+  const displayFat      = isRefeedDay ? 30 : phase.fat;
+
+  const s = React.useMemo(() => StyleSheet.create({
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderTopWidth: 3,
+      borderTopColor: phaseColor,
+      overflow: 'hidden',
+      gap: 0,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: Spacing.md,
+      paddingTop: 14,
+      paddingBottom: 10,
+    },
+    badge: {
+      backgroundColor: phaseColor,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 5,
+    },
+    badgeText: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.12,
+      color: phase.week === 3 ? '#000' : '#fff',
+    },
+    phaseName: { ...Typography.h4, color: Colors.primary, fontWeight: '700', flex: 1 },
+    dayInfo: { alignItems: 'flex-end', gap: 1 },
+    dayNum: { fontSize: 15, fontWeight: '800', color: phaseColor, letterSpacing: -0.3, fontVariant: ['tabular-nums'] },
+    dayLeft: { ...Typography.caption, color: Colors.muted },
+    progressTrack: {
+      height: 3,
+      backgroundColor: Colors.border,
+      marginHorizontal: Spacing.md,
+    },
+    progressFill: { height: '100%', backgroundColor: phaseColor, borderRadius: 2 },
+    macroStrip: {
+      flexDirection: 'row',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 14,
+      gap: 0,
+    },
+    macroCell: { flex: 1, alignItems: 'center', gap: 3 },
+    macroVal: {
+      fontSize: 17,
+      fontWeight: '800',
+      letterSpacing: -0.4,
+      fontVariant: ['tabular-nums'],
+      color: Colors.primary,
+    },
+    macroLabel: { ...Typography.caption, color: Colors.muted, letterSpacing: 0.5 },
+    divider: { width: 1, backgroundColor: Colors.border, marginVertical: 2 },
+    specialBanner: {
+      marginHorizontal: Spacing.md,
+      marginBottom: 12,
+      backgroundColor: Colors.accentGreen + '15',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: Colors.accentGreen + '30',
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      flexDirection: 'row',
+      gap: 8,
+      alignItems: 'flex-start',
+    },
+    specialText: { ...Typography.small, color: Colors.primary, flex: 1, lineHeight: 18 },
+    actionsSection: {
+      paddingHorizontal: Spacing.md,
+      paddingBottom: 14,
+      gap: 7,
+      borderTopWidth: 1,
+      borderTopColor: Colors.border,
+      paddingTop: 12,
+    },
+    actionsLabel: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5, marginBottom: 2 },
+    actionRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+    actionArrow: { ...Typography.small, color: phaseColor, fontWeight: '700', marginTop: 1 },
+    actionText: { ...Typography.small, color: Colors.secondary, flex: 1, lineHeight: 18 },
+  }), [Colors, phaseColor]);
+
+  return (
+    <View style={s.card}>
+      {/* Header */}
+      <View style={s.header}>
+        <View style={s.badge}>
+          <Text style={s.badgeText}>WEEK {phase.week}</Text>
+        </View>
+        <Text style={s.phaseName}>{phase.name}</Text>
+        <View style={s.dayInfo}>
+          <Text style={s.dayNum}>DAY {dayNumber}</Text>
+          <Text style={s.dayLeft}>{daysRemaining} left</Text>
+        </View>
+      </View>
+
+      {/* Progress bar */}
+      <View style={s.progressTrack}>
+        <View style={[s.progressFill, { width: `${progressPct}%` }]} />
+      </View>
+
+      {/* Macro targets */}
+      <View style={s.macroStrip}>
+        <View style={s.macroCell}>
+          <Text style={[s.macroVal, { color: Colors.accentHeat }]}>{displayCalories}</Text>
+          <Text style={s.macroLabel}>KCAL</Text>
+        </View>
+        <View style={s.divider} />
+        <View style={s.macroCell}>
+          <Text style={[s.macroVal, { color: Colors.accent }]}>{phase.protein}g</Text>
+          <Text style={s.macroLabel}>PROTEIN</Text>
+        </View>
+        <View style={s.divider} />
+        <View style={s.macroCell}>
+          <Text style={s.macroVal}>{displayCarbs}g</Text>
+          <Text style={s.macroLabel}>CARBS</Text>
+        </View>
+        <View style={s.divider} />
+        <View style={s.macroCell}>
+          <Text style={s.macroVal}>{displayFat}g</Text>
+          <Text style={s.macroLabel}>FAT</Text>
+        </View>
+      </View>
+
+      {/* Special day banners */}
+      {isRefeedDay && (
+        <View style={s.specialBanner}>
+          <Ionicons name="flash" size={13} color={Colors.accentGreen} style={{ marginTop: 2 }} />
+          <Text style={s.specialText}>
+            <Text style={{ fontWeight: '700', color: Colors.accentGreen }}>Carb Refeed Day</Text>
+            {' — '}Raise carbs to 340g, cut fat to 30g. Muscles fill out and look harder. This is the trick.
+          </Text>
+        </View>
+      )}
+      {isPeakDay && (
+        <View style={s.specialBanner}>
+          <Ionicons name="star" size={13} color={Colors.accentGreen} style={{ marginTop: 2 }} />
+          <Text style={s.specialText}>
+            <Text style={{ fontWeight: '700', color: Colors.accentGreen }}>Peak Day</Text>
+            {' — '}Low sodium, clean eating. Reduce water intake in the afternoon. Take your progress photo in the morning after a light pump.
+          </Text>
+        </View>
+      )}
+
+      {/* This week's actions */}
+      <View style={s.actionsSection}>
+        <Text style={s.actionsLabel}>THIS WEEK</Text>
+        {phase.actions.map((action, i) => (
+          <View key={i} style={s.actionRow}>
+            <Text style={s.actionArrow}>→</Text>
+            <Text style={s.actionText}>{action}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
