@@ -11,6 +11,7 @@ import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
+import { getActivePlanStatus } from '../../constants/plan';
 
 const DAYS: { key: DayOfWeek; label: string }[] = [
   { key: 'monday', label: 'Mon' },
@@ -31,6 +32,27 @@ export default function WorkoutsScreen() {
   const todayIndex = new Date().getDay();
   const todayKey = DAYS[todayIndex === 0 ? 6 : todayIndex - 1].key;
   const [missedSessions, setMissedSessions] = useState<{ key: DayOfWeek; label: string; daysAgo: number }[]>([]);
+
+  const planStatus = getActivePlanStatus();
+  let phaseColor: string = Colors.muted;
+  let phaseTitle = '';
+  let phaseNote = '';
+  if (planStatus.isActive) {
+    const { phase, isRefeedDay, isPeakDay } = planStatus;
+    phaseColor = isPeakDay ? Colors.accentGreen
+      : isRefeedDay ? Colors.accent2
+      : phase.week === 2 ? Colors.accentAmber
+      : phase.week === 3 ? Colors.accentGreen
+      : Colors.accentHeat;
+    phaseTitle = isPeakDay ? `WEEK ${phase.week} · PEAK DAY`
+      : isRefeedDay ? `WEEK ${phase.week} · REFEED DAY`
+      : `WEEK ${phase.week} · ${phase.name.toUpperCase()}`;
+    phaseNote = isPeakDay ? 'Light pump session, then take your progress photo'
+      : isRefeedDay ? 'Carb refeed today — moderate intensity only'
+      : phase.week === 2 ? 'One extra set per compound lift — signal your body to hold the muscle'
+      : phase.week === 3 ? 'Final push — same intensity, trust the process'
+      : 'Fasted 20-min walk before 10 AM · Training split unchanged';
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -166,6 +188,32 @@ export default function WorkoutsScreen() {
           <Text style={styles.title}>Training</Text>
           <Text style={styles.subtitle}>5-Day PPL · Push / Pull / Legs / Upper / Lower</Text>
         </Animated.View>
+
+        {planStatus.isActive && (
+          <Animated.View entering={FadeInDown.delay(30).duration(400)}>
+            <View style={{
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: phaseColor + '40',
+              backgroundColor: phaseColor + '0d',
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <View style={{ width: 3, alignSelf: 'stretch', backgroundColor: phaseColor, borderRadius: 2 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...Typography.caption, color: phaseColor, fontWeight: '700', letterSpacing: 0.8 }}>
+                  {phaseTitle}
+                </Text>
+                <Text style={{ ...Typography.small, color: Colors.primary, marginTop: 3 }}>
+                  {phaseNote}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
 
         {/* Missed sessions — make up today */}
         {missedSessions.length > 0 && (

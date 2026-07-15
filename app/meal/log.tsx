@@ -33,6 +33,7 @@ import {
   type MealEstimate,
 } from '../../services/aiService';
 import { useColors } from '../../hooks/useColors';
+import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { MealCategory, FoodItem } from '../../types';
 
@@ -70,6 +71,7 @@ type InputMode = 'library' | 'describe' | 'photo' | 'suggest';
 
 export default function LogMealScreen() {
   const Colors = useColors();
+  const planTargets = useActivePlanTargets();
   const params = useLocalSearchParams<{
     scannedId?: string; scannedName?: string; scannedCalories?: string;
     scannedProtein?: string; scannedCarbs?: string; scannedFat?: string; scannedServing?: string;
@@ -131,7 +133,11 @@ export default function LogMealScreen() {
     try {
       const consumed = getTotals();
       const mealLabel = CATEGORIES.find((c) => c.key === category)?.label ?? 'this meal';
-      const results = await suggestMealsForRemaining(consumed, USER_TARGETS, mealLabel);
+      const results = await suggestMealsForRemaining(
+        consumed,
+        { ...USER_TARGETS, calories: planTargets.calories, protein: planTargets.protein, carbs: planTargets.carbs, fat: planTargets.fat },
+        mealLabel
+      );
       setSuggestions(results);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
@@ -218,7 +224,7 @@ export default function LogMealScreen() {
     if (!selected) return;
 
     const mealCalories = selected.calories * qty;
-    const dailyBudget = USER_TARGETS.calories;
+    const dailyBudget = planTargets.calories;
     const pctOfDay = mealCalories / dailyBudget;
 
     if (pctOfDay >= 0.35) {
@@ -458,10 +464,10 @@ export default function LogMealScreen() {
               <Text style={styles.remainingLabel}>REMAINING TODAY</Text>
               {(() => {
                 const consumed = getTotals();
-                const remCal = Math.max(0, USER_TARGETS.calories - consumed.calories);
-                const remP = Math.max(0, USER_TARGETS.protein - consumed.protein);
-                const remC = Math.max(0, USER_TARGETS.carbs - consumed.carbs);
-                const remF = Math.max(0, USER_TARGETS.fat - consumed.fat);
+                const remCal = Math.max(0, planTargets.calories - consumed.calories);
+                const remP = Math.max(0, planTargets.protein - consumed.protein);
+                const remC = Math.max(0, planTargets.carbs - consumed.carbs);
+                const remF = Math.max(0, planTargets.fat - consumed.fat);
                 return (
                   <View style={styles.remainingGrid}>
                     {[

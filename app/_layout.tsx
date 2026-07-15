@@ -20,6 +20,7 @@ import { loadTodayMeals, loadTodayWater, loadTodaySupplements } from '../service
 import { loadTodayDisciplineState, loadWeeklyCheckIns } from '../services/disciplineService';
 import { syncToCloud, isOnline } from '../services/syncService';
 import { isMongoConfigured } from '../services/mongoService';
+import { getActivePlanStatus } from '../constants/plan';
 import { useUserStore } from '../store/userStore';
 import { useNutritionStore } from '../store/nutritionStore';
 import { useDisciplineStore } from '../store/disciplineStore';
@@ -87,7 +88,8 @@ export default function RootLayout() {
 
         const granted = await requestNotificationPermissions();
         if (granted) {
-          const goal = savedProfile?.goalProtein ?? 200;
+          const ps = getActivePlanStatus();
+          const goal = ps.isActive ? ps.phase.protein : (savedProfile?.goalProtein ?? 200);
           await scheduleAllNotifications(goal);
         }
 

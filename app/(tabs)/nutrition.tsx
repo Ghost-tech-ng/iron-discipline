@@ -18,11 +18,13 @@ import { DAILY_MEAL_PLAN, type MealSlot } from '../../constants/nutrition';
 import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
 import { loadDailyMacroHistory } from '../../services/nutritionService';
 import { useShoppingListStore } from '../../store/shoppingListStore';
+import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
 
 export default function NutritionScreen() {
   const Colors = useColors();
   const { getTotals, today, waterMl, removeMeal } = useNutritionStore();
   const { profile } = useUserStore();
+  const planTargets = useActivePlanTargets();
   const { calories, protein, carbs, fat } = getTotals();
   const { totalCount, checkedCount } = useShoppingListStore();
   const shopTotal = totalCount();
@@ -54,8 +56,8 @@ export default function NutritionScreen() {
     try {
       const plan = await generateMealPlan(
         profile.weightKg,
-        profile.goalProtein,
-        profile.goalCalories
+        planTargets.protein,
+        planTargets.calories
       );
       if (plan.length > 0) {
         setMealPlan(plan);
@@ -84,8 +86,8 @@ export default function NutritionScreen() {
   }
 
   const remaining = {
-    calories: profile.goalCalories - calories,
-    protein: Math.max(0, profile.goalProtein - protein),
+    calories: planTargets.calories - calories,
+    protein: Math.max(0, planTargets.protein - protein),
   };
 
   function parseSlotTime(timeStr: string): number {
@@ -313,7 +315,7 @@ export default function NutritionScreen() {
               <Ionicons name="flag" size={18} color={Colors.accent} />
               <Text style={{ ...Typography.small, color: Colors.primary, flex: 1, lineHeight: 18 }}>
                 <Text style={{ fontWeight: '700' }}>{proteinPerMeal}g protein</Text> needed per remaining meal
-                {' '}({mealsRemaining} left today) to hit {profile.goalProtein}g
+                {' '}({mealsRemaining} left today) to hit {planTargets.protein}g
               </Text>
             </View>
           </Animated.View>
@@ -377,16 +379,16 @@ export default function NutritionScreen() {
             </View>
             <View style={styles.calDivider} />
             <View>
-              <Text style={styles.calValue}>{profile.goalCalories}</Text>
+              <Text style={styles.calValue}>{planTargets.calories}</Text>
               <Text style={styles.calLabel}>target</Text>
             </View>
           </View>
 
           <View style={styles.bars}>
-            <GradientBar value={calories} max={profile.goalCalories} label="Calories" unit="kcal" color={Colors.accentAmber} />
-            <GradientBar value={protein} max={profile.goalProtein} label="Protein" unit="g" color={Colors.accent} />
-            <GradientBar value={carbs} max={profile.goalCarbs} label="Carbs" unit="g" color={Colors.accentGreen} />
-            <GradientBar value={fat} max={profile.goalFat} label="Fat" unit="g" color={Colors.accent2} />
+            <GradientBar value={calories} max={planTargets.calories} label="Calories" unit="kcal" color={Colors.accentAmber} />
+            <GradientBar value={protein} max={planTargets.protein} label="Protein" unit="g" color={Colors.accent} />
+            <GradientBar value={carbs} max={planTargets.carbs} label="Carbs" unit="g" color={Colors.accentGreen} />
+            <GradientBar value={fat} max={planTargets.fat} label="Fat" unit="g" color={Colors.accent2} />
           </View>
 
           {weeklyMacros.daysLogged > 0 && (
@@ -395,7 +397,7 @@ export default function NutritionScreen() {
                 7-day avg · {weeklyMacros.daysLogged}d logged
               </Text>
               <Text style={{ ...Typography.caption, color: Colors.secondary }}>
-                <Text style={{ color: weeklyMacros.avgProtein != null && weeklyMacros.avgProtein >= profile.goalProtein * 0.9 ? Colors.accentGreen : Colors.accentAmber }}>
+                <Text style={{ color: weeklyMacros.avgProtein != null && weeklyMacros.avgProtein >= planTargets.protein * 0.9 ? Colors.accentGreen : Colors.accentAmber }}>
                   {weeklyMacros.avgProtein}g P
                 </Text>
                 {' · '}
@@ -561,8 +563,8 @@ export default function NutritionScreen() {
           <Card style={styles.noteCard}>
             <Text style={styles.noteTitle}>Daily protein target</Text>
             <Text style={styles.noteBody}>
-              <Text style={{ color: Colors.accent, fontWeight: '700' }}>{profile.goalProtein}g</Text>
-              {' '}at {profile.weightKg}kg — 1.8g/kg bodyweight. Hit this every day regardless of training. This single variable has the biggest impact on body recomposition.
+              <Text style={{ color: Colors.accent, fontWeight: '700' }}>{planTargets.protein}g</Text>
+              {' '}at {profile.weightKg}kg — {(planTargets.protein / profile.weightKg).toFixed(1)}g/kg bodyweight. Hit this every day regardless of training. This single variable has the biggest impact on body recomposition.
             </Text>
           </Card>
         </Animated.View>
