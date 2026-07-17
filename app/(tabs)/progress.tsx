@@ -43,6 +43,7 @@ import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import { getActivePlanStatus } from '../../constants/plan';
+import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -58,6 +59,7 @@ export default function ProgressScreen() {
   const Colors = useColors();
   const { checkIns, latestWeight, totalLost, loadCheckIns } = useProgressStore();
   const { profile } = useUserStore();
+  const planTargets = useActivePlanTargets();
   const { setSyncing, setLastSynced, setError } = useSyncStore();
 
   async function handleManualSync() {
@@ -108,10 +110,10 @@ export default function ProgressScreen() {
         return;
       }
       const result = await generateWeeklyDietAudit(entries, {
-        calories: profile.goalCalories,
-        protein: profile.goalProtein,
-        carbs: profile.goalCarbs,
-        fat: profile.goalFat,
+        calories: planTargets.calories,
+        protein: planTargets.protein,
+        carbs: planTargets.carbs,
+        fat: planTargets.fat,
       });
       setDietAudit(result);
     } catch (e) {
@@ -378,8 +380,8 @@ export default function ProgressScreen() {
             macroHistory={macroHistory}
             scoreHistory={scoreHistory}
             workoutDates={workoutDates}
-            proteinGoal={profile.goalProtein}
-            calorieGoal={profile.goalCalories}
+            proteinGoal={planTargets.protein}
+            calorieGoal={planTargets.calories}
           />
         </Animated.View>
 
@@ -420,7 +422,7 @@ export default function ProgressScreen() {
         <Animated.View entering={FadeInDown.delay(480).duration(450)}>
           <Card style={styles.chartCard}>
             <Text style={styles.cardTitle}>CALORIE ADHERENCE — 30 DAYS</Text>
-            <CalorieChart history={calorieHistory} target={profile.goalCalories} />
+            <CalorieChart history={calorieHistory} target={planTargets.calories} />
           </Card>
         </Animated.View>
 

@@ -26,6 +26,7 @@ import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
 
 function computeStreak(history: { date: string; score: number }[]): number {
   if (history.length === 0) return 0;
@@ -94,9 +95,10 @@ export default function DashboardScreen() {
   useEffect(() => {
     if (isRestDay && !workoutDone) setWorkoutDone(true);
   }, [isRestDay]);
+  const planTargets = useActivePlanTargets();
   const { calories, protein, carbs, fat } = getTotals();
-  const calorieRemaining = profile.goalCalories - calories;
-  const proteinRemaining = profile.goalProtein - protein;
+  const calorieRemaining = planTargets.calories - calories;
+  const proteinRemaining = planTargets.protein - protein;
   const waterPct = waterMl / profile.goalWaterMl;
 
   const styles = React.useMemo(() => StyleSheet.create({
@@ -354,8 +356,8 @@ export default function DashboardScreen() {
             </View>
             <Divider />
             <View style={styles.bars}>
-              <GradientBar value={calories} max={profile.goalCalories} label="Calories" unit="kcal" color={Colors.accentAmber} />
-              <GradientBar value={protein} max={profile.goalProtein} label="Protein" unit="g" color={Colors.accent} />
+              <GradientBar value={calories} max={planTargets.calories} label="Calories" unit="kcal" color={Colors.accentAmber} />
+              <GradientBar value={protein} max={planTargets.protein} label="Protein" unit="g" color={Colors.accent} />
               <GradientBar value={waterMl} max={profile.goalWaterMl} label="Water" unit="ml" color={Colors.accent2} />
             </View>
           </Card>
@@ -367,9 +369,9 @@ export default function DashboardScreen() {
             data={{
               score,
               protein,
-              proteinGoal: profile.goalProtein,
+              proteinGoal: planTargets.protein,
               calories,
-              calorieGoal: profile.goalCalories,
+              calorieGoal: planTargets.calories,
               workoutDone,
               streak,
               weightTrend: 'unknown',

@@ -19,6 +19,7 @@ import { adviseOnFood, type AdvisorResult } from '../services/aiService';
 import { useNutritionStore } from '../store/nutritionStore';
 import { useUserStore } from '../store/userStore';
 import { useColors } from '../hooks/useColors';
+import { useActivePlanTargets } from '../hooks/useActivePlanTargets';
 import { Card } from '../components/ui/Card';
 import { Spacing, Typography } from '../constants/theme';
 
@@ -44,6 +45,7 @@ export default function AdvisorScreen() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdvisorResult | null>(null);
 
+  const planTargets = useActivePlanTargets();
   const { calories, protein, carbs, fat } = getTotals();
 
   async function pickImage() {
@@ -115,10 +117,10 @@ export default function AdvisorScreen() {
         images.map((img) => ({ base64: img.base64, mimeType: 'image/jpeg' })),
         {
           goals: {
-            calories: profile.goalCalories,
-            protein: profile.goalProtein,
-            carbs: profile.goalCarbs,
-            fat: profile.goalFat,
+            calories: planTargets.calories,
+            protein: planTargets.protein,
+            carbs: planTargets.carbs,
+            fat: planTargets.fat,
           },
           todayConsumed: { calories, protein, carbs, fat },
           question: question.trim(),
@@ -391,10 +393,10 @@ export default function AdvisorScreen() {
         {/* Today's context */}
         <View style={styles.contextRow}>
           <View style={styles.contextChip}>
-            <Text style={styles.contextText}>{calories} / {profile.goalCalories} kcal today</Text>
+            <Text style={styles.contextText}>{calories} / {planTargets.calories} kcal today</Text>
           </View>
           <View style={styles.contextChip}>
-            <Text style={styles.contextText}>{protein}g / {profile.goalProtein}g protein</Text>
+            <Text style={styles.contextText}>{protein}g / {planTargets.protein}g protein</Text>
           </View>
         </View>
 
