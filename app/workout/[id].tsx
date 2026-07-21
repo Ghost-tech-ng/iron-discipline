@@ -25,6 +25,7 @@ import { ExerciseCard } from '../../components/workouts/ExerciseCard';
 import { RestTimer } from '../../components/workouts/RestTimer';
 import { Button } from '../../components/ui/Button';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
+import { getExtraCompoundSets } from '../../constants/plan';
 import { useWorkoutStore } from '../../store/workoutStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { saveWorkoutLog, getLastSessionByType } from '../../services/workoutService';
@@ -150,6 +151,12 @@ export default function WorkoutScreen() {
   const session = id
     ? WEEKLY_SPLIT[ALL_DAYS.find((d) => WEEKLY_SPLIT[d]?.type === id) ?? 'monday']
     : null;
+
+  const extraSets = getExtraCompoundSets();
+  const adjustedExercises = session?.exercises.map((ex) => ({
+    ...ex,
+    sets: ex.sets >= 4 ? ex.sets + extraSets : ex.sets,
+  })) ?? [];
 
   const { completeWorkout, activeSession, startSession, updateSessionLog, clearActiveSession } = useWorkoutStore();
   const { setWorkoutDone } = useDisciplineStore();
@@ -347,14 +354,14 @@ export default function WorkoutScreen() {
 
   const completedExerciseCount = [...exerciseLogs.values()].filter(
     (sets) => {
-      const exercise = session?.exercises.find((e) =>
+      const exercise = adjustedExercises.find((e) =>
         [...exerciseLogs.entries()].find(([k, v]) => v === sets)?.[0] === e.id
       );
       return exercise && sets.length >= exercise.sets;
     }
   ).length;
 
-  const totalExercises = session?.exercises.length ?? 0;
+  const totalExercises = adjustedExercises.length;
   const progressPct = totalExercises > 0 ? completedExerciseCount / totalExercises : 0;
 
   useEffect(() => {
@@ -400,7 +407,7 @@ export default function WorkoutScreen() {
               sessionLabel: session.label,
               durationMinutes,
               completed: true,
-              exerciseLogs: session.exercises.map((ex) => ({
+              exerciseLogs: adjustedExercises.map((ex) => ({
                 exerciseId: ex.id,
                 exerciseName: ex.name,
                 sets: exerciseLogs.get(ex.id) ?? [],
@@ -507,7 +514,7 @@ export default function WorkoutScreen() {
           <StretchSection title="WARM-UP" stretches={session.warmUp} accentColor={accentColor} />
         )}
 
-        {session.exercises.map((exercise, idx) => (
+        {adjustedExercises.map((exercise, idx) => (
           <ExerciseCard
             key={exercise.id}
             exercise={exercise}

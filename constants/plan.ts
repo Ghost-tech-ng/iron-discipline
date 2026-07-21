@@ -76,6 +76,12 @@ export type PlanStatus =
   | { isActive: true; phase: PlanPhase; dayNumber: number; daysRemaining: number; totalDays: 21; isRefeedDay: boolean; isPeakDay: boolean }
   | { isActive: false; phase: null; dayNumber: number; daysRemaining: number; totalDays: 21; isRefeedDay: false; isPeakDay: false };
 
+export function getExtraCompoundSets(): number {
+  const status = getActivePlanStatus();
+  if (!status.isActive) return 0;
+  return status.phase.week >= 2 ? 1 : 0;
+}
+
 export function getActivePlanStatus(): PlanStatus {
   const today = new Date().toISOString().split('T')[0];
   const startMs = new Date(PUSH_PLAN_START + 'T00:00:00').getTime();
