@@ -44,7 +44,11 @@ export const LightColors = {
   rest: '#9ca3af',
 } as const;
 
-export type ColorScheme = typeof DarkColors;
+/**
+ * Widened to `string` per key: both palettes are `as const`, so a literal-typed
+ * alias to one of them makes the other unassignable. The keys are what matter.
+ */
+export type ColorScheme = { readonly [K in keyof typeof DarkColors]: string };
 
 // Kept for any non-reactive static usage (e.g. navigation config)
 export const Colors = DarkColors;

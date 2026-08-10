@@ -25,7 +25,7 @@ import { ExerciseCard } from '../../components/workouts/ExerciseCard';
 import { RestTimer } from '../../components/workouts/RestTimer';
 import { Button } from '../../components/ui/Button';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
-import { getExtraCompoundSets } from '../../constants/plan';
+import { getVolumeModifier } from '../../constants/plan';
 import { useWorkoutStore } from '../../store/workoutStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { saveWorkoutLog, getLastSessionByType } from '../../services/workoutService';
@@ -152,11 +152,16 @@ export default function WorkoutScreen() {
     ? WEEKLY_SPLIT[ALL_DAYS.find((d) => WEEKLY_SPLIT[d]?.type === id) ?? 'monday']
     : null;
 
-  const extraSets = getExtraCompoundSets();
-  const adjustedExercises = session?.exercises.map((ex) => ({
-    ...ex,
-    sets: ex.sets >= 4 ? ex.sets + extraSets : ex.sets,
-  })) ?? [];
+  // Volume rides the phase: sets creep up through a block, then get cut to 60%
+  // on the deload week so the accumulated fatigue can drain and the adaptation show.
+  const volume = getVolumeModifier();
+  const adjustedExercises = session?.exercises.map((ex) => {
+    const withProgression = ex.compound ? ex.sets + volume.extraSets : ex.sets;
+    const sets = volume.isDeload
+      ? Math.max(2, Math.round(withProgression * volume.setMultiplier))
+      : withProgression;
+    return { ...ex, sets };
+  }) ?? [];
 
   const { completeWorkout, activeSession, startSession, updateSessionLog, clearActiveSession } = useWorkoutStore();
   const { setWorkoutDone } = useDisciplineStore();
@@ -276,6 +281,13 @@ export default function WorkoutScreen() {
     sessionSub: {
       ...Typography.small,
       color: Colors.muted,
+    },
+    sessionIntent: {
+      ...Typography.small,
+      fontWeight: '600',
+      lineHeight: 18,
+      marginTop: 2,
+      marginBottom: 3,
     },
     scroll: { flex: 1 },
     scrollContent: {
@@ -486,8 +498,16 @@ export default function WorkoutScreen() {
       {/* Session title */}
       <View style={styles.sessionHeader}>
         <Text style={styles.sessionTitle}>{session.label}</Text>
+        {session.intent && (
+          <Text style={[styles.sessionIntent, { color: accentColor }]}>{session.intent}</Text>
+        )}
         <Text style={styles.sessionSub}>
           {totalExercises} exercises
+          {volume.isDeload
+            ? '  ·  DELOAD — 60% sets'
+            : volume.extraSets > 0
+              ? `  ·  +${volume.extraSets} set${volume.extraSets > 1 ? 's' : ''} on compounds`
+              : ''}
           {previousSession ? '  ·  PR data loaded' : '  ·  First session'}
         </Text>
       </View>

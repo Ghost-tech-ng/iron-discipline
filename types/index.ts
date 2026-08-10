@@ -1,6 +1,7 @@
 export type MuscleGroup =
   | 'chest'
   | 'back'
+  | 'lower_back'
   | 'shoulders'
   | 'triceps'
   | 'biceps'
@@ -9,7 +10,8 @@ export type MuscleGroup =
   | 'hamstrings'
   | 'glutes'
   | 'calves'
-  | 'core';
+  | 'core'
+  | 'deep_core';
 
 export type SessionType = 'push' | 'pull' | 'legs' | 'upper' | 'lower' | 'rest';
 
@@ -25,6 +27,20 @@ export interface Exercise {
   restSeconds: number;
   notes?: string;
   bodyweight?: boolean;
+  /** Why this exercise earns its slot. Shown in the workout screen. */
+  why?: string;
+  /** Prescribed tempo, e.g. "3-1-1" (eccentric-pause-concentric). */
+  tempo?: string;
+  /** Reps are counted per side, not total. */
+  perSide?: boolean;
+  /** Reps are actually seconds of hold. */
+  isTimed?: boolean;
+  /** Counts as a compound for volume progression and deload scaling. */
+  compound?: boolean;
+  /** Final set is taken as lengthened partials in the stretched position. */
+  lengthenedPartials?: boolean;
+  /** Substitutions when the equipment is not available. */
+  swaps?: string[];
 }
 
 export interface Stretch {
@@ -37,6 +53,8 @@ export interface WorkoutSession {
   id: string;
   type: SessionType;
   label: string;
+  /** One line on what this session is for and why it sits on this day. */
+  intent?: string;
   exercises: Exercise[];
   warmUp: Stretch[];
   coolDown: Stretch[];
@@ -116,7 +134,14 @@ export interface WeeklyCheckIn {
   week: number;
   date: string;
   weightKg: number;
+  /** Waist at the navel. The primary fat-loss metric — the scale lies, this does not. */
   waistCm?: number;
+  /** Narrowest point, usually a few cm above the navel. Tracks the taper. */
+  waistNarrowCm?: number;
+  /** Around the widest point of the hips/glutes. Waist:hip ratio comes from this. */
+  hipCm?: number;
+  /** Chest at nipple line, arms relaxed. */
+  chestCm?: number;
   photoUri?: string;
   notes?: string;
 }

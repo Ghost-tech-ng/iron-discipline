@@ -40,6 +40,11 @@ export async function initDatabase(): Promise<void> {
     await runMigration3(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (3);');
   }
+
+  if (currentVersion < 4) {
+    await runMigration4(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (4);');
+  }
 }
 
 export async function getUserId(): Promise<string> {
@@ -84,6 +89,18 @@ function generateUUID(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+/**
+ * Sculpt Protocol needs more than weight. Waist at the navel is the metric that
+ * actually tracks flank/lower-ab fat, and waist:hip separates "losing fat" from
+ * "losing everything". Chest is the counterweight — it should hold or grow while
+ * the waist falls.
+ */
+async function runMigration4(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync(`ALTER TABLE weekly_checkins ADD COLUMN waist_narrow_cm REAL;`);
+  await db.execAsync(`ALTER TABLE weekly_checkins ADD COLUMN hip_cm REAL;`);
+  await db.execAsync(`ALTER TABLE weekly_checkins ADD COLUMN chest_cm REAL;`);
 }
 
 async function runMigration3(db: SQLite.SQLiteDatabase): Promise<void> {

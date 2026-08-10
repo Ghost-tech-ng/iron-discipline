@@ -89,7 +89,7 @@ export default function RootLayout() {
         const granted = await requestNotificationPermissions();
         if (granted) {
           const ps = getActivePlanStatus();
-          const goal = ps.isActive ? ps.phase.protein : (savedProfile?.goalProtein ?? 200);
+          const goal = ps.isActive ? ps.targets.protein : (savedProfile?.goalProtein ?? 200);
           await scheduleAllNotifications(goal);
         }
 

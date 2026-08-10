@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/progress/WeightChart';
+import { WaistChart } from '../../components/progress/WaistChart';
 import { ScoreChart } from '../../components/progress/ScoreChart';
 import { StrengthChart } from '../../components/progress/StrengthChart';
 import { CalorieChart } from '../../components/progress/CalorieChart';
@@ -42,7 +43,9 @@ import { useSyncStore } from '../../store/syncStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
-import { getActivePlanStatus } from '../../constants/plan';
+import { getActivePlanStatus, PLAN_WEEKS } from '../../constants/plan';
+import { USER_TARGETS } from '../../constants/nutrition';
+import type { DayType } from '../../constants/phases';
 import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -57,7 +60,10 @@ const STRENGTH_EXERCISES = [
 
 export default function ProgressScreen() {
   const Colors = useColors();
-  const { checkIns, latestWeight, totalLost, loadCheckIns } = useProgressStore();
+  const {
+    checkIns, latestWeight, totalLost, loadCheckIns,
+    latestWaist, waistLost, waistToHip, chestToWaist, recompRatio,
+  } = useProgressStore();
   const { profile } = useUserStore();
   const planTargets = useActivePlanTargets();
   const { setSyncing, setLastSynced, setError } = useSyncStore();
@@ -125,6 +131,12 @@ export default function ProgressScreen() {
 
   const currentWeight = latestWeight() ?? profile.weightKg;
   const lost = totalLost();
+
+  const waistNow = latestWaist();
+  const waistOff = waistLost();
+  const whr = waistToHip();
+  const cwr = chestToWaist();
+  const ratio = recompRatio();
   const photos = checkIns.filter((c) => !!c.photoUri);
 
   const daysSinceCheckIn = checkIns.length > 0
@@ -184,6 +196,23 @@ export default function ProgressScreen() {
     },
     subtitle: { ...Typography.small, color: Colors.secondary },
     chartCard: { gap: Spacing.sm },
+    sculptStats: {
+      flexDirection: 'row',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderColor: Colors.border,
+      paddingVertical: 10,
+    },
+    sculptStat: { flex: 1, alignItems: 'center', gap: 2 },
+    sculptValue: {
+      fontSize: 19,
+      fontWeight: '800',
+      letterSpacing: -0.5,
+      color: Colors.primary,
+      fontVariant: ['tabular-nums'],
+    },
+    sculptLabel: { ...Typography.caption, color: Colors.muted, letterSpacing: 0.6, fontSize: 9 },
+    sculptNote: { ...Typography.caption, color: Colors.muted, lineHeight: 15 },
     goalCard: { gap: Spacing.sm },
     cardTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
     lostBadge: {
@@ -340,9 +369,51 @@ export default function ProgressScreen() {
           </Animated.View>
         )}
 
-        {/* 21-Day Push Plan countdown */}
+        {/* Sculpt Protocol phase */}
         <Animated.View entering={FadeInDown.delay(60).duration(450)}>
-          <PushCountdownCard />
+          <PhaseCard />
+        </Animated.View>
+
+        {/* Waist — the metric that decides whether this is working */}
+        <Animated.View entering={FadeInDown.delay(70).duration(450)}>
+          <Card style={styles.chartCard}>
+            <Text style={styles.cardTitle}>WAIST VS CHEST — THE TAPER</Text>
+            <View style={styles.sculptStats}>
+              <View style={styles.sculptStat}>
+                <Text style={[styles.sculptValue, { color: Colors.accentHeat }]}>
+                  {waistNow !== null ? `${waistNow}` : '—'}
+                </Text>
+                <Text style={styles.sculptLabel}>WAIST cm</Text>
+              </View>
+              <View style={styles.sculptStat}>
+                <Text style={[
+                  styles.sculptValue,
+                  { color: waistOff !== null && waistOff > 0 ? Colors.accentGreen : Colors.primary },
+                ]}>
+                  {waistOff !== null ? `${waistOff > 0 ? '−' : '+'}${Math.abs(waistOff)}` : '—'}
+                </Text>
+                <Text style={styles.sculptLabel}>OFF cm</Text>
+              </View>
+              <View style={styles.sculptStat}>
+                <Text style={styles.sculptValue}>{whr !== null ? whr.toFixed(2) : '—'}</Text>
+                <Text style={styles.sculptLabel}>WAIST:HIP</Text>
+              </View>
+              <View style={styles.sculptStat}>
+                <Text style={styles.sculptValue}>{cwr !== null ? cwr.toFixed(2) : '—'}</Text>
+                <Text style={styles.sculptLabel}>CHEST:WAIST</Text>
+              </View>
+            </View>
+            <WaistChart
+              checkIns={checkIns}
+              goalWaist={USER_TARGETS.goalWaistCm}
+              totalWeeks={PLAN_WEEKS}
+            />
+            <Text style={styles.sculptNote}>
+              {ratio !== null
+                ? `${ratio} cm off the waist per kg on the scale. Above 1.0 means the fat is leaving the middle faster than mass overall — that is the recomp working.`
+                : 'Log waist and chest at every check-in. Weight alone cannot tell you whether the fat is coming off your middle.'}
+            </Text>
+          </Card>
         </Animated.View>
 
         {/* Weight trend chart */}
@@ -916,25 +987,31 @@ function DietAuditCard({
   );
 }
 
-function PushCountdownCard() {
+const DAY_BANNERS: Record<DayType, { icon: keyof typeof Ionicons.glyphMap; title: string; body: string } | null> = {
+  training: null,
+  rest: {
+    icon: 'moon',
+    title: 'Rest Day',
+    body: 'Carbs drop because you are not spending them. Still hit protein, still walk, still sleep — this is when the tissue you trained actually rebuilds.',
+  },
+  refeed: {
+    icon: 'flash',
+    title: 'Refeed Day',
+    body: 'Carbs up, fat down. Refills muscle glycogen and pushes leptin back up after a run of deficit days — it is why next week feels strong instead of flat.',
+  },
+};
+
+function PhaseCard() {
   const Colors = useColors();
   const status = getActivePlanStatus();
 
   if (!status.isActive) return null;
 
-  const { phase, dayNumber, daysRemaining, totalDays, isRefeedDay, isPeakDay } = status;
+  const { phase, week, dayNumber, daysRemaining, totalDays, dayType, targets, isDeloadWeek, focus } = status;
 
-  const phaseColor =
-    phase.week === 1 ? Colors.accentHeat
-    : phase.week === 2 ? Colors.accent
-    : Colors.accentGreen;
-
+  const phaseColor = isDeloadWeek ? Colors.accent2 : phase.accent;
   const progressPct = Math.round(((dayNumber - 1) / totalDays) * 100);
-
-  // Override macros on special days
-  const displayCalories = isRefeedDay ? 2400 : phase.calories;
-  const displayCarbs    = isRefeedDay ? 340 : phase.carbs;
-  const displayFat      = isRefeedDay ? 30 : phase.fat;
+  const banner = DAY_BANNERS[dayType];
 
   const s = React.useMemo(() => StyleSheet.create({
     card: {
@@ -965,9 +1042,26 @@ function PushCountdownCard() {
       fontSize: 9,
       fontWeight: '700',
       letterSpacing: 0.12,
-      color: phase.week === 3 ? '#000' : '#fff',
+      color: '#fff',
     },
-    phaseName: { ...Typography.h4, color: Colors.primary, fontWeight: '700', flex: 1 },
+    phaseName: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
+    phaseSub: { ...Typography.caption, color: Colors.muted, marginTop: 1 },
+    dayTypeChip: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 5,
+      marginHorizontal: Spacing.md,
+      marginTop: 10,
+    },
+    dayTypeText: { fontSize: 9, fontWeight: '700', letterSpacing: 1 },
+    focusText: {
+      ...Typography.small,
+      color: Colors.secondary,
+      paddingHorizontal: Spacing.md,
+      paddingTop: 8,
+      lineHeight: 18,
+    },
     dayInfo: { alignItems: 'flex-end', gap: 1 },
     dayNum: { fontSize: 15, fontWeight: '800', color: phaseColor, letterSpacing: -0.3, fontVariant: ['tabular-nums'] },
     dayLeft: { ...Typography.caption, color: Colors.muted },
@@ -1026,9 +1120,14 @@ function PushCountdownCard() {
       {/* Header */}
       <View style={s.header}>
         <View style={s.badge}>
-          <Text style={s.badgeText}>WEEK {phase.week}</Text>
+          <Text style={s.badgeText}>WK {week}/{PLAN_WEEKS}</Text>
         </View>
-        <Text style={s.phaseName}>{phase.name}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.phaseName}>
+            {phase.name}{isDeloadWeek ? ' · DELOAD' : ''}
+          </Text>
+          <Text style={s.phaseSub}>{phase.subtitle}</Text>
+        </View>
         <View style={s.dayInfo}>
           <Text style={s.dayNum}>DAY {dayNumber}</Text>
           <Text style={s.dayLeft}>{daysRemaining} left</Text>
@@ -1040,58 +1139,73 @@ function PushCountdownCard() {
         <View style={[s.progressFill, { width: `${progressPct}%` }]} />
       </View>
 
-      {/* Macro targets */}
+      {/* Today's day type */}
+      <View style={[s.dayTypeChip, { backgroundColor: phaseColor + '20' }]}>
+        <Text style={[s.dayTypeText, { color: phaseColor }]}>
+          {dayType.toUpperCase()} DAY
+        </Text>
+      </View>
+
+      <Text style={s.focusText}>{focus}</Text>
+
+      {/* Today's macro targets */}
       <View style={s.macroStrip}>
         <View style={s.macroCell}>
-          <Text style={[s.macroVal, { color: Colors.accentHeat }]}>{displayCalories}</Text>
+          <Text style={[s.macroVal, { color: Colors.accentHeat }]}>{targets.calories}</Text>
           <Text style={s.macroLabel}>KCAL</Text>
         </View>
         <View style={s.divider} />
         <View style={s.macroCell}>
-          <Text style={[s.macroVal, { color: Colors.accent }]}>{phase.protein}g</Text>
+          <Text style={[s.macroVal, { color: Colors.accent }]}>{targets.protein}g</Text>
           <Text style={s.macroLabel}>PROTEIN</Text>
         </View>
         <View style={s.divider} />
         <View style={s.macroCell}>
-          <Text style={s.macroVal}>{displayCarbs}g</Text>
+          <Text style={s.macroVal}>{targets.carbs}g</Text>
           <Text style={s.macroLabel}>CARBS</Text>
         </View>
         <View style={s.divider} />
         <View style={s.macroCell}>
-          <Text style={s.macroVal}>{displayFat}g</Text>
+          <Text style={s.macroVal}>{targets.fat}g</Text>
           <Text style={s.macroLabel}>FAT</Text>
         </View>
       </View>
 
-      {/* Special day banners */}
-      {isRefeedDay && (
+      {banner && (
         <View style={s.specialBanner}>
-          <Ionicons name="flash" size={13} color={Colors.accentGreen} style={{ marginTop: 2 }} />
+          <Ionicons name={banner.icon} size={13} color={Colors.accentGreen} style={{ marginTop: 2 }} />
           <Text style={s.specialText}>
-            <Text style={{ fontWeight: '700', color: Colors.accentGreen }}>Carb Refeed Day</Text>
-            {' — '}Raise carbs to 340g, cut fat to 30g. Muscles fill out and look harder. This is the trick.
-          </Text>
-        </View>
-      )}
-      {isPeakDay && (
-        <View style={s.specialBanner}>
-          <Ionicons name="star" size={13} color={Colors.accentGreen} style={{ marginTop: 2 }} />
-          <Text style={s.specialText}>
-            <Text style={{ fontWeight: '700', color: Colors.accentGreen }}>Peak Day</Text>
-            {' — '}Low sodium, clean eating. Reduce water intake in the afternoon. Take your progress photo in the morning after a light pump.
+            <Text style={{ fontWeight: '700', color: Colors.accentGreen }}>{banner.title}</Text>
+            {' — '}{banner.body}
           </Text>
         </View>
       )}
 
-      {/* This week's actions */}
+      {isDeloadWeek && (
+        <View style={[s.specialBanner, { backgroundColor: phaseColor + '15', borderColor: phaseColor + '30' }]}>
+          <Ionicons name="battery-half" size={13} color={phaseColor} style={{ marginTop: 2 }} />
+          <Text style={s.specialText}>
+            <Text style={{ fontWeight: '700', color: phaseColor }}>Deload Week</Text>
+            {' — '}Same lifts, same loads, 60% of the sets. Fatigue drops away and the adaptation from the last five weeks finally shows up.
+          </Text>
+        </View>
+      )}
+
+      {/* This phase's standing orders */}
       <View style={s.actionsSection}>
-        <Text style={s.actionsLabel}>THIS WEEK</Text>
+        <Text style={s.actionsLabel}>{phase.name.toUpperCase()} · STANDING ORDERS</Text>
         {phase.actions.map((action, i) => (
           <View key={i} style={s.actionRow}>
             <Text style={s.actionArrow}>→</Text>
             <Text style={s.actionText}>{action}</Text>
           </View>
         ))}
+        <View style={[s.actionRow, { marginTop: 4 }]}>
+          <Text style={s.actionArrow}>◆</Text>
+          <Text style={[s.actionText, { color: Colors.primary }]}>
+            Target: {phase.expectedWeeklyKg} · {phase.waistGoal}
+          </Text>
+        </View>
       </View>
     </View>
   );

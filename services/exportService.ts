@@ -56,14 +56,20 @@ export async function exportAllData(): Promise<void> {
 
   // --- Weekly check-ins ---
   const checkins = await db.getAllAsync<{
-    date: string; week_number: number; weight_kg: number; waist_cm: number | null; notes: string | null;
-  }>(`SELECT date, week_number, weight_kg, waist_cm, notes FROM weekly_checkins ORDER BY date;`);
+    date: string; week_number: number; weight_kg: number; waist_cm: number | null;
+    waist_narrow_cm: number | null; hip_cm: number | null; chest_cm: number | null;
+    notes: string | null;
+  }>(`SELECT date, week_number, weight_kg, waist_cm, waist_narrow_cm, hip_cm, chest_cm, notes
+      FROM weekly_checkins ORDER BY date;`);
 
   sections.push('');
   sections.push('WEEKLY CHECK-INS');
-  sections.push(row('Date', 'Week', 'Weight (kg)', 'Waist (cm)', 'Notes'));
+  sections.push(row('Date', 'Week', 'Weight (kg)', 'Waist (cm)', 'Narrow (cm)', 'Hip (cm)', 'Chest (cm)', 'Notes'));
   checkins.forEach((c) =>
-    sections.push(row(c.date, c.week_number, c.weight_kg, c.waist_cm, c.notes))
+    sections.push(row(
+      c.date, c.week_number, c.weight_kg, c.waist_cm,
+      c.waist_narrow_cm, c.hip_cm, c.chest_cm, c.notes,
+    ))
   );
 
   // --- Discipline history ---

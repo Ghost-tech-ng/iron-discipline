@@ -5,13 +5,13 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
-import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
+import { WEEKLY_SPLIT, SESSION_COLORS, WEEKLY_VOLUME_SUMMARY } from '../../constants/workouts';
 import { loadRecentCompletedDates } from '../../services/workoutService';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
-import { getActivePlanStatus } from '../../constants/plan';
+import { getActivePlanStatus, getVolumeModifier } from '../../constants/plan';
 
 const DAYS: { key: DayOfWeek; label: string }[] = [
   { key: 'monday', label: 'Mon' },
@@ -38,20 +38,19 @@ export default function WorkoutsScreen() {
   let phaseTitle = '';
   let phaseNote = '';
   if (planStatus.isActive) {
-    const { phase, isRefeedDay, isPeakDay } = planStatus;
-    phaseColor = isPeakDay ? Colors.accentGreen
-      : isRefeedDay ? Colors.accent2
-      : phase.week === 2 ? Colors.accentAmber
-      : phase.week === 3 ? Colors.accentGreen
-      : Colors.accentHeat;
-    phaseTitle = isPeakDay ? `WEEK ${phase.week} · PEAK DAY`
-      : isRefeedDay ? `WEEK ${phase.week} · REFEED DAY`
-      : `WEEK ${phase.week} · ${phase.name.toUpperCase()}`;
-    phaseNote = isPeakDay ? 'Light pump session, then take your progress photo'
-      : isRefeedDay ? 'Carb refeed today — moderate intensity only'
-      : phase.week === 2 ? 'One extra set per compound lift — signal your body to hold the muscle'
-      : phase.week === 3 ? 'Final push — same intensity, trust the process'
-      : 'Fasted 20-min walk before 10 AM · Training split unchanged';
+    const { phase, week, isDeloadWeek, dayType, focus } = planStatus;
+    const mod = getVolumeModifier();
+    phaseColor = isDeloadWeek ? Colors.accent2 : phase.accent;
+    phaseTitle = isDeloadWeek
+      ? `WEEK ${week} · ${phase.name.toUpperCase()} · DELOAD`
+      : `WEEK ${week} · ${phase.name.toUpperCase()}`;
+    phaseNote = isDeloadWeek
+      ? 'Deload: same lifts, 60% of the sets. This is where the growth from the last five weeks actually lands.'
+      : dayType === 'refeed'
+        ? `Refeed day — full glycogen. ${focus}`
+        : mod.extraSets > 0
+          ? `${focus} · +${mod.extraSets} set${mod.extraSets > 1 ? 's' : ''} on every compound this week`
+          : focus;
   }
 
   useFocusEffect(
@@ -174,6 +173,35 @@ export default function WorkoutsScreen() {
       color: Colors.muted,
       lineHeight: 16,
     },
+    intentText: {
+      ...Typography.caption,
+      fontWeight: '600',
+      lineHeight: 16,
+      marginBottom: 2,
+    },
+    volumeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: 11,
+    },
+    volumeArea: { ...Typography.small, color: Colors.primary, fontWeight: '600' },
+    volumeNote: { ...Typography.caption, color: Colors.muted, marginTop: 2, lineHeight: 15 },
+    volumeSets: {
+      ...Typography.h4,
+      color: Colors.accent,
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+      minWidth: 30,
+      textAlign: 'right',
+    },
+    volumeFootnote: {
+      ...Typography.caption,
+      color: Colors.muted,
+      lineHeight: 15,
+      paddingHorizontal: 2,
+    },
   }), [Colors]);
 
   return (
@@ -186,7 +214,9 @@ export default function WorkoutsScreen() {
       >
         <Animated.View entering={FadeInDown.delay(0).duration(450)}>
           <Text style={styles.title}>Training</Text>
-          <Text style={styles.subtitle}>5-Day PPL · Push / Pull / Legs / Upper / Lower</Text>
+          <Text style={styles.subtitle}>
+            5 days · Legs twice · Chest priority · Lower back finally loaded
+          </Text>
         </Animated.View>
 
         {planStatus.isActive && (
@@ -306,9 +336,12 @@ export default function WorkoutsScreen() {
                   )}
                 </View>
 
-                {session && (
+                {session ? (
                   <>
                     <Text style={styles.sessionName}>{session.label}</Text>
+                    {session.intent && (
+                      <Text style={[styles.intentText, { color: accentColor }]}>{session.intent}</Text>
+                    )}
                     <Text style={styles.exerciseList}>
                       {session.exercises
                         .slice(0, 4)
@@ -317,12 +350,42 @@ export default function WorkoutsScreen() {
                       {session.exercises.length > 4 && `  +${session.exercises.length - 4} more`}
                     </Text>
                   </>
+                ) : (
+                  <Text style={styles.exerciseList}>
+                    Fasted Zone-2 walk · mobility · this is when the growth actually happens
+                  </Text>
                 )}
               </Card>
             </PressableScale>
             </Animated.View>
           );
         })}
+
+        {/* Weekly volume audit — proof the split matches the goal */}
+        <Animated.View entering={FadeInDown.delay(560).duration(400)} style={{ gap: Spacing.sm, marginTop: Spacing.md }}>
+          <Text style={styles.sectionLabel}>WEEKLY VOLUME AUDIT</Text>
+          <Card style={{ gap: 0, padding: 0, overflow: 'hidden' }}>
+            {WEEKLY_VOLUME_SUMMARY.map((v, i) => (
+              <View
+                key={v.area}
+                style={[
+                  styles.volumeRow,
+                  i > 0 ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border } : null,
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.volumeArea}>{v.area}</Text>
+                  <Text style={styles.volumeNote}>{v.note}</Text>
+                </View>
+                <Text style={styles.volumeSets}>{v.sets}</Text>
+              </View>
+            ))}
+          </Card>
+          <Text style={styles.volumeFootnote}>
+            Sets per week of direct work. 10–20 is the productive range for a trained lifter;
+            anything under 6 is maintenance at best.
+          </Text>
+        </Animated.View>
 
         <View style={{ height: 100 }} />
       </ScrollView>

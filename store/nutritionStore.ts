@@ -1,7 +1,24 @@
 import { create } from 'zustand';
 import type { MealEntry, DailyNutrition } from '../types';
 import { USER_TARGETS } from '../constants/nutrition';
+import { getProtocolStatus } from '../constants/phases';
 import { useDisciplineStore } from './disciplineStore';
+
+/** Today's live targets from the phase engine, falling back to maintenance. */
+function todaysTargets() {
+  const s = getProtocolStatus();
+  return s.isActive ? s.targets : USER_TARGETS;
+}
+
+/**
+ * On a cut, overshooting calories is a miss, not a win. The old rule only
+ * checked the lower bound, so a 3,500 kcal day still scored a calorie hit
+ * against an 1,825 kcal rest-day target. Now it has to land inside the band.
+ */
+function isCalorieHit(calories: number): boolean {
+  const target = todaysTargets().calories;
+  return calories >= target * 0.9 && calories <= target * 1.06;
+}
 
 interface NutritionStore {
   today: DailyNutrition;
@@ -44,8 +61,8 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
       const newCalories = state.today.calories + foodItem.calories * ratio;
 
       const discipline = useDisciplineStore.getState();
-      if (newProtein >= USER_TARGETS.protein) discipline.setProteinHit(true);
-      discipline.setCalorieHit(newCalories >= USER_TARGETS.calories * 0.9);
+      if (newProtein >= todaysTargets().protein) discipline.setProteinHit(true);
+      discipline.setCalorieHit(isCalorieHit(newCalories));
 
       return {
         today: {
@@ -68,8 +85,8 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
       const newCalories = state.today.calories - foodItem.calories * quantity;
 
       const discipline = useDisciplineStore.getState();
-      if (newProtein < USER_TARGETS.protein) discipline.setProteinHit(false);
-      discipline.setCalorieHit(newCalories >= USER_TARGETS.calories * 0.9);
+      if (newProtein < todaysTargets().protein) discipline.setProteinHit(false);
+      discipline.setCalorieHit(isCalorieHit(newCalories));
 
       return {
         today: {
@@ -100,8 +117,8 @@ export const useNutritionStore = create<NutritionStore>((set, get) => ({
     }
     set({ today: { date, calories, protein, carbs, fat, entries: meals }, waterMl });
     const discipline = useDisciplineStore.getState();
-    discipline.setProteinHit(protein >= USER_TARGETS.protein);
-    discipline.setCalorieHit(calories >= USER_TARGETS.calories * 0.9);
+    discipline.setProteinHit(protein >= todaysTargets().protein);
+    discipline.setCalorieHit(isCalorieHit(calories));
   },
 
   getTotals: () => {

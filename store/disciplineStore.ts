@@ -1,18 +1,25 @@
 import { create } from 'zustand';
 import type { DisciplineState } from '../types';
 import { saveDisciplineScore } from '../services/disciplineService';
+import { DEFAULT_SUPPLEMENTS } from '../constants/nutrition';
 
-const WEIGHTS = {
-  workoutDone: 25,
-  proteinHit: 20,
-  calorieHit: 15,
-  supplementsTaken: 15,
-  waterGoalHit: 10,
+/**
+ * Rebalanced for the Sculpt Protocol. Protein and cardio carry more weight than
+ * they did: in a deficit, protein intake is the single strongest predictor of
+ * how much of the loss is fat rather than muscle, and daily fasted Zone-2 work
+ * is now a phase mechanic rather than an optional extra.
+ */
+export const WEIGHTS = {
+  workoutDone: 22,
+  proteinHit: 22,
+  calorieHit: 16,
+  cardioLogged: 12,
+  supplementsTaken: 10,
   sleepLogged: 10,
-  cardioLogged: 5,
+  waterGoalHit: 8,
 } as const;
 
-const TOTAL_SUPPLEMENTS = 6;
+export const TOTAL_SUPPLEMENTS = DEFAULT_SUPPLEMENTS.length;
 
 function computeScore(state: Omit<DisciplineState, 'score'>): number {
   let score = 0;

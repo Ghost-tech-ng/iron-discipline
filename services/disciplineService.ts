@@ -39,19 +39,38 @@ export async function loadDisciplineHistory(): Promise<
   return rows;
 }
 
+export interface CheckInMeasurements {
+  waistCm?: number | null;
+  waistNarrowCm?: number | null;
+  hipCm?: number | null;
+  chestCm?: number | null;
+}
+
 export async function saveWeeklyCheckIn(
   id: string,
   week: number,
   weightKg: number,
-  waistCm: number | null,
+  measurements: CheckInMeasurements,
   photoUri: string | null,
   notes: string | null
 ): Promise<void> {
   const db = getDb();
   await db.runAsync(
-    `INSERT OR REPLACE INTO weekly_checkins (id, week_number, date, weight_kg, waist_cm, photo_uri, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?);`,
-    [id, week, today(), weightKg, waistCm, photoUri, notes]
+    `INSERT OR REPLACE INTO weekly_checkins
+       (id, week_number, date, weight_kg, waist_cm, waist_narrow_cm, hip_cm, chest_cm, photo_uri, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    [
+      id,
+      week,
+      today(),
+      weightKg,
+      measurements.waistCm ?? null,
+      measurements.waistNarrowCm ?? null,
+      measurements.hipCm ?? null,
+      measurements.chestCm ?? null,
+      photoUri,
+      notes,
+    ]
   );
 }
 
@@ -93,6 +112,9 @@ export async function loadWeeklyCheckIns(): Promise<
     date: string;
     weightKg: number;
     waistCm?: number;
+    waistNarrowCm?: number;
+    hipCm?: number;
+    chestCm?: number;
     photoUri?: string;
     notes?: string;
   }[]
@@ -104,6 +126,9 @@ export async function loadWeeklyCheckIns(): Promise<
     date: string;
     weight_kg: number;
     waist_cm: number | null;
+    waist_narrow_cm: number | null;
+    hip_cm: number | null;
+    chest_cm: number | null;
     photo_uri: string | null;
     notes: string | null;
   }>(`SELECT * FROM weekly_checkins ORDER BY week_number DESC;`);
@@ -114,6 +139,9 @@ export async function loadWeeklyCheckIns(): Promise<
     date: r.date,
     weightKg: r.weight_kg,
     waistCm: r.waist_cm ?? undefined,
+    waistNarrowCm: r.waist_narrow_cm ?? undefined,
+    hipCm: r.hip_cm ?? undefined,
+    chestCm: r.chest_cm ?? undefined,
     photoUri: r.photo_uri ?? undefined,
     notes: r.notes ?? undefined,
   }));

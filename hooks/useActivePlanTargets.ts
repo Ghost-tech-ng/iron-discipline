@@ -1,4 +1,4 @@
-import { getActivePlanStatus } from '../constants/plan';
+import { getProtocolStatus, type DayType, type Phase } from '../constants/phases';
 import { USER_TARGETS } from '../constants/nutrition';
 
 export interface ActiveTargets {
@@ -7,30 +7,70 @@ export interface ActiveTargets {
   carbs: number;
   fat: number;
   water: number;
+  dayType: DayType;
+  dayLabel: string;
+  phase: Phase;
+  week: number;
+  isDeloadWeek: boolean;
+  /** Why today's numbers look the way they do. */
+  rationale: string;
 }
 
-export function useActivePlanTargets(): ActiveTargets {
-  const status = getActivePlanStatus();
+const DAY_LABELS: Record<DayType, string> = {
+  training: 'TRAINING DAY',
+  rest: 'REST DAY',
+  refeed: 'REFEED DAY',
+};
 
-  if (!status.isActive) {
+function rationaleFor(dayType: DayType, phase: Phase): string {
+  if (dayType === 'refeed') {
+    return 'Full carb refeed. Restores muscle glycogen and pushes leptin back up after a run of deficit days — this is why the next training week feels strong instead of flat.';
+  }
+  if (dayType === 'rest') {
+    return phase.id === 'build'
+      ? 'No training, so carbs come down. Protein and fat hold — recovery still runs today.'
+      : 'Carbs are low because you are not training. The week averages out; the carbs you skip today land on the days you actually use them.';
+  }
+  return phase.id === 'build'
+    ? 'Training day surplus. The extra carbs go into the session and the recovery after it.'
+    : 'Training day. Higher carbs fuel the work and get partitioned toward muscle, not stored — this is the point of cycling.';
+}
+
+/**
+ * Today's macro targets. Driven entirely by the Sculpt Protocol phase engine:
+ * which phase you are in, and whether today is a training, rest or refeed day.
+ * Weekly averages hit the phase baseline by construction.
+ */
+export function useActivePlanTargets(): ActiveTargets {
+  const s = getProtocolStatus();
+
+  if (!s.isActive) {
     return {
       calories: USER_TARGETS.calories,
       protein: USER_TARGETS.protein,
       carbs: USER_TARGETS.carbs,
       fat: USER_TARGETS.fat,
       water: USER_TARGETS.waterMl,
+      dayType: 'training',
+      dayLabel: 'OFF PROTOCOL',
+      phase: s.phase,
+      week: s.week,
+      isDeloadWeek: false,
+      rationale: 'No active phase. Running on maintenance defaults.',
     };
   }
 
-  if (status.isRefeedDay) {
-    return { calories: 2400, protein: 185, carbs: 340, fat: 30, water: USER_TARGETS.waterMl };
-  }
-
   return {
-    calories: status.phase.calories,
-    protein: status.phase.protein,
-    carbs: status.phase.carbs,
-    fat: status.phase.fat,
-    water: USER_TARGETS.waterMl,
+    calories: s.targets.calories,
+    protein: s.targets.protein,
+    carbs: s.targets.carbs,
+    fat: s.targets.fat,
+    water: s.dayType === 'refeed' ? USER_TARGETS.waterMl + 500 : USER_TARGETS.waterMl,
+    dayType: s.dayType,
+    dayLabel: DAY_LABELS[s.dayType],
+    phase: s.phase,
+    week: s.week,
+    isDeloadWeek: s.isDeloadWeek,
+    rationale: rationaleFor(s.dayType, s.phase),
   };
 }

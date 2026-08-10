@@ -13,7 +13,7 @@ import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { StatBadge } from '../../components/ui/StatBadge';
 import { Divider } from '../../components/ui/Divider';
-import { useDisciplineStore } from '../../store/disciplineStore';
+import { useDisciplineStore, WEIGHTS, TOTAL_SUPPLEMENTS } from '../../store/disciplineStore';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
 import { useWorkoutStore } from '../../store/workoutStore';
@@ -27,6 +27,7 @@ import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
+import { PROTOCOL_WEEKS } from '../../constants/phases';
 
 function computeStreak(history: { date: string; score: number }[]): number {
   if (history.length === 0) return 0;
@@ -76,7 +77,10 @@ function formatDate(): string {
 
 export default function DashboardScreen() {
   const Colors = useColors();
-  const { score, workoutDone, proteinHit, calorieHit, supplementsTaken, setWorkoutDone } = useDisciplineStore();
+  const {
+    score, workoutDone, proteinHit, calorieHit, supplementsTaken,
+    cardioLogged, sleepLogged, setWorkoutDone,
+  } = useDisciplineStore();
   const { getTotals, waterMl } = useNutritionStore();
   const { profile } = useUserStore();
   const { activeWorkout } = useWorkoutStore();
@@ -96,6 +100,14 @@ export default function DashboardScreen() {
     if (isRestDay && !workoutDone) setWorkoutDone(true);
   }, [isRestDay]);
   const planTargets = useActivePlanTargets();
+  const onProtocol = planTargets.dayLabel !== 'OFF PROTOCOL';
+  const phaseAccent = planTargets.isDeloadWeek ? Colors.accent2 : planTargets.phase.accent;
+  const dayAccent =
+    planTargets.dayType === 'rest'
+      ? Colors.accent2
+      : planTargets.dayType === 'refeed'
+      ? Colors.accentGreen
+      : Colors.accentAmber;
   const { calories, protein, carbs, fat } = getTotals();
   const calorieRemaining = planTargets.calories - calories;
   const proteinRemaining = planTargets.protein - protein;
@@ -143,6 +155,44 @@ export default function DashboardScreen() {
       ...Typography.body,
       color: Colors.primary,
       fontWeight: '700',
+    },
+    phaseCard: {
+      marginBottom: Spacing.lg,
+      gap: 6,
+    },
+    phaseTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    phaseName: {
+      ...Typography.label,
+      fontWeight: '700',
+      letterSpacing: 1.4,
+      flex: 1,
+    },
+    phaseWeek: {
+      ...Typography.caption,
+      color: Colors.muted,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    dayChip: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
+    },
+    dayChipText: {
+      ...Typography.caption,
+      fontWeight: '700',
+      letterSpacing: 1.2,
+      fontSize: 10,
+    },
+    phaseRationale: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 18,
     },
     disciplineCard: {
       marginBottom: Spacing.lg,
@@ -214,9 +264,14 @@ export default function DashboardScreen() {
       fontWeight: '700',
       letterSpacing: 1,
     },
-    exerciseCount: {
+    sessionIntent: {
       ...Typography.small,
       color: Colors.secondary,
+      lineHeight: 18,
+    },
+    exerciseCount: {
+      ...Typography.small,
+      color: Colors.muted,
     },
     sessionCta: {
       ...Typography.small,
@@ -239,6 +294,9 @@ export default function DashboardScreen() {
     restSub: {
       ...Typography.small,
       color: Colors.muted,
+      textAlign: 'center',
+      paddingHorizontal: Spacing.md,
+      lineHeight: 18,
     },
     nutritionCard: {
       marginBottom: Spacing.md,
@@ -278,6 +336,25 @@ export default function DashboardScreen() {
           </PressableScale>
         </Animated.View>
 
+        {/* Where you are in the protocol — sets the meaning of every number below it */}
+        {onProtocol && (
+          <Animated.View entering={FadeInDown.delay(40).duration(450)}>
+            <Card style={styles.phaseCard} accentColor={phaseAccent} gradient>
+              <View style={styles.phaseTop}>
+                <Text style={[styles.phaseName, { color: phaseAccent }]}>
+                  {planTargets.phase.name.toUpperCase()}
+                  {planTargets.isDeloadWeek ? ' · DELOAD' : ''}
+                </Text>
+                <Text style={styles.phaseWeek}>WK {planTargets.week}/{PROTOCOL_WEEKS}</Text>
+              </View>
+              <View style={[styles.dayChip, { backgroundColor: dayAccent + '22' }]}>
+                <Text style={[styles.dayChipText, { color: dayAccent }]}>{planTargets.dayLabel}</Text>
+              </View>
+              <Text style={styles.phaseRationale}>{planTargets.rationale}</Text>
+            </Card>
+          </Animated.View>
+        )}
+
         {/* Discipline Score — hero element */}
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
         <Card style={styles.disciplineCard} accentColor={Colors.accent} gradient glow={score >= 50 ? Colors.accent : undefined}>
@@ -294,11 +371,19 @@ export default function DashboardScreen() {
                   : 'Locked in. This is the standard.'}
               </Text>
               <View style={styles.scoreBreakdown}>
-                <ScoreRow label="Workout" done={workoutDone} pts={25} />
-                <ScoreRow label="Protein" done={proteinHit} pts={20} />
-                <ScoreRow label="Calories" done={calorieHit} pts={15} />
-                <ScoreRow label="Supplements" done={supplementsTaken.length >= 6} partial={supplementsTaken.length > 0 && supplementsTaken.length < 6} pts={15} earnedPts={Math.round((supplementsTaken.length / 6) * 15)} />
-                <ScoreRow label="Water" done={waterPct >= 1} pts={10} />
+                <ScoreRow label="Workout" done={workoutDone} pts={WEIGHTS.workoutDone} />
+                <ScoreRow label="Protein" done={proteinHit} pts={WEIGHTS.proteinHit} />
+                <ScoreRow label="Calories" done={calorieHit} pts={WEIGHTS.calorieHit} />
+                <ScoreRow label="Cardio" done={cardioLogged} pts={WEIGHTS.cardioLogged} />
+                <ScoreRow
+                  label="Supplements"
+                  done={supplementsTaken.length >= TOTAL_SUPPLEMENTS}
+                  partial={supplementsTaken.length > 0 && supplementsTaken.length < TOTAL_SUPPLEMENTS}
+                  pts={WEIGHTS.supplementsTaken}
+                  earnedPts={Math.round((supplementsTaken.length / TOTAL_SUPPLEMENTS) * WEIGHTS.supplementsTaken)}
+                />
+                <ScoreRow label="Sleep" done={sleepLogged} pts={WEIGHTS.sleepLogged} />
+                <ScoreRow label="Water" done={waterPct >= 1} pts={WEIGHTS.waterGoalHit} />
               </View>
             </View>
           </View>
@@ -327,6 +412,7 @@ export default function DashboardScreen() {
                     </View>
                   )}
                 </View>
+                {session.intent && <Text style={styles.sessionIntent}>{session.intent}</Text>}
                 <Text style={styles.exerciseCount}>{session.exercises.length} exercises</Text>
                 <Text style={styles.sessionCta}>{workoutDone ? 'View completed workout' : 'Tap to begin →'}</Text>
               </Card>
@@ -334,7 +420,9 @@ export default function DashboardScreen() {
           ) : (
             <Card style={styles.restCard}>
               <Text style={styles.restLabel}>REST DAY</Text>
-              <Text style={styles.restSub}>30-min walk + active recovery.</Text>
+              <Text style={styles.restSub}>
+                Fasted Zone-2 walk, 40 min. Mobility. This is when the growth actually lands.
+              </Text>
             </Card>
           )}
         </Animated.View>

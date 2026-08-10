@@ -169,6 +169,25 @@ export function ExerciseCard({
       color: Colors.muted,
       fontStyle: 'italic',
     },
+    why: {
+      ...Typography.caption,
+      color: Colors.secondary,
+      lineHeight: 15,
+      marginTop: 2,
+    },
+    tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+    tag: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.7,
+      color: Colors.muted,
+      backgroundColor: Colors.surface2,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    tagHot: { color: Colors.accentHeat, backgroundColor: Colors.accentHeat + '18' },
     progress: {
       backgroundColor: Colors.surface2,
       paddingHorizontal: 10,
@@ -257,7 +276,18 @@ export function ExerciseCard({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={[styles.name, allDone && styles.nameDone]}>{exercise.name}</Text>
+          {(exercise.tempo || exercise.perSide || exercise.lengthenedPartials || exercise.isTimed) && (
+            <View style={styles.tagRow}>
+              {exercise.tempo && <Text style={styles.tag}>TEMPO {exercise.tempo}</Text>}
+              {exercise.perSide && <Text style={styles.tag}>PER SIDE</Text>}
+              {exercise.isTimed && <Text style={styles.tag}>HOLD FOR TIME</Text>}
+              {exercise.lengthenedPartials && (
+                <Text style={[styles.tag, styles.tagHot]}>LENGTHENED PARTIALS</Text>
+              )}
+            </View>
+          )}
           {exercise.notes && <Text style={styles.notes}>{exercise.notes}</Text>}
+          {exercise.why && <Text style={styles.why}>{exercise.why}</Text>}
           {recommendation.direction !== 'none' && (
             <View style={[
               styles.targetBadge,
@@ -324,7 +354,9 @@ export function ExerciseCard({
 
       <View style={styles.specRow}>
         <Text style={styles.specText}>
-          {totalSets} sets · {exercise.repsMin}–{exercise.repsMax} {exercise.bodyweight ? 'reps/secs' : 'reps'} · {exercise.restSeconds}s rest
+          {totalSets} sets · {exercise.repsMin}–{exercise.repsMax}{' '}
+          {exercise.isTimed ? 'secs' : exercise.bodyweight ? 'reps/secs' : 'reps'}
+          {exercise.perSide ? ' per side' : ''} · {exercise.restSeconds}s rest
         </Text>
       </View>
     </Animated.View>

@@ -24,6 +24,8 @@ import { useUserStore } from '../../store/userStore';
 import { saveWeeklyCheckIn } from '../../services/disciplineService';
 import { useColors } from '../../hooks/useColors';
 import { Spacing, Typography } from '../../constants/theme';
+import { USER_TARGETS } from '../../constants/nutrition';
+import { getProtocolStatus } from '../../constants/phases';
 import type { WeeklyCheckIn } from '../../types';
 
 export default function WeighInScreen() {
@@ -34,15 +36,38 @@ export default function WeighInScreen() {
   const lastWeight = checkIns[0]?.weightKg ?? profile.weightKg;
   const weekNumber = checkIns.length + 1;
 
+  const lastWaist = checkIns.find((c) => typeof c.waistCm === 'number')?.waistCm ?? null;
+
   const [weight, setWeight] = useState(String(lastWeight));
   const [waist, setWaist] = useState('');
+  const [waistNarrow, setWaistNarrow] = useState('');
+  const [hip, setHip] = useState('');
+  const [chest, setChest] = useState('');
   const [notes, setNotes] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const num = (v: string): number | undefined => {
+    const n = parseFloat(v);
+    return v.trim() !== '' && !isNaN(n) ? n : undefined;
+  };
+
   const weightNum = parseFloat(weight);
-  const waistNum = waist ? parseFloat(waist) : undefined;
+  const waistNum = num(waist);
+  const waistNarrowNum = num(waistNarrow);
+  const hipNum = num(hip);
+  const chestNum = num(chest);
   const delta = checkIns.length > 0 ? weightNum - lastWeight : null;
+
+  const waistDelta = waistNum !== undefined && lastWaist !== null ? waistNum - lastWaist : null;
+  const waistToGoal = waistNum !== undefined ? waistNum - USER_TARGETS.goalWaistCm : null;
+
+  const protocol = getProtocolStatus();
+  const phaseNote = protocol.isActive
+    ? protocol.phase.id === 'build'
+      ? `Week ${protocol.week} · ${protocol.phase.name}: scale should climb ${protocol.phase.expectedWeeklyKg}. Waist holding flat is the pass mark — if it climbs, calories come down.`
+      : `Week ${protocol.week} · ${protocol.phase.name}: expect ${protocol.phase.expectedWeeklyKg} on the scale. ${protocol.phase.waistGoal} across the phase.`
+    : null;
 
   const styles = React.useMemo(() => StyleSheet.create({
     safe: { flex: 1, backgroundColor: Colors.base },
@@ -110,6 +135,32 @@ export default function WeighInScreen() {
     },
     photoEmptyText: { ...Typography.body, color: Colors.secondary, fontWeight: '600' },
     photoEmptySubtext: { ...Typography.small, color: Colors.muted },
+    tapeLead: { gap: 12, borderWidth: 1, borderColor: Colors.accent + '40' },
+    tapeLeadHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    tapeLeadLabel: { ...Typography.caption, color: Colors.accent, letterSpacing: 1.5, fontWeight: '700' },
+    tapeLeadHint: { ...Typography.small, color: Colors.muted, marginTop: 4, lineHeight: 16 },
+    tapeLeadInputWrap: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+    tapeLeadInput: {
+      fontSize: 40,
+      fontWeight: '700',
+      color: Colors.primary,
+      minWidth: 76,
+      textAlign: 'right',
+      fontVariant: ['tabular-nums'],
+      padding: 0,
+    },
+    tapeLeadUnit: { ...Typography.small, color: Colors.muted },
+    tapeStatRow: {
+      flexDirection: 'row',
+      gap: Spacing.lg,
+      paddingTop: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: Colors.border,
+    },
+    tapeStat: { gap: 2 },
+    tapeStatValue: { ...Typography.body, color: Colors.primary, fontWeight: '700', fontVariant: ['tabular-nums'] },
+    tapeStatLabel: { ...Typography.caption, color: Colors.muted },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: Colors.border },
     optionalCard: { padding: 0, overflow: 'hidden', gap: 0 },
     fieldRow: {
       flexDirection: 'row',
@@ -118,7 +169,7 @@ export default function WeighInScreen() {
       paddingVertical: 14,
       gap: 12,
     },
-    fieldLabel: { ...Typography.small, color: Colors.secondary, width: 90 },
+    fieldLabel: { ...Typography.small, color: Colors.secondary, width: 132 },
     fieldInput: { flex: 1, ...Typography.body, color: Colors.primary, textAlign: 'right' },
     notesInput: { textAlign: 'left', paddingTop: 0 },
     protocolCard: { gap: 6, backgroundColor: Colors.surface2 },
@@ -186,6 +237,9 @@ export default function WeighInScreen() {
         date: today,
         weightKg: weightNum,
         waistCm: waistNum,
+        waistNarrowCm: waistNarrowNum,
+        hipCm: hipNum,
+        chestCm: chestNum,
         photoUri: photoUri ?? undefined,
         notes: notes.trim() || undefined,
       };
@@ -194,7 +248,12 @@ export default function WeighInScreen() {
         id,
         weekNumber,
         weightNum,
-        waistNum ?? null,
+        {
+          waistCm: waistNum ?? null,
+          waistNarrowCm: waistNarrowNum ?? null,
+          hipCm: hipNum ?? null,
+          chestCm: chestNum ?? null,
+        },
         photoUri,
         notes.trim() || null
       );
@@ -317,28 +376,99 @@ export default function WeighInScreen() {
             )}
           </Pressable>
 
-          {/* Optional measurements */}
-          <Text style={styles.sectionTitle}>MEASUREMENTS</Text>
+          {/* Tape measurements — waist leads */}
+          <Text style={styles.sectionTitle}>TAPE MEASUREMENTS</Text>
+
+          <Card style={styles.tapeLead}>
+            <View style={styles.tapeLeadHead}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.tapeLeadLabel}>WAIST · AT THE NAVEL</Text>
+                <Text style={styles.tapeLeadHint}>
+                  The number that actually tracks love handles. Relaxed, don&apos;t suck in.
+                </Text>
+              </View>
+              <View style={styles.tapeLeadInputWrap}>
+                <TextInput
+                  style={styles.tapeLeadInput}
+                  value={waist}
+                  onChangeText={setWaist}
+                  keyboardType="decimal-pad"
+                  placeholder="—"
+                  placeholderTextColor={Colors.muted}
+                />
+                <Text style={styles.tapeLeadUnit}>cm</Text>
+              </View>
+            </View>
+
+            {(waistDelta !== null || waistToGoal !== null) && (
+              <View style={styles.tapeStatRow}>
+                {waistDelta !== null && (
+                  <View style={styles.tapeStat}>
+                    <Text style={[
+                      styles.tapeStatValue,
+                      { color: waistDelta <= 0 ? Colors.accentGreen : Colors.accentRed },
+                    ]}>
+                      {waistDelta <= 0 ? '' : '+'}{waistDelta.toFixed(1)} cm
+                    </Text>
+                    <Text style={styles.tapeStatLabel}>vs last</Text>
+                  </View>
+                )}
+                {waistToGoal !== null && (
+                  <View style={styles.tapeStat}>
+                    <Text style={styles.tapeStatValue}>
+                      {Math.max(0, waistToGoal).toFixed(1)} cm
+                    </Text>
+                    <Text style={styles.tapeStatLabel}>to {USER_TARGETS.goalWaistCm} cm goal</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </Card>
 
           <Card style={styles.optionalCard}>
             <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>Waist (cm)</Text>
+              <Text style={styles.fieldLabel}>Narrowest waist</Text>
               <TextInput
                 style={styles.fieldInput}
-                value={waist}
-                onChangeText={setWaist}
+                value={waistNarrow}
+                onChangeText={setWaistNarrow}
                 keyboardType="decimal-pad"
-                placeholder="e.g. 88"
+                placeholder="cm"
                 placeholderTextColor={Colors.muted}
               />
             </View>
-            <View style={[styles.fieldRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border }]}>
+            <View style={styles.divider} />
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Hips (widest)</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={hip}
+                onChangeText={setHip}
+                keyboardType="decimal-pad"
+                placeholder="cm"
+                placeholderTextColor={Colors.muted}
+              />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Chest (nipple line)</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={chest}
+                onChangeText={setChest}
+                keyboardType="decimal-pad"
+                placeholder="cm"
+                placeholderTextColor={Colors.muted}
+              />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>Notes</Text>
               <TextInput
                 style={[styles.fieldInput, styles.notesInput]}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="How's the recomposition feeling?"
+                placeholder="Energy, sleep, how the sessions felt"
                 placeholderTextColor={Colors.muted}
                 multiline
                 numberOfLines={3}
@@ -348,13 +478,19 @@ export default function WeighInScreen() {
 
           {/* Protocol reminder */}
           <Card style={styles.protocolCard}>
-            <Text style={styles.protocolTitle}>WEIGH-IN PROTOCOL</Text>
+            <Text style={styles.protocolTitle}>CHECK-IN PROTOCOL</Text>
             <Text style={styles.protocolBody}>
-              Monday morning · After toilet · Before food or water · Same scale
+              Monday morning · After toilet · Before food or water · Same scale, same tape spot
             </Text>
             <Text style={[styles.protocolBody, { marginTop: 4 }]}>
-              Judge trend over 2–3 weeks, not single readings. Water weight swings ±1–2 kg daily.
+              Waist is the metric that decides whether this phase is working. Scale weight swings
+              ±1–2 kg on water alone — the tape doesn&apos;t.
             </Text>
+            {phaseNote && (
+              <Text style={[styles.protocolBody, { marginTop: 6, color: Colors.accent }]}>
+                {phaseNote}
+              </Text>
+            )}
           </Card>
 
           <Button

@@ -14,7 +14,7 @@ import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
-import { DAILY_MEAL_PLAN, type MealSlot } from '../../constants/nutrition';
+import { getMealPlan, type MealSlot } from '../../constants/nutrition';
 import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
 import { loadDailyMacroHistory } from '../../services/nutritionService';
 import { useShoppingListStore } from '../../store/shoppingListStore';
@@ -30,7 +30,10 @@ export default function NutritionScreen() {
   const shopTotal = totalCount();
   const shopChecked = checkedCount();
   const [expandedMeal, setExpandedMeal] = useState<number | null>(null);
-  const [mealPlan, setMealPlan] = useState<MealSlot[]>(DAILY_MEAL_PLAN);
+  // The default plan follows today's day type — a rest day should not be showing
+  // a training day's carbs. An AI plan, once generated, overrides it.
+  const [aiPlan, setAiPlan] = useState<MealSlot[] | null>(null);
+  const mealPlan: MealSlot[] = aiPlan ?? getMealPlan(planTargets.dayType);
   const [refreshing, setRefreshing] = useState(false);
   const [aiGenerated, setAiGenerated] = useState(false);
   const [weeklyMacros, setWeeklyMacros] = useState<{ avgProtein: number | null; avgCalories: number | null; daysLogged: number }>({ avgProtein: null, avgCalories: null, daysLogged: 0 });
@@ -38,7 +41,7 @@ export default function NutritionScreen() {
   useEffect(() => {
     loadCachedMealPlan().then((cached) => {
       if (cached && cached.length > 0) {
-        setMealPlan(cached);
+        setAiPlan(cached);
         setAiGenerated(true);
       }
     });
@@ -60,7 +63,7 @@ export default function NutritionScreen() {
         planTargets.calories
       );
       if (plan.length > 0) {
-        setMealPlan(plan);
+        setAiPlan(plan);
         setAiGenerated(true);
         setExpandedMeal(null);
       }
@@ -456,8 +459,12 @@ export default function NutritionScreen() {
         <View style={styles.sectionHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={styles.sectionLabel}>MEAL PLAN + TIMING</Text>
-            {aiGenerated && (
+            {aiGenerated ? (
               <Text style={[styles.sectionCount, { color: Colors.accent }]}>AI</Text>
+            ) : (
+              <Text style={[styles.sectionCount, { color: Colors.muted }]}>
+                {planTargets.dayLabel}
+              </Text>
             )}
           </View>
           <TouchableOpacity onPress={handleRefreshMealPlan} disabled={refreshing}>

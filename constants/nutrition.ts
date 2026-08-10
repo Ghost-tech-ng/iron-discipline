@@ -1,4 +1,5 @@
 import type { FoodItem, Supplement } from '../types';
+import type { DayType } from './phases';
 
 export interface MealSlot {
   time: string;
@@ -10,45 +11,138 @@ export interface MealSlot {
   calories: number;
 }
 
-export const DAILY_MEAL_PLAN: MealSlot[] = [
+/**
+ * Four meals, not three. On a cut at 215g+ protein, a 2021 review of protein
+ * distribution found spreading intake across 3–6 doses beats concentrating it —
+ * each dose fully activates muscle protein synthesis, and you cannot bank the
+ * response. Four meals also makes 215g achievable without any single plate
+ * being absurd.
+ */
+const TRAINING_DAY_MEALS: MealSlot[] = [
+  {
+    time: '9:00 AM',
+    label: 'First Meal',
+    icon: 'sunny-outline',
+    why: 'After the fasted walk. Protein-heavy, moderate carbs — you have a full day and a training session ahead of this.',
+    foods: ['5 whole eggs scrambled', '200g beans (cooked)', '2 slices wholegrain bread', '1 banana'],
+    protein: 62,
+    calories: 700,
+  },
+  {
+    time: '1:00 PM',
+    label: 'Pre-Workout Meal',
+    icon: 'barbell-outline',
+    why: 'The biggest carb meal of the day, 90 minutes before you lift. These carbs go into glycogen and get spent in the session — this is the one meal where carbs are unambiguously working for you.',
+    foods: ['250g grilled chicken breast', '250g cooked white rice', '1 plantain (150g)', '150g cucumber and tomato'],
+    protein: 72,
+    calories: 830,
+  },
+  {
+    time: '6:00 PM',
+    label: 'Post-Workout Meal',
+    icon: 'flame-outline',
+    why: 'Protein and carbs after training refill glycogen and start repair. This is the second-largest meal, and on a deficit it is the one you protect.',
+    foods: ['200g tilapia or mackerel (grilled)', '200g cooked rice or yam', '150g moi moi or beans', '1 tbsp groundnut oil'],
+    protein: 58,
+    calories: 660,
+  },
+  {
+    time: '9:00 PM',
+    label: 'Night Protein',
+    icon: 'moon-outline',
+    why: 'Slow protein before sleep. Overnight is the longest fasting window you have — a casein-style dose keeps amino acids available through it, which matters more in a deficit than at maintenance.',
+    foods: ['250g Greek yogurt (0%)', '1 scoop whey', '20g almonds'],
+    protein: 48,
+    calories: 400,
+  },
+];
+
+const REST_DAY_MEALS: MealSlot[] = [
   {
     time: '10:00 AM',
     label: 'First Meal',
     icon: 'sunny-outline',
-    why: '16:8 window opens here. 3 large meals trigger muscle protein synthesis just as effectively as 6 small ones — each large dose fully activates the MPS response. Start strong with ~65g protein.',
-    foods: ['4 whole eggs scrambled', '200g beans (cooked)', '2 slices wholegrain bread', '1 banana'],
-    protein: 65,
-    calories: 820,
+    why: 'Rest day opens later — a longer fast is easier when you are not training, and it buys you bigger meals later.',
+    foods: ['5 whole eggs', '1 tin sardines', '1 slice wholegrain bread', '150g spinach'],
+    protein: 62,
+    calories: 570,
   },
   {
     time: '2:00 PM',
-    label: 'Pre-Workout Meal',
-    icon: 'barbell-outline',
-    why: 'Largest carb meal of the day — 90 min before your afternoon training. Carbs here go straight to glycogen, not fat. Do not train without fuel at 95kg with heavy compounds.',
-    foods: ['250g grilled chicken breast', '300g cooked white rice', '1 fried plantain (150g)', '100g cucumber'],
-    protein: 78,
-    calories: 900,
+    label: 'Main Meal',
+    icon: 'restaurant-outline',
+    why: 'Protein and volume, carbs kept low. Vegetables do the filling that rice does on a training day, at a fraction of the calories.',
+    foods: ['250g grilled chicken breast', '300g mixed vegetables', '100g cooked rice', '1 tbsp olive oil'],
+    protein: 82,
+    calories: 690,
   },
   {
-    time: '6:30 PM',
+    time: '7:00 PM',
     label: 'Last Meal',
     icon: 'moon-outline',
-    why: 'Post-workout recovery window. Protein + carbs after training refills glycogen and starts muscle repair. Last meal by 7pm closes your 16:8 window — 16 hours of fat-burning fasting begins.',
-    foods: ['200g tilapia or mackerel (grilled)', '250g cooked rice or yam', '150g beans or moi moi', '1 tbsp groundnut oil'],
-    protein: 65,
-    calories: 780,
+    why: 'High protein, low carb, moderate fat. You are not refuelling anything today — you are protecting muscle while the deficit does its work.',
+    foods: ['200g lean beef or mackerel', '200g broccoli', '100g beans', '1 tsp oil'],
+    protein: 71,
+    calories: 565,
   },
 ];
 
+const REFEED_DAY_MEALS: MealSlot[] = [
+  {
+    time: '9:00 AM',
+    label: 'Refeed Opener',
+    icon: 'sunny-outline',
+    why: 'Carbs first thing today. Fat stays low all day — this is a carbohydrate refeed, not a cheat day, and the two produce opposite results.',
+    foods: ['150g oats (dry)', '2 scoops whey', '2 bananas', '1 tbsp honey'],
+    protein: 62,
+    calories: 900,
+  },
+  {
+    time: '1:00 PM',
+    label: 'Big Carb Meal',
+    icon: 'barbell-outline',
+    why: 'The largest carb load of the week. Muscle glycogen restores here, and leptin — which has been suppressed all week by the deficit — comes back up.',
+    foods: ['250g grilled chicken breast', '400g cooked rice or jollof', '2 plantains', '150g salad, no oil'],
+    protein: 78,
+    calories: 1180,
+  },
+  {
+    time: '7:00 PM',
+    label: 'Refeed Close',
+    icon: 'moon-outline',
+    why: 'Still carb-forward, still low fat. Expect the scale up 1–1.5 kg tomorrow morning — that is glycogen pulling water in, and it is gone within 48 hours.',
+    foods: ['200g white fish or tilapia', '250g yam or sweet potato', '150g beans', 'Fruit'],
+    protein: 60,
+    calories: 820,
+  },
+];
+
+export function getMealPlan(dayType: DayType): MealSlot[] {
+  if (dayType === 'refeed') return REFEED_DAY_MEALS;
+  if (dayType === 'rest') return REST_DAY_MEALS;
+  return TRAINING_DAY_MEALS;
+}
+
+/** Default view. Screens should prefer getMealPlan(dayType). */
+export const DAILY_MEAL_PLAN: MealSlot[] = TRAINING_DAY_MEALS;
+
+/**
+ * Fallback targets used only when the protocol is not running (before the start
+ * date, or after week 22). Live day-to-day targets come from the phase engine
+ * via useActivePlanTargets — do not use these for daily scoring.
+ */
 export const USER_TARGETS = {
-  calories: 2500,
-  protein: 171,   // 1.8g/kg at 95kg — minimum effective dose for recomposition (Morton et al. 2018: plateau at 1.62g/kg)
-  carbs: 292,     // bumped up from 240 to fill the ~116 kcal freed by reducing protein
-  fat: 72,
-  waterMl: 3500,
-  goalWeightKg: 85,
-  startWeightKg: 95,
+  calories: 2400,
+  protein: 215,   // 2.4 g/kg at ~90kg. Cutting range is 2.2–3.0 g/kg (higher the leaner you get)
+  carbs: 235,
+  fat: 70,        // ~0.75 g/kg floor — below this, hormonal output suffers
+  waterMl: 4000,  // up from 3500: higher protein raises urea load, and you are training 5x
+  goalWeightKg: 82,
+  startWeightKg: 90,
   weeklyGoalKg: 0.6,
+  /** Waist at the navel. This is the real target — the scale is a proxy. */
+  startWaistCm: 92,
+  goalWaistCm: 80,
 };
 
 export const FOOD_LIBRARY: FoodItem[] = [
@@ -327,7 +421,7 @@ export const DEFAULT_SUPPLEMENTS: Supplement[] = [
     id: 'creatine',
     name: 'Creatine Monohydrate',
     dose: '5g',
-    timing: 'Any time — consistency matters',
+    timing: 'Any time — consistency matters, timing does not',
     taken: false,
     notificationTime: '08:00',
   },
@@ -335,9 +429,25 @@ export const DEFAULT_SUPPLEMENTS: Supplement[] = [
     id: 'whey',
     name: 'Whey Protein',
     dose: '30–40g',
-    timing: 'Post-workout or when short on protein',
+    timing: 'Post-workout, and again at night if protein is short',
     taken: false,
     notificationTime: undefined,
+  },
+  {
+    id: 'caffeine',
+    name: 'Caffeine (pre-workout)',
+    dose: '200mg, 45 min pre-session',
+    timing: 'Training days only — never after 3 PM',
+    taken: false,
+    notificationTime: '12:15',
+  },
+  {
+    id: 'electrolytes',
+    name: 'Electrolytes (sodium + potassium)',
+    dose: '1 serving',
+    timing: 'Rest days and fasted-walk mornings',
+    taken: false,
+    notificationTime: '07:00',
   },
   {
     id: 'omega3',
