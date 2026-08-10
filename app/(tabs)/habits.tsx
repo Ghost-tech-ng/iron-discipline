@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useSharedValue,
@@ -139,7 +140,7 @@ function HabitRow({ id, label, completed, onToggle }: {
     },
     checkmark: {
       fontSize: 13,
-      color: '#000',
+      color: '#fff',
       fontWeight: '700',
     },
     label: {
@@ -173,9 +174,9 @@ function HabitRow({ id, label, completed, onToggle }: {
                 boxStyle,
               ]}
             >
-              <Animated.Text style={[habitStyles.checkmark, checkmarkStyle]}>
-                ✓
-              </Animated.Text>
+              <Animated.View style={[{ alignItems: 'center', justifyContent: 'center' }, checkmarkStyle]}>
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              </Animated.View>
             </Animated.View>
           </View>
 

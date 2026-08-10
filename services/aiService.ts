@@ -3,7 +3,7 @@ import type { MealSlot } from '../constants/nutrition';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const TEXT_MODEL = 'llama-3.3-70b-versatile';
-const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const VISION_MODEL = 'qwen/qwen3.6-27b';
 
 function getKey(): string {
   const key = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? '';
@@ -13,34 +13,66 @@ function getKey(): string {
   return key;
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 async function callGroq(
   model: string,
   messages: object[],
-  jsonMode = true
+  jsonMode = true,
+  extra: Record<string, unknown> = {}
 ): Promise<string> {
   const body: Record<string, unknown> = {
     model,
     messages,
     temperature: 0.3,
+    ...extra,
   };
   if (jsonMode) body.response_format = { type: 'json_object' };
 
-  const res = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getKey()}`,
-    },
-    body: JSON.stringify(body),
-  });
+  // Groq free tier caps tokens-per-minute. Retry once on 429 if the wait is short.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getKey()}`,
+      },
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content ?? '';
+    }
+
     const err = await res.text();
+
+    if (res.status === 429) {
+      const waitSec = Number(err.match(/try again in ([\d.]+)s/)?.[1] ?? 0);
+      if (attempt === 0 && waitSec > 0 && waitSec <= 30) {
+        await sleep(waitSec * 1000 + 500);
+        continue;
+      }
+      throw new Error(
+        `Too many scans in a row. Wait ${Math.ceil(waitSec) || 30}s and try again.`
+      );
+    }
+
     throw new Error(`Groq ${res.status}: ${err}`);
   }
 
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '';
+  throw new Error('Groq request failed after retry');
+}
+
+function extractJson(text: string): string | null {
+  // Strip closed <think> blocks
+  let clean = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  // Strip unclosed <think> block (response cut off mid-reasoning)
+  clean = clean.replace(/<think>[\s\S]*/gi, '');
+  // Strip markdown code fences
+  clean = clean.replace(/```(?:json)?\s*/gi, '').replace(/```/gi, '');
+  const match = clean.match(/\{[\s\S]*\}/);
+  return match ? match[0] : null;
 }
 
 export interface MealEstimate {
@@ -104,23 +136,24 @@ export async function estimateMealFromPhoto(
           {
             type: 'text',
             text: `You are a Nigerian sports nutritionist based in Abuja. Estimate the nutritional content of the food in this photo.
-The person is in Abuja, Nigeria — recognize Nigerian foods (jollof rice, eba, egusi, suya, moi moi, plantain, etc.) and use realistic Nigerian portion sizes.
-If you see a plate of rice, a typical Nigerian restaurant portion is 350-400g cooked. If you see a wrapped food item, estimate accordingly.
-Do not underestimate — use the higher end of your estimate range.
-Return JSON only, no markdown, with exactly this shape:
+Recognize Nigerian foods (jollof rice, eba, egusi, suya, moi moi, plantain, etc.) and use realistic Nigerian portion sizes.
+A typical Nigerian restaurant plate of rice is 350-400g cooked. Do not underestimate — use the higher end of your estimate range.
+Return JSON only, no markdown, no explanation, with exactly this shape:
 {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"servingSize":"..."}
 All macros in grams, calories in kcal as integers.`,
           },
         ],
       },
     ],
-    false // vision model doesn't support json_object mode
+    true,
+    // qwen3.6 is a reasoning model — without this it burns its whole token budget
+    // on a <think> block and gets truncated before emitting any JSON.
+    { reasoning_effort: 'none', max_tokens: 800 }
   );
 
-  // Extract JSON from response even if model wraps it in text
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Could not parse nutrition from photo');
-  return JSON.parse(match[0]) as MealEstimate;
+  const clean = extractJson(text);
+  if (!clean) throw new Error('Could not read the food in that photo. Try a clearer shot.');
+  return JSON.parse(clean) as MealEstimate;
 }
 
 const MEAL_PLAN_CACHE_KEY = 'ai_meal_plan_v3';
@@ -308,16 +341,17 @@ Return JSON exactly:
         role: 'user',
         content: [
           ...imageContent,
-          { type: 'text', text: userPrompt },
+          { type: 'text', text: `${systemPrompt}\n\n${userPrompt}` },
         ],
       },
     ],
-    false
+    true,
+    { reasoning_effort: 'none', max_tokens: 1200 }
   );
 
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Could not parse advisor response');
-  return JSON.parse(match[0]) as AdvisorResult;
+  const clean = extractJson(text);
+  if (!clean) throw new Error('Could not read that photo. Try a clearer shot.');
+  return JSON.parse(clean) as AdvisorResult;
 }
 
 export interface DietAuditResult {

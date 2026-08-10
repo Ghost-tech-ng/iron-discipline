@@ -7,6 +7,7 @@ import Animated, {
   withSpring,
   withSequence,
 } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { useHabitStore } from '../../store/habitStore';
@@ -137,7 +138,7 @@ export function WaterLogger() {
             : `${waterMl}ml`}
         </Text>
         <Text style={styles.goal}>/ 3.5L</Text>
-        {pct >= 1 && <Text style={styles.done}>✓</Text>}
+        {pct >= 1 && <Ionicons name="checkmark-circle" size={18} color={Colors.accentGreen} />}
       </View>
 
       {/* Add buttons */}

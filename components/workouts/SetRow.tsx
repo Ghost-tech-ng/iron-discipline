@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -211,9 +212,11 @@ export function SetRow({
         onPress={handleComplete}
         style={[styles.checkBtn, completed && styles.checkBtnDone]}
       >
-        <Text style={[styles.checkText, completed && styles.checkTextDone]}>
-          {completed ? '✓' : '○'}
-        </Text>
+        <Ionicons
+          name={completed ? 'checkmark' : 'ellipse-outline'}
+          size={18}
+          color={completed ? Colors.base : Colors.muted}
+        />
       </Pressable>
     </Animated.View>
   );

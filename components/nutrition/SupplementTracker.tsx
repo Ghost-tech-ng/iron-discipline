@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -88,7 +89,7 @@ function SupplementRow({
     <Pressable onPress={handlePress}>
       <Animated.View style={[suppStyles.row, taken && suppStyles.rowDone, style]}>
         <View style={[suppStyles.check, taken && suppStyles.checkDone]}>
-          {taken && <Text style={suppStyles.checkMark}>✓</Text>}
+          {taken && <Ionicons name="checkmark" size={14} color="#fff" />}
         </View>
         <View style={suppStyles.info}>
           <Text style={[suppStyles.name, taken && suppStyles.nameDone]}>{name}</Text>

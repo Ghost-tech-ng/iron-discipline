@@ -3,7 +3,7 @@ import type { FoodItem, Supplement } from '../types';
 export interface MealSlot {
   time: string;
   label: string;
-  emoji: string;
+  icon: string;
   why: string;
   foods: string[];
   protein: number;
@@ -14,7 +14,7 @@ export const DAILY_MEAL_PLAN: MealSlot[] = [
   {
     time: '10:00 AM',
     label: 'First Meal',
-    emoji: '🍳',
+    icon: 'sunny-outline',
     why: '16:8 window opens here. 3 large meals trigger muscle protein synthesis just as effectively as 6 small ones — each large dose fully activates the MPS response. Start strong with ~65g protein.',
     foods: ['4 whole eggs scrambled', '200g beans (cooked)', '2 slices wholegrain bread', '1 banana'],
     protein: 65,
@@ -23,7 +23,7 @@ export const DAILY_MEAL_PLAN: MealSlot[] = [
   {
     time: '2:00 PM',
     label: 'Pre-Workout Meal',
-    emoji: '🍚',
+    icon: 'barbell-outline',
     why: 'Largest carb meal of the day — 90 min before your afternoon training. Carbs here go straight to glycogen, not fat. Do not train without fuel at 95kg with heavy compounds.',
     foods: ['250g grilled chicken breast', '300g cooked white rice', '1 fried plantain (150g)', '100g cucumber'],
     protein: 78,
@@ -32,7 +32,7 @@ export const DAILY_MEAL_PLAN: MealSlot[] = [
   {
     time: '6:30 PM',
     label: 'Last Meal',
-    emoji: '🥩',
+    icon: 'moon-outline',
     why: 'Post-workout recovery window. Protein + carbs after training refills glycogen and starts muscle repair. Last meal by 7pm closes your 16:8 window — 16 hours of fat-burning fasting begins.',
     foods: ['200g tilapia or mackerel (grilled)', '250g cooked rice or yam', '150g beans or moi moi', '1 tbsp groundnut oil'],
     protein: 65,
