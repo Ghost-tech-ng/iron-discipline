@@ -35,6 +35,19 @@ export async function loadUserProfile(): Promise<UserProfile | null> {
   };
 }
 
+export async function getProtocolStartOverride(): Promise<string | null> {
+  const db = getDb();
+  const row = await db.getFirstAsync<{ protocol_start_override: string | null }>(
+    'SELECT protocol_start_override FROM user_profile WHERE id = 1;'
+  );
+  return row?.protocol_start_override ?? null;
+}
+
+export async function saveProtocolStartOverride(iso: string | null): Promise<void> {
+  const db = getDb();
+  await db.runAsync('UPDATE user_profile SET protocol_start_override = ? WHERE id = 1;', [iso]);
+}
+
 export async function saveUserProfile(profile: UserProfile): Promise<void> {
   const db = getDb();
   await db.runAsync(

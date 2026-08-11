@@ -54,6 +54,10 @@ export async function initDatabase(): Promise<void> {
     await runMigration6(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (6);');
   }
+  if (currentVersion < 7) {
+    await runMigration7(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (7);');
+  }
 }
 
 export async function getUserId(): Promise<string> {
@@ -87,7 +91,8 @@ export async function resetAllData(): Promise<void> {
       goal_carbs = 320,
       goal_fat = 63,
       goal_water_ml = 4000,
-      onboarding_complete = 0
+      onboarding_complete = 0,
+      protocol_start_override = NULL
     WHERE id = 1;
   `);
 }
@@ -144,6 +149,16 @@ async function runMigration6(db: SQLite.SQLiteDatabase): Promise<void> {
       USER_TARGETS.carbs, USER_TARGETS.fat, USER_TARGETS.waterMl,
     ]
   );
+}
+
+/**
+ * The Sculpt Protocol's start date used to be a hardcoded constant, so every
+ * day between install and whenever the user actually began training read as a
+ * missed session. NULL here means "not started yet" — the app sets this to
+ * today's date the moment the user taps Start Protocol.
+ */
+async function runMigration7(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync(`ALTER TABLE user_profile ADD COLUMN protocol_start_override TEXT;`);
 }
 
 /**

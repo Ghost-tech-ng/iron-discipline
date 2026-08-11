@@ -5,11 +5,14 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { GlowRing } from '../../components/ui/GlowRing';
 import { GradientBar } from '../../components/ui/GradientBar';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { StatBadge } from '../../components/ui/StatBadge';
 import { Divider } from '../../components/ui/Divider';
@@ -82,7 +85,7 @@ export default function DashboardScreen() {
     cardioLogged, sleepLogged, setWorkoutDone,
   } = useDisciplineStore();
   const { getTotals, waterMl } = useNutritionStore();
-  const { profile } = useUserStore();
+  const { profile, startProtocol } = useUserStore();
   const { activeWorkout } = useWorkoutStore();
   const [streak, setStreak] = useState(0);
 
@@ -108,6 +111,23 @@ export default function DashboardScreen() {
       : planTargets.dayType === 'refeed'
       ? Colors.accentGreen
       : Colors.accentAmber;
+  function handleStartProtocol() {
+    Alert.alert(
+      'Start The Sculpt Protocol',
+      "Today becomes Day 1 — week, phase and macro targets all count from here. There's no backlog of missed sessions before this point.",
+      [
+        { text: 'Not yet', style: 'cancel' },
+        {
+          text: "I'm Ready",
+          onPress: () => {
+            startProtocol();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ]
+    );
+  }
+
   const { calories, protein, carbs, fat } = getTotals();
   const calorieRemaining = planTargets.calories - calories;
   const proteinRemaining = planTargets.protein - protein;
@@ -159,6 +179,21 @@ export default function DashboardScreen() {
     phaseCard: {
       marginBottom: Spacing.lg,
       gap: 6,
+    },
+    startCard: {
+      marginBottom: Spacing.lg,
+      gap: 10,
+      padding: Spacing.lg,
+    },
+    startTitle: {
+      ...Typography.h4,
+      color: Colors.primary,
+      fontWeight: '700',
+    },
+    startBody: {
+      ...Typography.small,
+      color: Colors.secondary,
+      lineHeight: 18,
     },
     phaseTop: {
       flexDirection: 'row',
@@ -337,7 +372,7 @@ export default function DashboardScreen() {
         </Animated.View>
 
         {/* Where you are in the protocol — sets the meaning of every number below it */}
-        {onProtocol && (
+        {onProtocol ? (
           <Animated.View entering={FadeInDown.delay(40).duration(450)}>
             <Card style={styles.phaseCard} accentColor={phaseAccent} gradient>
               <View style={styles.phaseTop}>
@@ -351,6 +386,17 @@ export default function DashboardScreen() {
                 <Text style={[styles.dayChipText, { color: dayAccent }]}>{planTargets.dayLabel}</Text>
               </View>
               <Text style={styles.phaseRationale}>{planTargets.rationale}</Text>
+            </Card>
+          </Animated.View>
+        ) : (
+          <Animated.View entering={FadeInDown.delay(40).duration(450)}>
+            <Card style={styles.startCard} accentColor={Colors.accent} gradient>
+              <Text style={styles.startTitle}>The Sculpt Protocol is ready</Text>
+              <Text style={styles.startBody}>
+                12 weeks, ATTACK then BUILD. Nothing counts against you until you tap start —
+                whenever that is, that day becomes Day 1.
+              </Text>
+              <Button label="Start Protocol" onPress={handleStartProtocol} />
             </Card>
           </Animated.View>
         )}

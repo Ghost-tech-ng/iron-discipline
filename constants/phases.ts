@@ -43,6 +43,28 @@
 export const PROTOCOL_START = '2026-08-10'; // Monday
 export const PROTOCOL_WEEKS = 12;
 
+/**
+ * PROTOCOL_START above is a design anchor, not a live start switch — without
+ * this, every day between install and whenever the user actually begins reads
+ * as a missed session. Null = not started yet; the user sets it by tapping
+ * "Start Protocol", which pins day 1 to that date. Kept as in-memory state,
+ * mirrored into SQLite/userStore, because every date function below reads it
+ * synchronously and can't await a DB read.
+ */
+let startOverride: string | null = null;
+
+export function setProtocolStartOverride(iso: string | null): void {
+  startOverride = iso;
+}
+
+export function getProtocolStartOverride(): string | null {
+  return startOverride;
+}
+
+export function hasProtocolStarted(): boolean {
+  return startOverride !== null;
+}
+
 export type PhaseId = 'attack' | 'build';
 export type DayType = 'training' | 'rest' | 'refeed';
 
@@ -221,7 +243,27 @@ export interface ProtocolStatus {
 }
 
 export function getProtocolStatus(isoDate: string = todayIso()): ProtocolStatus {
-  const startMs = toMidnight(PROTOCOL_START);
+  const totalDaysUnstarted = PROTOCOL_WEEKS * 7;
+  if (startOverride === null) {
+    const phase = PHASES[0];
+    return {
+      isActive: false,
+      week: 0,
+      weekInPhase: 0,
+      dayNumber: 0,
+      daysRemaining: totalDaysUnstarted,
+      totalDays: totalDaysUnstarted,
+      phase,
+      phaseIndex: 0,
+      isDeloadWeek: false,
+      dayType: 'training',
+      targets: phase.training,
+      focus: WEEK_FOCUS[0],
+      phaseProgress: 0,
+    };
+  }
+
+  const startMs = toMidnight(startOverride);
   const nowMs = toMidnight(isoDate);
   const totalDays = PROTOCOL_WEEKS * 7;
   const endMs = startMs + (totalDays - 1) * DAY_MS;
@@ -297,7 +339,7 @@ export function getPhaseByWeek(week: number): Phase {
 
 /** Calendar date a given protocol week starts on. */
 export function weekStartDate(week: number): string {
-  const ms = toMidnight(PROTOCOL_START) + (week - 1) * 7 * DAY_MS;
+  const ms = toMidnight(startOverride ?? PROTOCOL_START) + (week - 1) * 7 * DAY_MS;
   return new Date(ms).toISOString().split('T')[0];
 }
 

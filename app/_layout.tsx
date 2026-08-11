@@ -15,7 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initDatabase, getUserId } from '../services/db';
 import { requestNotificationPermissions, scheduleAllNotifications } from '../services/notificationService';
 import { checkAndRunDailyReset } from '../services/dailyReset';
-import { loadUserProfile } from '../services/userService';
+import { loadUserProfile, getProtocolStartOverride } from '../services/userService';
 import { loadTodayMeals, loadTodayWater, loadTodaySupplements } from '../services/nutritionService';
 import { loadTodayDisciplineState, loadWeeklyCheckIns } from '../services/disciplineService';
 import { syncToCloud, isOnline } from '../services/syncService';
@@ -67,7 +67,7 @@ export default function RootLayout() {
         // Reset daily state before loading so hydrateToday always wins
         await checkAndRunDailyReset();
 
-        const [savedProfile, meals, waterMl, supplements, disciplineState, checkIns] =
+        const [savedProfile, meals, waterMl, supplements, disciplineState, checkIns, protocolStartOverride] =
           await Promise.all([
             loadUserProfile(),
             loadTodayMeals(),
@@ -75,9 +75,11 @@ export default function RootLayout() {
             loadTodaySupplements(),
             loadTodayDisciplineState(),
             loadWeeklyCheckIns(),
+            getProtocolStartOverride(),
           ]);
 
         if (savedProfile) loadProfile(savedProfile);
+        useUserStore.getState().hydrateProtocolStart(protocolStartOverride);
         useUserStore.getState().setHydrated();
 
         useDisciplineStore.getState().hydrateSupplements(supplements);

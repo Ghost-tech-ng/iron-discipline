@@ -12,7 +12,8 @@ import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 import { getActivePlanStatus, getVolumeModifier } from '../../constants/plan';
-import { PROTOCOL_START } from '../../constants/phases';
+import { getProtocolStartOverride } from '../../constants/phases';
+import { useUserStore } from '../../store/userStore';
 
 const DAYS: { key: DayOfWeek; label: string }[] = [
   { key: 'monday', label: 'Mon' },
@@ -30,6 +31,7 @@ function localDate(d: Date): string {
 
 export default function WorkoutsScreen() {
   const Colors = useColors();
+  useUserStore(); // re-render when protocol start (tapped on another tab) changes
   const todayIndex = new Date().getDay();
   const todayKey = DAYS[todayIndex === 0 ? 6 : todayIndex - 1].key;
   const [missedSessions, setMissedSessions] = useState<{ key: DayOfWeek; label: string; daysAgo: number }[]>([]);
@@ -56,6 +58,13 @@ export default function WorkoutsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // Nothing is "missed" before the user has actually tapped Start Protocol.
+      const effectiveStart = getProtocolStartOverride();
+      if (!effectiveStart) {
+        setMissedSessions([]);
+        return;
+      }
+
       loadRecentCompletedDates(7).then((completed) => {
         const completedDates = new Set(completed.map((c) => c.date));
         const missed: { key: DayOfWeek; label: string; daysAgo: number }[] = [];
@@ -66,7 +75,7 @@ export default function WorkoutsScreen() {
           const dateStr = localDate(d);
           // Days before the protocol started belong to the old plan and ran a
           // different split. They are not sessions you can make up.
-          if (dateStr < PROTOCOL_START) continue;
+          if (dateStr < effectiveStart) continue;
           const jsDay = d.getDay();
           const dayKey = DAYS[jsDay === 0 ? 6 : jsDay - 1].key;
           const session = WEEKLY_SPLIT[dayKey];
