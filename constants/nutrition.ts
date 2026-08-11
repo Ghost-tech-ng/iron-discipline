@@ -140,7 +140,7 @@ export const USER_TARGETS = {
   waterMl: 4000,  // up from 3500: higher protein raises urea load, and you are training 5x
   goalWeightKg: 82,
   startWeightKg: 89,
-  weeklyGoalKg: 0.6,
+  weeklyGoalKg: 0.85, // 8-week compressed protocol — eases from ~1.0 kg/wk early to ~0.7 kg/wk late
   /** Waist at the navel. This is the real target — the scale is a proxy. */
   startWaistCm: 92,
   goalWaistCm: 80,

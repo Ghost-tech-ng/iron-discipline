@@ -64,9 +64,7 @@ export default function WeighInScreen() {
 
   const protocol = getProtocolStatus();
   const phaseNote = protocol.isActive
-    ? protocol.phase.id === 'build'
-      ? `Week ${protocol.week} · ${protocol.phase.name}: scale should climb ${protocol.phase.expectedWeeklyKg}. Waist holding flat is the pass mark — if it climbs, calories come down.`
-      : `Week ${protocol.week} · ${protocol.phase.name}: expect ${protocol.phase.expectedWeeklyKg} on the scale. ${protocol.phase.waistGoal} across the phase.`
+    ? `Week ${protocol.week} · ${protocol.phase.name}: expect ${protocol.phase.expectedWeeklyKg} on the scale. ${protocol.phase.waistGoal} across the phase.`
     : null;
 
   const styles = React.useMemo(() => StyleSheet.create({

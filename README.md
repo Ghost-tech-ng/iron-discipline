@@ -23,7 +23,7 @@ This app is built for one person. All defaults are calibrated to this profile.
 | Height | 191 cm (6'3") |
 | Starting Weight | 89 kg (was 95 kg — first 3-month block is done) |
 | Goal | Sculpt Protocol — strip the flanks, build chest/legs, hold the waist |
-| Timeline | 22 weeks (STRIP → CARVE → BUILD), from 2026-08-10 |
+| Timeline | 8 weeks (ATTACK → FINISH), from 2026-08-10 — deadline-compressed from the original 22-week plan |
 | Training Level | Intermediate |
 
 ---
@@ -40,13 +40,44 @@ bodyweight and cycles them by day type; the numbers below are the weekly average
 | Macro | Target | Rationale |
 |-------|--------|-----------|
 | **Protein** | **210 g/day** | 2.36 g/kg at 89 kg. The leaner you get in a deficit, the higher the requirement — 2.2–3.0 g/kg is the cutting range (Helms et al., 2014; Phillips & Van Loon, 2011) |
-| **Calories** | **2,300 (STRIP) → 2,360 (CARVE) → 3,150 (BUILD)** | Each baseline is set against the TDEE at that phase's *average* bodyweight, not the starting one. Mifflin-St Jeor at 89 kg / 191 cm × 1.55 activity ≈ 3,000 kcal TDEE |
-| **Carbohydrates** | **cycled 100–452 g/day** | Loaded onto training days and the weekly refeed, stripped on rest days |
-| **Fats** | **55–85 g/day** | Hormonal baseline — ~0.75 g/kg floor; testosterone drops below it |
+| **Calories** | **2,075 baseline (ATTACK) → 2,100 baseline (FINISH)** | Each baseline is set against the TDEE at that phase's *average* bodyweight, not the starting one. Mifflin-St Jeor at 89 kg / 191 cm × 1.55 activity ≈ 3,000 kcal TDEE |
+| **Carbohydrates** | **cycled 54–360 g/day** | Loaded onto training days and refeeds, stripped on rest days |
+| **Fats** | **48–65 g/day** | Hormonal baseline — ~0.75 g/kg floor; testosterone drops below it |
 
 > **Why cycle instead of a flat number?** A fixed deficit silently shrinks as you get
 > lighter, because TDEE falls with bodyweight. Anchoring each phase to its own average
 > weight keeps the actual deficit constant across the block.
+
+### The 2-Month Compression — What Changed and Why
+
+The original plan ran 22 weeks: STRIP + CARVE down to 82 kg, then a separate 8-week
+BUILD phase in a caloric surplus. The deadline moved to 8 weeks total, so the protocol
+was rebuilt as two blocks — **ATTACK** (weeks 1–4) and **FINISH** (weeks 5–8) — both
+run in a deficit. There is no standalone BUILD phase in this version.
+
+That has a real cost, stated plainly: genuine hypertrophy requires a caloric surplus,
+and an 8-week fixed-deadline window doesn't have room for one without giving up most of
+the fat-loss target. Chest and ab "growth" over these 8 weeks is mostly fat loss
+revealing muscle that's already there, not new tissue. Legs and lower back are the
+exception — undertrained muscle can still add size in a deficit because it has adaptive
+headroom the rest of the body has already used up (Barakat 2020, *Sports Medicine*) —
+so leg and lower-back priority in the training split stays exactly as aggressive as before.
+
+The deficit rate itself sits at the upper edge of what the literature supports for a
+resistance-trained lifter:
+
+- Garthe et al. 2011 (*Int J Sport Nutr Exerc Metab*): athletes cutting at 0.7%/wk
+  gained lean mass; cutting at 1.4%/wk didn't gain lean mass but didn't lose it either,
+  given high training frequency and high protein.
+- Nutrients 2021 review (PMC8471721): 0.5–1.0%/wk is the ceiling for resistance-trained
+  individuals to protect fat-free mass; protein 2.2–3.0 g/kg.
+- MATADOR-style diet-break literature: scheduled refeeds beat one continuous deficit for
+  adherence and blunt adaptive thermogenesis.
+
+ATTACK runs close to 1.0%/wk with a single weekly refeed (Saturday). FINISH eases to
+~0.8%/wk but doubles refeed frequency to twice a week (Wednesday + Saturday) — spending
+the diet-break benefit where fatigue is highest instead of the same single day
+throughout. Protein holds at 210 g (2.4–2.6 g/kg across this weight range) in both blocks.
 
 ### Meal Timing Protocol
 
@@ -225,16 +256,16 @@ The app enforces these automatically — previous session weight is shown at eve
 
 ### Expected Progress Timeline (Realistic, Research-Based)
 
-| Week | Expected Weight Change | What's Happening |
-|------|----------------------|-----------------|
-| 1–2 | −1.5 to −3 kg | Mostly water + glycogen depletion — looks fast, don't get overconfident |
-| 3–6 | −0.5 to −0.75 kg/week | True fat loss begins |
-| 7–10 | −0.4 to −0.6 kg/week | Rate slows slightly — this is normal, do not cut calories aggressively |
-| 11–12 | −0.3 to −0.5 kg/week | Final phase — hold form and intensity |
+| Week | Phase | Expected Weight Change | What's Happening |
+|------|-------|----------------------|-----------------|
+| 1 | ATTACK | −1.5 to −2 kg | Mostly water + glycogen depletion — looks fast, don't get overconfident |
+| 2–4 | ATTACK | −0.85 to −1.0 kg/week | True fat loss, run near the upper edge of the sustainable rate; deload at week 4 |
+| 5–7 | FINISH | −0.65 to −0.8 kg/week | Rate eases slightly as refeeds double to twice a week |
+| 8 | FINISH | −0.5 to −0.7 kg/week | Final week — hold form and intensity |
 
 **Block 1 (done):** 95 kg → 89 kg.
-**Sculpt Protocol target from 89 kg:** ~82 kg by the end of CARVE (week 14), then a lean
-gain through BUILD. The real metric is waist at the navel: 92 cm → 80 cm. The scale is a proxy.
+**Sculpt Protocol target from 89 kg:** ~82 kg by the end of the 8-week ATTACK → FINISH
+block. The real metric is waist at the navel: 92 cm → 80 cm. The scale is a proxy.
 
 ### Body Measurements to Track (Beyond Scale Weight)
 
@@ -440,7 +471,7 @@ type WeeklyCheckIn = {
 ## Onboarding Flow
 
 1. Name, age, height, current weight
-2. Goal weight and timeline (default: 88 kg in 12 weeks)
+2. Goal weight and timeline (default: 82 kg in 8 weeks)
 3. Daily calorie and protein targets (defaults pre-filled from profile)
 4. Gym split configuration — PPL loaded as default, fully editable per day
 5. Supplement list setup — stack pre-loaded, editable

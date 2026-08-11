@@ -7,9 +7,9 @@ import type { WeeklyCheckIn } from '../types';
  * Scale weight moves with glycogen, sodium and gut content — it can swing 2 kg
  * in a day and says nothing about where the fat went. Waist at the navel tracks
  * abdominal and flank fat directly, and waist:hip separates "the fat is coming
- * off the middle" from "everything is shrinking". During BUILD, weight is meant
- * to go UP while waist holds — a state the old weight-only helpers would have
- * scored as failure.
+ * off the middle" from "everything is shrinking". This is a single continuous
+ * cut end to end, so weight should trend down every week — a refeed day
+ * bumping the scale 1-2kg overnight is glycogen and water, not a reversal.
  */
 
 /** Oldest → newest. Store keeps check-ins newest-first. */

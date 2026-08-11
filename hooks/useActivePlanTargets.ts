@@ -24,16 +24,14 @@ const DAY_LABELS: Record<DayType, string> = {
 
 function rationaleFor(dayType: DayType, phase: Phase): string {
   if (dayType === 'refeed') {
-    return 'Full carb refeed. Restores muscle glycogen and pushes leptin back up after a run of deficit days — this is why the next training week feels strong instead of flat.';
+    return phase.id === 'finish'
+      ? 'Full carb refeed — the second one this week. Restores muscle glycogen and pushes leptin back up, which is what keeps training output up this late into a steep cut.'
+      : 'Full carb refeed. Restores muscle glycogen and pushes leptin back up after a run of deficit days — this is why the next training week feels strong instead of flat.';
   }
   if (dayType === 'rest') {
-    return phase.id === 'build'
-      ? 'No training, so carbs come down. Protein and fat hold — recovery still runs today.'
-      : 'Carbs are low because you are not training. The week averages out; the carbs you skip today land on the days you actually use them.';
+    return 'Carbs are low because you are not training. The week averages out; the carbs you skip today land on the days you actually use them.';
   }
-  return phase.id === 'build'
-    ? 'Training day surplus. The extra carbs go into the session and the recovery after it.'
-    : 'Training day. Higher carbs fuel the work and get partitioned toward muscle, not stored — this is the point of cycling.';
+  return 'Training day. Higher carbs fuel the work and get partitioned toward muscle, not stored — this is the point of cycling.';
 }
 
 /**

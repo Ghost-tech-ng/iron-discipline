@@ -1,29 +1,39 @@
 /**
- * THE SCULPT PROTOCOL — 22 weeks, three phases.
+ * THE SCULPT PROTOCOL — 8 weeks, two blocks. Compressed from the original
+ * 22-week STRIP → CARVE → BUILD plan because the deadline moved: two months,
+ * not five and a half.
  *
- * Built around one uncomfortable fact: spot reduction does not exist. A 2021
- * meta-analysis (13 studies, 1,158 participants) found a pooled effect size of
- * roughly zero for training a region to strip fat from it, and a 2025 review of
- * 62 RCTs found intervention type changes body composition but not fat
- * *distribution*. Flank and lower-abdominal fat is dense in alpha-2 adrenergic
- * receptors, which are antilipolytic — that tissue is the last to go, and it
- * only goes when total body fat gets low enough.
+ * What that compression costs, stated plainly: real hypertrophy needs a
+ * caloric surplus, and an 8-week window run at a fixed deadline does not have
+ * room for one without giving up most of the fat-loss target. So there is no
+ * BUILD phase here — this is a single continuous cut, split into two blocks
+ * for pacing and adherence, not two different physiological modes. Chest and
+ * ab "growth" over these 8 weeks is mostly fat loss revealing muscle that is
+ * already there, not new tissue. Legs and lower back are the exception —
+ * Barakat 2020 (Sports Medicine) shows undertrained muscle groups can still
+ * add size in a deficit because they have adaptive headroom the rest of the
+ * body has already used up — so leg/lower-back frequency and priority in
+ * constants/workouts.ts stays exactly as aggressive as before.
  *
- * So love handles are not a training problem. They are a body-fat-percentage
- * problem, and the only lever is a sustained deficit held long enough to reach
- * roughly 10–11% body fat. That is what Phases 1 and 2 are for.
- *
- * Phase 3 is where the chest gets built, because you cannot be in a surplus and
- * strip stubborn fat at the same time. Legs and lower back are the exception:
- * they are undertrained enough that they will still grow during the deficit
- * (Barakat 2020, Sports Medicine — recomposition is achievable in trained
- * lifters when a muscle group has untapped adaptive headroom).
+ * The rate itself sits deliberately at the upper edge of what the literature
+ * supports for a resistance-trained lifter, not the middle of it:
+ *   - Garthe et al. 2011 (Int J Sport Nutr Exerc Metab): athletes cutting at
+ *     0.7%/wk gained lean mass; cutting at 1.4%/wk did not gain lean mass but
+ *     did not lose it either, given high training frequency and high protein.
+ *   - Nutrients 2021 (PMC8471721): 0.5–1.0%/wk is the ceiling for resistance-
+ *     trained individuals to protect fat-free mass; protein 2.2–3.0 g/kg.
+ *   - MATADOR-style diet-break literature: scheduled refeeds beat one
+ *     continuous deficit for adherence and blunt adaptive thermogenesis.
+ * This plan runs close to 1.0%/wk early and eases toward 0.8%/wk late, with
+ * protein held at 210g (2.4–2.6 g/kg across this weight range) and refeed
+ * frequency doubling in the second half — spending the diet-break benefit
+ * where fatigue is highest instead of the same single day throughout.
  */
 
 export const PROTOCOL_START = '2026-08-10'; // Monday
-export const PROTOCOL_WEEKS = 22;
+export const PROTOCOL_WEEKS = 8;
 
-export type PhaseId = 'strip' | 'carve' | 'build';
+export type PhaseId = 'attack' | 'finish';
 export type DayType = 'training' | 'rest' | 'refeed';
 
 export interface MacroTarget {
@@ -39,15 +49,15 @@ export interface Phase {
   subtitle: string;
   startWeek: number;
   endWeek: number;
-  /** Weekly-average calories. Training and rest days cycle around this and net to it. */
+  /** Weekly-average calories. Training, rest and refeed days cycle around this and net to it. */
   baselineCalories: number;
   training: MacroTarget;
   rest: MacroTarget;
-  /** Present only in phases that use a scheduled weekly refeed. */
+  /** Present only in phases that use scheduled refeed days. */
   refeed?: MacroTarget;
-  /** Day index of the weekly refeed. 0 = Monday … 6 = Sunday. */
-  refeedDay?: number;
-  /** Week number inside the protocol that runs as a deload. */
+  /** Day indices of weekly refeeds. 0 = Monday … 6 = Sunday. Empty/absent = none this phase. */
+  refeedDays?: number[];
+  /** Week number inside the protocol that runs as a deload. 0 = no deload this phase. */
   deloadWeek: number;
   expectedWeeklyKg: string;
   waistGoal: string;
@@ -64,12 +74,11 @@ export interface Phase {
  * Mifflin-St Jeor at 89 kg / 191 cm / male / ~30 yr → BMR ≈ 1940 kcal.
  * Activity ×1.55 (5 lifting sessions + daily Zone-2 walking) → TDEE ≈ 3000 kcal.
  *
- * Each phase's baseline is set against the TDEE at that phase's *average*
- * bodyweight, not the starting one — TDEE falls as you get lighter, so a fixed
- * deficit silently shrinks over a cut:
- *   STRIP  avg ~86.5 kg → TDEE ~2965 → −665/day → 2300  (0.7 %/wk)
- *   CARVE  avg ~82.5 kg → TDEE ~2905 → −545/day → 2360  (0.6 %/wk, slowed on purpose)
- *   BUILD  avg ~82.5 kg → TDEE ~2905 → +245/day → 3150  (lean gain)
+ * Each block's baseline is set against the TDEE at that block's *average*
+ * bodyweight, not the starting one — TDEE falls as you get lighter:
+ *   ATTACK avg ~87 kg   → TDEE ~2975 → −900/day → 2075  (~0.9 %/wk)
+ *   FINISH avg ~84 kg   → TDEE ~2930 → −830/day → 2100  (~0.75 %/wk, eased slightly)
+ * Target: 89 kg → ~82 kg by the end of week 8.
  */
 export const PROTOCOL_BODYWEIGHT_KG = 89;
 export const PROTOCOL_HEIGHT_CM = 191;
@@ -77,56 +86,61 @@ export const ESTIMATED_TDEE = 3000;
 
 export const PHASES: readonly Phase[] = [
   {
-    id: 'strip',
-    name: 'STRIP',
-    subtitle: 'Take the bulk of the fat off',
+    id: 'attack',
+    name: 'ATTACK',
+    subtitle: 'Two months, full deficit from day one',
     startWeek: 1,
-    endWeek: 8,
-    baselineCalories: 2300,
-    // Protein 2.4 g/kg at 87kg avg. Garthe 2011: cutting at ~0.7%/wk gained 2.1%
-    // lean mass and lost 31% of fat mass; cutting at 1.4%/wk gained no lean mass
-    // and lost only 21%. Faster is not faster. Fat floor ~0.72 g/kg protects
-    // testosterone. 5 training + 2 rest = 16106 kcal/wk ≈ 2300/day baseline.
-    training: { calories: 2502, protein: 210, carbs: 258, fat: 70 },
-    rest: { calories: 1798, protein: 210, carbs: 100, fat: 62 },
-    deloadWeek: 6,
-    expectedWeeklyKg: '0.55 – 0.65 kg/wk',
-    waistGoal: '−5 to −7 cm across the phase',
+    endWeek: 4,
+    baselineCalories: 2075,
+    // Protein 210g (2.4g/kg at 87kg avg) held constant with FINISH so the habit
+    // never shifts. Fat floor ~0.75g/kg. Deficit is steep on purpose — the
+    // deadline is fixed, so the rate sits at the top of what Garthe 2011 and the
+    // Nutrients 2021 review still call defensible for a trained lifter, not the
+    // middle. One refeed a week from week 1, not eased in, because an 8-week cut
+    // has no slack to build the habit gradually. 4 training + 2 rest + 1 refeed
+    // = 14,524 kcal/wk ≈ 2075/day baseline.
+    training: { calories: 2181, protein: 210, carbs: 189, fat: 65 },
+    rest: { calories: 1614, protein: 210, carbs: 63, fat: 58 },
+    refeed: { calories: 2570, protein: 190, carbs: 340, fat: 50 },
+    refeedDays: [5], // Saturday
+    deloadWeek: 4,
+    expectedWeeklyKg: '0.85 – 1.0 kg/wk',
+    waistGoal: '−4 to −6 cm across the block',
     cardio: [
-      'Fasted Zone-2 walk, 30 min, 5 mornings — before your first meal',
+      'Fasted Zone-2 walk, 35 min, 6 mornings — before your first meal',
       '2 × 12-min intervals after lifting (30s hard / 90s easy)',
-      '8,000+ steps on every rest day — no exceptions',
+      '8,000+ steps on both rest days — no exceptions',
     ],
     actions: [
-      'Protein 210g every single day — deficit or not, this is what keeps the muscle',
-      'Rest days are low-carb by design. The carbs live on training days where they fuel work',
+      'Protein 210g every single day — this is what a steep deficit costs you if you skip it',
+      'Rest days are low-carb by design. Saturday carries the only carb-up of the week',
       'Weigh every morning, log it. Judge the 7-day average, never a single number',
       'Measure your waist at the navel every Sunday — this is the metric that matters, not the scale',
-      'Sleep 7h+. Under-sleeping in a deficit costs you lean mass, not fat',
+      'Sleep 7h+. On a deficit this steep, under-sleeping costs lean mass first',
     ],
     accent: '#ef4444',
   },
   {
-    id: 'carve',
-    name: 'CARVE',
-    subtitle: 'The last of the love handles',
-    startWeek: 9,
-    endWeek: 14,
-    baselineCalories: 2360,
-    // Slow the rate down deliberately. The final layer of flank fat comes off at
-    // low body fat, where a hard deficit costs lean mass faster than it costs fat.
-    // Protein holds at 2.55 g/kg of the lower bodyweight — relatively higher than
-    // STRIP, which is the point: the leaner you get, the more protein spares muscle.
-    // The Saturday refeed replaces a training day, so training days are pulled
-    // below what they would otherwise be to pay for it. 4 training + 2 rest +
-    // 1 refeed = 16519 kcal/wk ≈ 2360/day baseline. Without that compensation the
-    // refeed silently makes the phase a 54 kcal/day shallower deficit than stated.
-    training: { calories: 2466, protein: 210, carbs: 249, fat: 70 },
-    rest: { calories: 1900, protein: 210, carbs: 130, fat: 60 },
-    refeed: { calories: 2855, protein: 190, carbs: 400, fat: 55 },
-    refeedDay: 5, // Saturday
-    deloadWeek: 12,
-    expectedWeeklyKg: '0.4 – 0.55 kg/wk',
+    id: 'finish',
+    name: 'FINISH',
+    subtitle: 'The last month — refeeds double, calories step down',
+    startWeek: 5,
+    endWeek: 8,
+    baselineCalories: 2100,
+    // Bodyweight and TDEE have both dropped, so the same absolute deficit would
+    // silently become a smaller percentage — this baseline corrects for that.
+    // Refeed frequency doubles to twice weekly (Wednesday + Saturday, both
+    // training days) rather than one day carrying the whole week's carb-up —
+    // MATADOR-style diet-break research shows split refeeds protect adherence
+    // and blunt adaptive thermogenesis better than one big one, which matters
+    // most in exactly this back-half-of-a-hard-cut window. Protein still 210g.
+    // 3 training + 2 rest + 2 refeed = 14,700 kcal/wk ≈ 2100/day baseline.
+    training: { calories: 2100, protein: 210, carbs: 175, fat: 62 },
+    rest: { calories: 1550, protein: 210, carbs: 54, fat: 55 },
+    refeed: { calories: 2650, protein: 195, carbs: 360, fat: 48 },
+    refeedDays: [2, 5], // Wednesday, Saturday
+    deloadWeek: 0, // Already spent at week 4 — the transition point. No second deload in a 4-week block.
+    expectedWeeklyKg: '0.65 – 0.8 kg/wk',
     waistGoal: '−3 to −4 cm — this is where the flank finally moves',
     cardio: [
       'Fasted Zone-2 walk, 40 min, 6 mornings',
@@ -134,70 +148,26 @@ export const PHASES: readonly Phase[] = [
       'Add a 20-min evening walk after your last meal',
     ],
     actions: [
-      'Saturday is a full carb refeed — 400g carbs, fat down. Restores leptin and training output',
-      'Protein holds at 210g on a lighter bodyweight — that is a higher dose per kg than STRIP, on purpose',
-      'Scale will move slower now. That is correct. Waist and photos are the signal',
-      'No alcohol in this phase. It blunts fat oxidation for ~12h and you have no margin',
-      'Front, side and back photos every Sunday, same light, same time',
+      'Wednesday and Saturday are both full carb refeeds now — eat them, do not fear the water weight next morning',
+      'Protein holds at 210g on a lighter bodyweight — a higher dose per kg than ATTACK, on purpose',
+      'Scale will move slower than ATTACK. That is correct. Waist and photos are the signal',
+      'No alcohol this block. It blunts fat oxidation for ~12h and there is no margin left',
+      'If a joint or your sleep is breaking down, take an unplanned deload — a missed week beats an injury with 4 weeks left',
     ],
     accent: '#f59e0b',
   },
-  {
-    id: 'build',
-    name: 'BUILD',
-    subtitle: 'Chest, shoulders, and the frame around the new waist',
-    startWeek: 15,
-    endWeek: 22,
-    baselineCalories: 3150,
-    // Lean gain, not a bulk. ~+245 kcal over the TDEE you will have at ~82kg,
-    // which yields roughly 0.2 kg/wk — fast enough to grow, slow enough that the
-    // waist holds. Protein drops to ~2.2 g/kg because a surplus already spares
-    // muscle; the freed calories go to carbs, which drive training output.
-    // 5 training + 2 rest = 22061 kcal/wk ≈ 3150/day baseline.
-    training: { calories: 3313, protein: 185, carbs: 452, fat: 85 },
-    rest: { calories: 2748, protein: 185, carbs: 340, fat: 72 },
-    deloadWeek: 18,
-    expectedWeeklyKg: '+0.15 – 0.25 kg/wk',
-    waistGoal: 'Hold. If waist climbs 2.5 cm, drop to 2,900 for two weeks',
-    cardio: [
-      'Zone-2 walk, 25 min, 3 mornings — appetite and insulin sensitivity, not fat loss',
-      'Drop the intervals. Recovery goes into the lifts now',
-    ],
-    actions: [
-      'Surplus is small on purpose. A big surplus refills the fat you just spent 14 weeks removing',
-      'Chest moves first in every session now — freshest effort on the priority',
-      'Keep measuring your waist weekly. It is the guardrail on this phase',
-      'Push the top set of every compound. The calories are there to be used',
-      'Creatine 5g daily, non-negotiable — cheapest performance gain available',
-    ],
-    accent: '#2d9cff',
-  },
 ];
 
-/** One line of intent for each of the 22 weeks. Ordered, index 0 = week 1. */
+/** One line of intent for each of the 8 weeks. Ordered, index 0 = week 1. */
 export const WEEK_FOCUS: readonly string[] = [
-  'Set the baseline. Weigh in, measure your waist, take all three photos. You cannot steer without a starting point.',
-  'Lock the food in. Same meals, same times — decision fatigue is what breaks deficits.',
-  'Volume steps up. One extra set on every compound.',
-  'First honest read on the trend. Losing under 0.4 kg/wk? Take 100 off rest days.',
-  'Peak volume of the phase. This is the hardest training week so far.',
-  'DELOAD. Volume down 40%, calories unchanged. You grow this week, not last week.',
-  'Back to full volume. Strength should feel better than week 5 — that is the deload working.',
-  'End of Phase 1. Full measurements. The waist number should be 5–7 cm down.',
-  'CARVE opens. Calories up slightly, rate slows. Trust it.',
-  'First refeed Saturday. Eat the carbs, do not fear the water weight the next morning.',
-  'Flank fat starts moving now. Compare side photos to week 1, not to yesterday.',
-  'DELOAD. The lowest-body-fat weeks are the ones where recovery breaks first.',
-  'Push the leg and lower-back work hard. These are still growing on a deficit.',
-  'End of the cut. Full measurements, full photos. This is your leanest point.',
-  'BUILD opens. Calories jump. Expect 1–2 kg of scale weight in 5 days — that is glycogen and water, not fat.',
-  'Chest volume peaks. Incline first, every session, freshest.',
-  'Add load, not reps. The rep ranges are already correct.',
-  'DELOAD. Surplus stays. This is where the tissue actually assembles.',
-  'Waist check. Up more than 2.5 cm from week 14? Drop to 2,700 kcal.',
-  'Strength should be at all-time highs. If it is not, you are under-eating or under-sleeping.',
-  'Second-to-last week. Push every top set to genuine failure.',
-  'Final week. Full measurements, full photos, and set the next block.',
+  'Week 1 of 8. No easing in — full deficit from day one. Weigh in, measure your waist, take all three photos as your baseline.',
+  'Add one set to every compound. First real read on the trend — if the 7-day average is not down at least 0.5kg, cut rest-day carbs by 20g.',
+  'Peak volume before the deload. Hardest training week of the block — push it, recovery is coming.',
+  'DELOAD. Volume down 40%, calories unchanged. Saturday refeed still runs. This is the only recovery week the whole 8 weeks gets — use it.',
+  'FINISH opens. Refeed frequency doubles — Wednesday and Saturday both carry a full carb day now. This is what keeps training output up for the last month.',
+  'Bodyweight and TDEE have both dropped — calories step down to match. Protein and leg/lower-back frequency stay exactly where they are.',
+  'Second-to-last week. This is where the waist number moves the most — flank fat responds late in a cut, and you are deep enough now.',
+  'Final week. Full measurements, full photos, log every session. Whatever the scale reads on day 56 is the number — no extending the deadline.',
 ];
 
 const DAY_MS = 86400000;
@@ -257,7 +227,7 @@ export function getProtocolStatus(isoDate: string = todayIso()): ProtocolStatus 
 
   const dow = mondayIndex(new Date(isoDate + 'T00:00:00'));
   const isRestDay = dow === 3 || dow === 6; // Thursday and Sunday
-  const isRefeed = phase.refeed !== undefined && dow === phase.refeedDay;
+  const isRefeed = phase.refeed !== undefined && (phase.refeedDays?.includes(dow) ?? false);
 
   const dayType: DayType = isRefeed ? 'refeed' : isRestDay ? 'rest' : 'training';
   const targets =
@@ -292,8 +262,10 @@ export interface VolumeModifier {
 
 /**
  * Linear volume ramp inside each phase, reset at every phase boundary, with one
- * planned deload. Accumulated fatigue is what stalls a 22-week block — the
- * deload is not optional recovery, it is where the adaptation is expressed.
+ * planned deload for the whole 8-week block, sitting at the transition point
+ * between ATTACK and FINISH. Accumulated fatigue is what stalls a cut this
+ * steep — the deload is not optional recovery, it is where the adaptation is
+ * expressed.
  */
 export function getVolumeModifier(isoDate: string = todayIso()): VolumeModifier {
   const s = getProtocolStatus(isoDate);
