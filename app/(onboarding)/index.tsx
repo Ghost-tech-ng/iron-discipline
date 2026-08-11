@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { USER_TARGETS } from '../../constants/nutrition';
 
 export default function WelcomeScreen() {
   const Colors = useColors();
@@ -94,7 +95,7 @@ export default function WelcomeScreen() {
         <View style={styles.pillars}>
           {[
             { label: 'Train', desc: '5-day PPL split, progressive overload' },
-            { label: 'Fuel', desc: '200g protein, 2,500 kcal, tracked daily' },
+            { label: 'Fuel', desc: `${USER_TARGETS.protein}g protein daily, calories cycled by day type` },
             { label: 'Recover', desc: 'Sleep, water, habits — scored every day' },
             { label: 'Progress', desc: 'Weekly weigh-ins, photos, analytics' },
           ].map((p) => (

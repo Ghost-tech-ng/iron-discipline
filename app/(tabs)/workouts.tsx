@@ -12,6 +12,7 @@ import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 import { getActivePlanStatus, getVolumeModifier } from '../../constants/plan';
+import { PROTOCOL_START } from '../../constants/phases';
 
 const DAYS: { key: DayOfWeek; label: string }[] = [
   { key: 'monday', label: 'Mon' },
@@ -63,6 +64,9 @@ export default function WorkoutsScreen() {
           const d = new Date();
           d.setDate(d.getDate() - i);
           const dateStr = localDate(d);
+          // Days before the protocol started belong to the old plan and ran a
+          // different split. They are not sessions you can make up.
+          if (dateStr < PROTOCOL_START) continue;
           const jsDay = d.getDay();
           const dayKey = DAYS[jsDay === 0 ? 6 : jsDay - 1].key;
           const session = WEEKLY_SPLIT[dayKey];

@@ -23,6 +23,7 @@ import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 import { resetAllData } from '../../services/db';
+import { USER_TARGETS } from '../../constants/nutrition';
 import { router } from 'expo-router';
 
 function HabitRow({ id, label, completed, onToggle }: {
@@ -212,9 +213,15 @@ export default function HabitsScreen() {
             try {
               await resetAllData();
               useUserStore.getState().loadProfile({
-                name: '', heightCm: 191, weightKg: 95, goalWeightKg: 89,
-                goalCalories: 2500, goalProtein: 200, goalCarbs: 240,
-                goalFat: 72, goalWaterMl: 3500, onboardingComplete: false,
+                name: '', heightCm: 191,
+                weightKg: USER_TARGETS.startWeightKg,
+                goalWeightKg: USER_TARGETS.goalWeightKg,
+                goalCalories: USER_TARGETS.calories,
+                goalProtein: USER_TARGETS.protein,
+                goalCarbs: USER_TARGETS.carbs,
+                goalFat: USER_TARGETS.fat,
+                goalWaterMl: USER_TARGETS.waterMl,
+                onboardingComplete: false,
               });
               useUserStore.getState().setHydrated();
               useNutritionStore.getState().hydrateToday([], 0);

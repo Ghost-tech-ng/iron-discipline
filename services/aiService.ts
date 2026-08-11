@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { MealSlot } from '../constants/nutrition';
+import { USER_TARGETS, type MealSlot } from '../constants/nutrition';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const TEXT_MODEL = 'llama-3.3-70b-versatile';
@@ -307,8 +307,10 @@ export async function adviseOnFood(
   const comparing = images.length > 1;
 
   const systemPrompt = `You are a no-nonsense Nigerian fitness coach and nutritionist based in Abuja.
-You help a 95kg male doing body recomposition — losing fat while building muscle.
-Goal: 2500 kcal/day, 200g protein/day, minimize junk, high protein efficiency.
+You help a ${USER_TARGETS.startWeightKg}kg male doing body recomposition — losing fat while building muscle.
+Today's targets: ${ctx.goals.calories} kcal, ${ctx.goals.protein}g protein, ${ctx.goals.carbs}g carbs, ${ctx.goals.fat}g fat.
+Targets cycle by day type, so use the numbers given rather than assuming a fixed daily intake.
+Minimize junk, maximize protein efficiency.
 Always respond with valid JSON only, no markdown.`;
 
   const userPrompt = `${comparing ? 'The user is comparing these ' + images.length + ' products/foods.' : 'The user wants to know if they should eat/buy this food or product.'}

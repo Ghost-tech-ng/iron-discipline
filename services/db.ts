@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { USER_TARGETS } from '../constants/nutrition';
 
 let db: SQLite.SQLiteDatabase;
 
@@ -45,6 +46,10 @@ export async function initDatabase(): Promise<void> {
     await runMigration4(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (4);');
   }
+  if (currentVersion < 5) {
+    await runMigration5(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (5);');
+  }
 }
 
 export async function getUserId(): Promise<string> {
@@ -71,13 +76,13 @@ export async function resetAllData(): Promise<void> {
     DELETE FROM weekly_checkins;
     UPDATE user_profile SET
       name = '',
-      weight_kg = 95,
-      goal_weight_kg = 89,
-      goal_calories = 2500,
-      goal_protein = 200,
-      goal_carbs = 240,
-      goal_fat = 72,
-      goal_water_ml = 3500,
+      weight_kg = 89,
+      goal_weight_kg = 82,
+      goal_calories = 2400,
+      goal_protein = 210,
+      goal_carbs = 239,
+      goal_fat = 67,
+      goal_water_ml = 4000,
       onboarding_complete = 0
     WHERE id = 1;
   `);
@@ -89,6 +94,31 @@ function generateUUID(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+/**
+ * The profile row was created with the old 95kg default and never corrected, so
+ * the app has been showing 95kg and sizing the fallback targets against it.
+ * Actual bodyweight after the first three months is 89kg.
+ *
+ * Only the profile row is touched — the guard means a weight that was genuinely
+ * entered by hand is left alone. No logs, meals or check-ins are read or written.
+ */
+async function runMigration5(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.runAsync(
+    `UPDATE user_profile SET weight_kg = ? WHERE id = 1 AND weight_kg = 95;`,
+    [USER_TARGETS.startWeightKg]
+  );
+  await db.runAsync(
+    `UPDATE user_profile SET
+       goal_weight_kg = ?, goal_calories = ?, goal_protein = ?,
+       goal_carbs = ?, goal_fat = ?, goal_water_ml = ?
+     WHERE id = 1;`,
+    [
+      USER_TARGETS.goalWeightKg, USER_TARGETS.calories, USER_TARGETS.protein,
+      USER_TARGETS.carbs, USER_TARGETS.fat, USER_TARGETS.waterMl,
+    ]
+  );
 }
 
 /**
@@ -121,13 +151,13 @@ async function runMigration1(db: SQLite.SQLiteDatabase): Promise<void> {
       id INTEGER PRIMARY KEY DEFAULT 1,
       name TEXT NOT NULL DEFAULT '',
       height_cm REAL NOT NULL DEFAULT 191,
-      weight_kg REAL NOT NULL DEFAULT 95,
-      goal_weight_kg REAL NOT NULL DEFAULT 89,
-      goal_calories INTEGER NOT NULL DEFAULT 2500,
-      goal_protein INTEGER NOT NULL DEFAULT 200,
-      goal_carbs INTEGER NOT NULL DEFAULT 240,
-      goal_fat INTEGER NOT NULL DEFAULT 72,
-      goal_water_ml INTEGER NOT NULL DEFAULT 3500,
+      weight_kg REAL NOT NULL DEFAULT 89,
+      goal_weight_kg REAL NOT NULL DEFAULT 82,
+      goal_calories INTEGER NOT NULL DEFAULT 2400,
+      goal_protein INTEGER NOT NULL DEFAULT 210,
+      goal_carbs INTEGER NOT NULL DEFAULT 239,
+      goal_fat INTEGER NOT NULL DEFAULT 67,
+      goal_water_ml INTEGER NOT NULL DEFAULT 4000,
       onboarding_complete INTEGER NOT NULL DEFAULT 0
     );
 

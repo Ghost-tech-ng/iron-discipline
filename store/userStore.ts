@@ -15,7 +15,7 @@ interface UserStore {
 const defaults: UserProfile = {
   name: '',
   heightCm: 191,
-  weightKg: 95,
+  weightKg: USER_TARGETS.startWeightKg,
   goalWeightKg: USER_TARGETS.goalWeightKg,
   goalCalories: USER_TARGETS.calories,
   goalProtein: USER_TARGETS.protein,

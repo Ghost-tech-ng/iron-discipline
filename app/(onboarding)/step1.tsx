@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { USER_TARGETS } from '../../constants/nutrition';
 
 function Field({
   label,
@@ -71,7 +72,7 @@ export default function Step1Screen() {
     setProfile({
       name: name.trim(),
       heightCm: parseFloat(height) || 191,
-      weightKg: parseFloat(weight) || 95,
+      weightKg: parseFloat(weight) || USER_TARGETS.startWeightKg,
     });
     router.push('/(onboarding)/step2');
   }
@@ -153,7 +154,7 @@ export default function Step1Screen() {
               label="Current weight (kg)"
               value={weight}
               onChangeText={setWeight}
-              placeholder="95"
+              placeholder="89"
               keyboardType="decimal-pad"
             />
           </View>
@@ -162,11 +163,11 @@ export default function Step1Screen() {
             <Text style={styles.infoText}>
               At{' '}
               <Text style={{ color: Colors.primary, fontWeight: '600' }}>
-                {parseFloat(weight) || 95}kg
+                {parseFloat(weight) || USER_TARGETS.startWeightKg}kg
               </Text>
               {' '}your daily protein target will be set to{' '}
               <Text style={{ color: Colors.accent, fontWeight: '700' }}>
-                {Math.round((parseFloat(weight) || 95) * 2.1)}g
+                {Math.round((parseFloat(weight) || USER_TARGETS.startWeightKg) * 2.1)}g
               </Text>
               .
             </Text>

@@ -21,9 +21,9 @@ This app is built for one person. All defaults are calibrated to this profile.
 | Field | Value |
 |-------|-------|
 | Height | 191 cm (6'3") |
-| Starting Weight | 95 kg |
-| Goal | Body recomposition — fat loss + muscle retention |
-| Timeline | 3 months (12 weeks) |
+| Starting Weight | 89 kg (was 95 kg — first 3-month block is done) |
+| Goal | Sculpt Protocol — strip the flanks, build chest/legs, hold the waist |
+| Timeline | 22 weeks (STRIP → CARVE → BUILD), from 2026-08-10 |
 | Training Level | Intermediate |
 
 ---
@@ -32,16 +32,21 @@ This app is built for one person. All defaults are calibrated to this profile.
 
 All values are derived from peer-reviewed sports nutrition research (ISSN, Helms et al., Stokes et al.).
 
-### Daily Macro Targets for 95 kg, 6'3" Recomposition
+### Daily Macro Targets for 89 kg, 6'3" Recomposition
+
+Targets are no longer a single fixed number. `constants/phases.ts` derives them from
+bodyweight and cycles them by day type; the numbers below are the weekly averages.
 
 | Macro | Target | Rationale |
 |-------|--------|-----------|
-| **Protein** | **190–210 g/day** | 2.0–2.2 g/kg bodyweight — upper range recommended for fat loss phases to preserve lean mass (Helms et al., 2014; Phillips & Van Loon, 2011) |
-| **Calories** | **2,400–2,600 kcal** | ~500 kcal below estimated TDEE (~2,950–3,100 for moderately active 95 kg male) — sufficient deficit for 0.5–0.75 kg fat loss/week |
-| **Carbohydrates** | **220–260 g/day** | Performance fuel — prioritise around workouts |
-| **Fats** | **65–80 g/day** | Hormonal baseline — don't go lower; testosterone drops below ~0.7 g/kg |
+| **Protein** | **210 g/day** | 2.36 g/kg at 89 kg. The leaner you get in a deficit, the higher the requirement — 2.2–3.0 g/kg is the cutting range (Helms et al., 2014; Phillips & Van Loon, 2011) |
+| **Calories** | **2,300 (STRIP) → 2,360 (CARVE) → 3,150 (BUILD)** | Each baseline is set against the TDEE at that phase's *average* bodyweight, not the starting one. Mifflin-St Jeor at 89 kg / 191 cm × 1.55 activity ≈ 3,000 kcal TDEE |
+| **Carbohydrates** | **cycled 100–452 g/day** | Loaded onto training days and the weekly refeed, stripped on rest days |
+| **Fats** | **55–85 g/day** | Hormonal baseline — ~0.75 g/kg floor; testosterone drops below it |
 
-> **Why 190–210g protein?** At 95kg in a caloric deficit, protein synthesis rates drop. Hitting 2.0–2.2g/kg directly counteracts muscle breakdown, even while losing fat. This is the single most important target to hit daily.
+> **Why cycle instead of a flat number?** A fixed deficit silently shrinks as you get
+> lighter, because TDEE falls with bodyweight. Anchoring each phase to its own average
+> weight keeps the actual deficit constant across the block.
 
 ### Meal Timing Protocol
 
@@ -227,8 +232,9 @@ The app enforces these automatically — previous session weight is shown at eve
 | 7–10 | −0.4 to −0.6 kg/week | Rate slows slightly — this is normal, do not cut calories aggressively |
 | 11–12 | −0.3 to −0.5 kg/week | Final phase — hold form and intensity |
 
-**3-month target from 95 kg:** ~88–91 kg (4–7 kg true fat loss) while maintaining or gaining lean mass.
-This is a visible, significant change at 6'3" — leaner face, visible shoulder separation, flatter stomach.
+**Block 1 (done):** 95 kg → 89 kg.
+**Sculpt Protocol target from 89 kg:** ~82 kg by the end of CARVE (week 14), then a lean
+gain through BUILD. The real metric is waist at the navel: 92 cm → 80 cm. The scale is a proxy.
 
 ### Body Measurements to Track (Beyond Scale Weight)
 
@@ -399,11 +405,11 @@ type DisciplineState = {
 type UserProfile = {
   name: string
   heightCm: number               // 191
-  weightKg: number               // 95 (starting), updated weekly
-  goalCalories: number           // 2500
-  goalProtein: number            // 200
-  goalWaterMl: number            // 3500
-  goalWeightKg: number           // 88–91 by week 12
+  weightKg: number               // 89 (starting), updated weekly
+  goalCalories: number           // 2400 fallback — phases.ts drives the live number
+  goalProtein: number            // 210
+  goalWaterMl: number            // 4000
+  goalWeightKg: number           // 82
   split: Record<string, string>  // PPL timetable
 }
 

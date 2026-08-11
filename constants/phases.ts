@@ -57,6 +57,24 @@ export interface Phase {
   accent: string;
 }
 
+/**
+ * Everything below is derived from these, so if bodyweight is wrong the whole
+ * protocol is wrong. Recalculate the baselines if this changes by more than ~3kg.
+ *
+ * Mifflin-St Jeor at 89 kg / 191 cm / male / ~30 yr → BMR ≈ 1940 kcal.
+ * Activity ×1.55 (5 lifting sessions + daily Zone-2 walking) → TDEE ≈ 3000 kcal.
+ *
+ * Each phase's baseline is set against the TDEE at that phase's *average*
+ * bodyweight, not the starting one — TDEE falls as you get lighter, so a fixed
+ * deficit silently shrinks over a cut:
+ *   STRIP  avg ~86.5 kg → TDEE ~2965 → −665/day → 2300  (0.7 %/wk)
+ *   CARVE  avg ~82.5 kg → TDEE ~2905 → −545/day → 2360  (0.6 %/wk, slowed on purpose)
+ *   BUILD  avg ~82.5 kg → TDEE ~2905 → +245/day → 3150  (lean gain)
+ */
+export const PROTOCOL_BODYWEIGHT_KG = 89;
+export const PROTOCOL_HEIGHT_CM = 191;
+export const ESTIMATED_TDEE = 3000;
+
 export const PHASES: readonly Phase[] = [
   {
     id: 'strip',
@@ -64,15 +82,15 @@ export const PHASES: readonly Phase[] = [
     subtitle: 'Take the bulk of the fat off',
     startWeek: 1,
     endWeek: 8,
-    baselineCalories: 2250,
-    // Protein 2.4 g/kg. Garthe 2011: cutting at ~0.7%/wk gained 2.1% lean mass and
-    // lost 31% of fat mass; cutting at 1.4%/wk gained no lean mass and lost only 21%.
-    // Faster is not faster. Fat floor at ~0.7 g/kg protects testosterone.
-    // 5 training + 2 rest = 15758 kcal/wk ≈ 2250/day baseline.
-    training: { calories: 2422, protein: 215, carbs: 233, fat: 70 },
-    rest: { calories: 1824, protein: 215, carbs: 106, fat: 60 },
+    baselineCalories: 2300,
+    // Protein 2.4 g/kg at 87kg avg. Garthe 2011: cutting at ~0.7%/wk gained 2.1%
+    // lean mass and lost 31% of fat mass; cutting at 1.4%/wk gained no lean mass
+    // and lost only 21%. Faster is not faster. Fat floor ~0.72 g/kg protects
+    // testosterone. 5 training + 2 rest = 16106 kcal/wk ≈ 2300/day baseline.
+    training: { calories: 2502, protein: 210, carbs: 258, fat: 70 },
+    rest: { calories: 1798, protein: 210, carbs: 100, fat: 62 },
     deloadWeek: 6,
-    expectedWeeklyKg: '0.55 – 0.7 kg/wk',
+    expectedWeeklyKg: '0.55 – 0.65 kg/wk',
     waistGoal: '−5 to −7 cm across the phase',
     cardio: [
       'Fasted Zone-2 walk, 30 min, 5 mornings — before your first meal',
@@ -80,7 +98,7 @@ export const PHASES: readonly Phase[] = [
       '8,000+ steps on every rest day — no exceptions',
     ],
     actions: [
-      'Protein 215g every single day — deficit or not, this is what keeps the muscle',
+      'Protein 210g every single day — deficit or not, this is what keeps the muscle',
       'Rest days are low-carb by design. The carbs live on training days where they fuel work',
       'Weigh every morning, log it. Judge the 7-day average, never a single number',
       'Measure your waist at the navel every Sunday — this is the metric that matters, not the scale',
@@ -94,20 +112,21 @@ export const PHASES: readonly Phase[] = [
     subtitle: 'The last of the love handles',
     startWeek: 9,
     endWeek: 14,
-    baselineCalories: 2350,
+    baselineCalories: 2360,
     // Slow the rate down deliberately. The final layer of flank fat comes off at
     // low body fat, where a hard deficit costs lean mass faster than it costs fat.
-    // Protein goes UP as calories come down — this is the protein-sparing window.
+    // Protein holds at 2.55 g/kg of the lower bodyweight — relatively higher than
+    // STRIP, which is the point: the leaner you get, the more protein spares muscle.
     // The Saturday refeed replaces a training day, so training days are pulled
-    // ~95 kcal below what they would otherwise be to pay for it. 4 training +
-    // 2 rest + 1 refeed = 16456 kcal/wk ≈ 2350/day baseline. Without this the
+    // below what they would otherwise be to pay for it. 4 training + 2 rest +
+    // 1 refeed = 16519 kcal/wk ≈ 2360/day baseline. Without that compensation the
     // refeed silently makes the phase a 54 kcal/day shallower deficit than stated.
-    training: { calories: 2427, protein: 225, carbs: 213, fat: 75 },
-    rest: { calories: 1924, protein: 225, carbs: 121, fat: 60 },
-    refeed: { calories: 2900, protein: 200, carbs: 390, fat: 60 },
+    training: { calories: 2466, protein: 210, carbs: 249, fat: 70 },
+    rest: { calories: 1900, protein: 210, carbs: 130, fat: 60 },
+    refeed: { calories: 2855, protein: 190, carbs: 400, fat: 55 },
     refeedDay: 5, // Saturday
     deloadWeek: 12,
-    expectedWeeklyKg: '0.3 – 0.45 kg/wk',
+    expectedWeeklyKg: '0.4 – 0.55 kg/wk',
     waistGoal: '−3 to −4 cm — this is where the flank finally moves',
     cardio: [
       'Fasted Zone-2 walk, 40 min, 6 mornings',
@@ -115,8 +134,8 @@ export const PHASES: readonly Phase[] = [
       'Add a 20-min evening walk after your last meal',
     ],
     actions: [
-      'Saturday is a full carb refeed — 390g carbs, fat down. Restores leptin and training output',
-      'Protein up to 225g. Lower calories mean protein does more of the work',
+      'Saturday is a full carb refeed — 400g carbs, fat down. Restores leptin and training output',
+      'Protein holds at 210g on a lighter bodyweight — that is a higher dose per kg than STRIP, on purpose',
       'Scale will move slower now. That is correct. Waist and photos are the signal',
       'No alcohol in this phase. It blunts fat oxidation for ~12h and you have no margin',
       'Front, side and back photos every Sunday, same light, same time',
@@ -129,15 +148,17 @@ export const PHASES: readonly Phase[] = [
     subtitle: 'Chest, shoulders, and the frame around the new waist',
     startWeek: 15,
     endWeek: 22,
-    baselineCalories: 2950,
-    // Lean gain, not a bulk. ~+150 kcal over maintenance yields roughly
-    // 0.15–0.2 kg/wk — fast enough to grow, slow enough that the waist holds.
-    // 5 training + 2 rest = 20653 kcal/wk ≈ 2950/day baseline.
-    training: { calories: 3101, protein: 190, carbs: 394, fat: 85 },
-    rest: { calories: 2574, protein: 190, carbs: 296, fat: 70 },
+    baselineCalories: 3150,
+    // Lean gain, not a bulk. ~+245 kcal over the TDEE you will have at ~82kg,
+    // which yields roughly 0.2 kg/wk — fast enough to grow, slow enough that the
+    // waist holds. Protein drops to ~2.2 g/kg because a surplus already spares
+    // muscle; the freed calories go to carbs, which drive training output.
+    // 5 training + 2 rest = 22061 kcal/wk ≈ 3150/day baseline.
+    training: { calories: 3313, protein: 185, carbs: 452, fat: 85 },
+    rest: { calories: 2748, protein: 185, carbs: 340, fat: 72 },
     deloadWeek: 18,
-    expectedWeeklyKg: '+0.15 – 0.2 kg/wk',
-    waistGoal: 'Hold. If waist climbs 2.5 cm, drop to 2,700 for two weeks',
+    expectedWeeklyKg: '+0.15 – 0.25 kg/wk',
+    waistGoal: 'Hold. If waist climbs 2.5 cm, drop to 2,900 for two weeks',
     cardio: [
       'Zone-2 walk, 25 min, 3 mornings — appetite and insulin sensitivity, not fat loss',
       'Drop the intervals. Recovery goes into the lifts now',

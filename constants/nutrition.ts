@@ -12,10 +12,10 @@ export interface MealSlot {
 }
 
 /**
- * Four meals, not three. On a cut at 215g+ protein, a 2021 review of protein
+ * Four meals, not three. On a cut at 210g+ protein, a 2021 review of protein
  * distribution found spreading intake across 3–6 doses beats concentrating it —
  * each dose fully activates muscle protein synthesis, and you cannot bank the
- * response. Four meals also makes 215g achievable without any single plate
+ * response. Four meals also makes 210g achievable without any single plate
  * being absurd.
  */
 const TRAINING_DAY_MEALS: MealSlot[] = [
@@ -133,12 +133,13 @@ export const DAILY_MEAL_PLAN: MealSlot[] = TRAINING_DAY_MEALS;
  */
 export const USER_TARGETS = {
   calories: 2400,
-  protein: 215,   // 2.4 g/kg at ~90kg. Cutting range is 2.2–3.0 g/kg (higher the leaner you get)
-  carbs: 235,
-  fat: 70,        // ~0.75 g/kg floor — below this, hormonal output suffers
+  protein: 210,   // 2.36 g/kg at 89kg. Cutting range is 2.2–3.0 g/kg (higher the leaner you get).
+                  // Same number the phase engine uses, so off-protocol days do not shift the habit.
+  carbs: 239,     // macros sum to 2,399 kcal — the calorie line is not an independent number
+  fat: 67,        // ~0.75 g/kg floor — below this, hormonal output suffers
   waterMl: 4000,  // up from 3500: higher protein raises urea load, and you are training 5x
   goalWeightKg: 82,
-  startWeightKg: 90,
+  startWeightKg: 89,
   weeklyGoalKg: 0.6,
   /** Waist at the navel. This is the real target — the scale is a proxy. */
   startWaistCm: 92,

@@ -16,7 +16,7 @@ export default function Step2Screen() {
 
   const weight = profile.weightKg;
   const recommendedProtein = Math.round(weight * 2.1);
-  const recommendedCalories = 2500;
+  const recommendedCalories = USER_TARGETS.calories;
 
   function handleNext() {
     setProfile({ goalCalories: calories, goalProtein: protein });
@@ -151,7 +151,7 @@ export default function Step2Screen() {
           {[
             'Protein: ISSN 2017 guidelines — 1.6–2.2g/kg for fat loss phases. Upper range used for maximum muscle protection.',
             'Calories: 500 kcal/day deficit = ~0.5kg fat/week. You are 6\'3" and training hard — do not go lower than 2,200.',
-            'At 95kg cutting to ~89kg = ~6kg fat lost. Realistic in 12 weeks. Visible change at your height.',
+            `At ${USER_TARGETS.startWeightKg}kg cutting to ~${USER_TARGETS.goalWeightKg}kg = ~${USER_TARGETS.startWeightKg - USER_TARGETS.goalWeightKg}kg fat lost. Realistic across the protocol. Visible change at your height.`,
           ].map((item) => (
             <View key={item} style={styles.researchRow}>
               <View style={styles.dot} />
