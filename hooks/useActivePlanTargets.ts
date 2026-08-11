@@ -23,10 +23,14 @@ const DAY_LABELS: Record<DayType, string> = {
 };
 
 function rationaleFor(dayType: DayType, phase: Phase): string {
+  if (phase.id === 'build') {
+    if (dayType === 'rest') {
+      return 'Rest day. Calories ease down slightly — you are not training, so carbs are not needed to fuel a session. This is recomposition, not a bulk: the surplus lives on training days only.';
+    }
+    return 'Training day. Calories sit right around maintenance, tipped slightly positive — enough to fuel hard training and add visible muscle without adding fat back over the abs.';
+  }
   if (dayType === 'refeed') {
-    return phase.id === 'finish'
-      ? 'Full carb refeed — the second one this week. Restores muscle glycogen and pushes leptin back up, which is what keeps training output up this late into a steep cut.'
-      : 'Full carb refeed. Restores muscle glycogen and pushes leptin back up after a run of deficit days — this is why the next training week feels strong instead of flat.';
+    return 'Full carb refeed. Restores muscle glycogen and pushes leptin back up after a run of deficit days — this is why the next training week feels strong instead of flat.';
   }
   if (dayType === 'rest') {
     return 'Carbs are low because you are not training. The week averages out; the carbs you skip today land on the days you actually use them.';

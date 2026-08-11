@@ -128,19 +128,19 @@ export const DAILY_MEAL_PLAN: MealSlot[] = TRAINING_DAY_MEALS;
 
 /**
  * Fallback targets used only when the protocol is not running (before the start
- * date, or after week 22). Live day-to-day targets come from the phase engine
+ * date, or after week 12). Live day-to-day targets come from the phase engine
  * via useActivePlanTargets — do not use these for daily scoring.
  */
 export const USER_TARGETS = {
-  calories: 2400,
-  protein: 210,   // 2.36 g/kg at 89kg. Cutting range is 2.2–3.0 g/kg (higher the leaner you get).
-                  // Same number the phase engine uses, so off-protocol days do not shift the habit.
-  carbs: 239,     // macros sum to 2,399 kcal — the calorie line is not an independent number
-  fat: 67,        // ~0.75 g/kg floor — below this, hormonal output suffers
+  calories: 2700,
+  protein: 210,   // 2.4 g/kg at 87kg floor. Same number the phase engine uses throughout
+                  // ATTACK and BUILD, so off-protocol days do not shift the habit.
+  carbs: 320,     // roughly BUILD's rest-day carbs — this is a maintenance fallback, not a cut number
+  fat: 63,        // ~0.72 g/kg at the 87kg floor
   waterMl: 4000,  // up from 3500: higher protein raises urea load, and you are training 5x
-  goalWeightKg: 82,
+  goalWeightKg: 87, // the floor, not a further-loss target — recomposition happens at this weight
   startWeightKg: 89,
-  weeklyGoalKg: 0.85, // 8-week compressed protocol — eases from ~1.0 kg/wk early to ~0.7 kg/wk late
+  weeklyGoalKg: 0.5, // ATTACK-only taper toward the 87kg floor; BUILD holds weight roughly flat
   /** Waist at the navel. This is the real target — the scale is a proxy. */
   startWaistCm: 92,
   goalWaistCm: 80,

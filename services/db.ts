@@ -50,6 +50,10 @@ export async function initDatabase(): Promise<void> {
     await runMigration5(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (5);');
   }
+  if (currentVersion < 6) {
+    await runMigration6(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (6);');
+  }
 }
 
 export async function getUserId(): Promise<string> {
@@ -77,11 +81,11 @@ export async function resetAllData(): Promise<void> {
     UPDATE user_profile SET
       name = '',
       weight_kg = 89,
-      goal_weight_kg = 82,
-      goal_calories = 2400,
+      goal_weight_kg = 87,
+      goal_calories = 2700,
       goal_protein = 210,
-      goal_carbs = 239,
-      goal_fat = 67,
+      goal_carbs = 320,
+      goal_fat = 63,
       goal_water_ml = 4000,
       onboarding_complete = 0
     WHERE id = 1;
@@ -109,6 +113,27 @@ async function runMigration5(db: SQLite.SQLiteDatabase): Promise<void> {
     `UPDATE user_profile SET weight_kg = ? WHERE id = 1 AND weight_kg = 95;`,
     [USER_TARGETS.startWeightKg]
   );
+  await db.runAsync(
+    `UPDATE user_profile SET
+       goal_weight_kg = ?, goal_calories = ?, goal_protein = ?,
+       goal_carbs = ?, goal_fat = ?, goal_water_ml = ?
+     WHERE id = 1;`,
+    [
+      USER_TARGETS.goalWeightKg, USER_TARGETS.calories, USER_TARGETS.protein,
+      USER_TARGETS.carbs, USER_TARGETS.fat, USER_TARGETS.waterMl,
+    ]
+  );
+}
+
+/**
+ * The 87kg floor / recomposition redesign moved goal_weight_kg from 82 to 87
+ * and the fallback macro targets from the ATTACK/FINISH cut numbers to the
+ * ATTACK/BUILD ones. Migration 5 already ran on installed devices, so it will
+ * not re-fire to pick this up — only the profile row is touched here, same
+ * guard-free UPDATE-by-id pattern as migration 5. No logs, meals or check-ins
+ * are read or written.
+ */
+async function runMigration6(db: SQLite.SQLiteDatabase): Promise<void> {
   await db.runAsync(
     `UPDATE user_profile SET
        goal_weight_kg = ?, goal_calories = ?, goal_protein = ?,

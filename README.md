@@ -22,8 +22,8 @@ This app is built for one person. All defaults are calibrated to this profile.
 |-------|-------|
 | Height | 191 cm (6'3") |
 | Starting Weight | 89 kg (was 95 kg — first 3-month block is done) |
-| Goal | Sculpt Protocol — strip the flanks, build chest/legs, hold the waist |
-| Timeline | 8 weeks (ATTACK → FINISH), from 2026-08-10 — deadline-compressed from the original 22-week plan |
+| Goal | Sculpt Protocol — taper to an 87 kg floor, then recomposition: build visible muscle without the fat coming back |
+| Timeline | 12 weeks (ATTACK → BUILD), from 2026-08-10 |
 | Training Level | Intermediate |
 
 ---
@@ -39,45 +39,63 @@ bodyweight and cycles them by day type; the numbers below are the weekly average
 
 | Macro | Target | Rationale |
 |-------|--------|-----------|
-| **Protein** | **210 g/day** | 2.36 g/kg at 89 kg. The leaner you get in a deficit, the higher the requirement — 2.2–3.0 g/kg is the cutting range (Helms et al., 2014; Phillips & Van Loon, 2011) |
-| **Calories** | **2,075 baseline (ATTACK) → 2,100 baseline (FINISH)** | Each baseline is set against the TDEE at that phase's *average* bodyweight, not the starting one. Mifflin-St Jeor at 89 kg / 191 cm × 1.55 activity ≈ 3,000 kcal TDEE |
-| **Carbohydrates** | **cycled 54–360 g/day** | Loaded onto training days and refeeds, stripped on rest days |
-| **Fats** | **48–65 g/day** | Hormonal baseline — ~0.75 g/kg floor; testosterone drops below it |
+| **Protein** | **210 g/day** | 2.4 g/kg at the 87 kg floor. Held identical across both phases — the deficit range is 2.2–3.0 g/kg (Helms et al., 2014; Phillips & Van Loon, 2011), and it does double duty as the muscle-building floor in BUILD |
+| **Calories** | **2,420 baseline (ATTACK) → 2,986 baseline (BUILD)** | Each baseline is set against the TDEE at that phase's *average* bodyweight, not the starting one. Mifflin-St Jeor at 89 kg / 191 cm × 1.55 activity ≈ 3,000 kcal TDEE, falling to ~2,974 kcal by 87 kg |
+| **Carbohydrates** | **cycled 160–412 g/day** | Loaded onto training days and refeeds, stripped on rest days |
+| **Fats** | **50–68 g/day** | Hormonal baseline — ~0.72–0.75 g/kg floor; testosterone drops below it |
 
 > **Why cycle instead of a flat number?** A fixed deficit silently shrinks as you get
 > lighter, because TDEE falls with bodyweight. Anchoring each phase to its own average
 > weight keeps the actual deficit constant across the block.
 
-### The 2-Month Compression — What Changed and Why
+### The 87 kg Floor and the Recomposition Redesign
 
-The original plan ran 22 weeks: STRIP + CARVE down to 82 kg, then a separate 8-week
-BUILD phase in a caloric surplus. The deadline moved to 8 weeks total, so the protocol
-was rebuilt as two blocks — **ATTACK** (weeks 1–4) and **FINISH** (weeks 5–8) — both
-run in a deficit. There is no standalone BUILD phase in this version.
+The protocol went through two revisions before landing here. First it was compressed
+from the original 22-week STRIP → CARVE → BUILD plan to 8 weeks of ATTACK → FINISH
+against a fixed deadline, targeting 82 kg. Then a second constraint arrived that changed
+the shape of the plan, not just its length: abs were already ~60% visible and love
+handles already small at 89 kg, which means the 82 kg target overshot what was actually
+needed — and there's a hard floor of **87 kg**, below which the goal is no longer "leaner"
+but "too lean for this frame."
 
-That has a real cost, stated plainly: genuine hypertrophy requires a caloric surplus,
-and an 8-week fixed-deadline window doesn't have room for one without giving up most of
-the fat-loss target. Chest and ab "growth" over these 8 weeks is mostly fat loss
-revealing muscle that's already there, not new tissue. Legs and lower back are the
-exception — undertrained muscle can still add size in a deficit because it has adaptive
-headroom the rest of the body has already used up (Barakat 2020, *Sports Medicine*) —
-so leg and lower-back priority in the training split stays exactly as aggressive as before.
+So the protocol is now 12 weeks across two blocks that do different jobs:
 
-The deficit rate itself sits at the upper edge of what the literature supports for a
-resistance-trained lifter:
+- **ATTACK** (weeks 1–4) is a real but gentler deficit than the original cut — built to
+  land at ~87 kg by the end of week 4, not to keep pushing past it. There was only ever
+  ~2 kg between the starting weight and the floor.
+- **BUILD** (weeks 5–12) is a genuine recomposition phase, not a second deficit block and
+  not a bulk. Calories step up to roughly maintenance at the 87 kg floor — training days
+  running a small surplus to fuel and fund the session, rest days a small deficit — so
+  the week nets out at maintenance. The goal is visible muscle added on top of the
+  physique that's already there, at a stable weight, not further fat loss.
 
+There is no FINISH phase anymore. It existed to keep cutting after ATTACK when the
+target was 82 kg; with the target now 87 kg, there's nothing left to cut for once ATTACK
+ends.
+
+The literature behind each block:
+
+**ATTACK** — same deficit-phase research as before, just run at the gentler end of it:
 - Garthe et al. 2011 (*Int J Sport Nutr Exerc Metab*): athletes cutting at 0.7%/wk
   gained lean mass; cutting at 1.4%/wk didn't gain lean mass but didn't lose it either,
   given high training frequency and high protein.
 - Nutrients 2021 review (PMC8471721): 0.5–1.0%/wk is the ceiling for resistance-trained
-  individuals to protect fat-free mass; protein 2.2–3.0 g/kg.
-- MATADOR-style diet-break literature: scheduled refeeds beat one continuous deficit for
-  adherence and blunt adaptive thermogenesis.
+  individuals to protect fat-free mass; protein 2.2–3.0 g/kg. ATTACK now sits near the
+  bottom of that range (~0.45%/wk) rather than the top, because respecting the floor
+  matters more than maximising the weekly rate.
+- MATADOR-style diet-break literature: a single weekly refeed (Saturday) still applies —
+  the deficit is real even if it's gentle.
 
-ATTACK runs close to 1.0%/wk with a single weekly refeed (Saturday). FINISH eases to
-~0.8%/wk but doubles refeed frequency to twice a week (Wednesday + Saturday) — spending
-the diet-break benefit where fatigue is highest instead of the same single day
-throughout. Protein holds at 210 g (2.4–2.6 g/kg across this weight range) in both blocks.
+**BUILD** — recomposition, not a cut or a bulk:
+- Barakat et al. 2020 (*Sports Medicine*): simultaneous fat loss and muscle gain at
+  maintenance-to-slight-surplus calories is realistic, especially in muscle groups with
+  adaptive headroom — which is why leg and lower-back priority in the training split
+  stays exactly as aggressive as it was in ATTACK.
+- High protein (210 g, unchanged from ATTACK) plus progressive overload is what decides
+  whether the surplus becomes muscle or fat — the training-day-only calorie bump exists
+  to put the extra calories where the muscle-building signal actually is.
+- No scheduled refeed in BUILD: refeeds are an adherence tool for a deficit, and BUILD
+  isn't running one.
 
 ### Meal Timing Protocol
 
@@ -258,14 +276,16 @@ The app enforces these automatically — previous session weight is shown at eve
 
 | Week | Phase | Expected Weight Change | What's Happening |
 |------|-------|----------------------|-----------------|
-| 1 | ATTACK | −1.5 to −2 kg | Mostly water + glycogen depletion — looks fast, don't get overconfident |
-| 2–4 | ATTACK | −0.85 to −1.0 kg/week | True fat loss, run near the upper edge of the sustainable rate; deload at week 4 |
-| 5–7 | FINISH | −0.65 to −0.8 kg/week | Rate eases slightly as refeeds double to twice a week |
-| 8 | FINISH | −0.5 to −0.7 kg/week | Final week — hold form and intensity |
+| 1 | ATTACK | −0.8 to −1.2 kg | Mostly water + glycogen depletion — looks fast, don't get overconfident |
+| 2–4 | ATTACK | −0.4 to −0.55 kg/week | True fat loss, deliberately gentle so the floor isn't overshot; deload at week 4 |
+| 5–8 | BUILD | ±0.1 to +0.3 kg/week | Deficit ends. Scale holds near 87 kg or creeps up slightly — that's muscle and glycogen, not fat returning; deload at week 9 |
+| 9–12 | BUILD | ±0.1 to +0.3 kg/week | Same pattern continues — judge the waist, not the scale, for whether it's working |
 
 **Block 1 (done):** 95 kg → 89 kg.
-**Sculpt Protocol target from 89 kg:** ~82 kg by the end of the 8-week ATTACK → FINISH
-block. The real metric is waist at the navel: 92 cm → 80 cm. The scale is a proxy.
+**Sculpt Protocol target from 89 kg:** ~87 kg by the end of the 4-week ATTACK block, held
+there through the 8-week BUILD block while visible muscle increases. The real metric is
+the waist at the navel: 92 cm → 80 cm, expected to hold flat (not necessarily keep
+shrinking) once BUILD starts. The scale is a proxy either way.
 
 ### Body Measurements to Track (Beyond Scale Weight)
 
@@ -437,10 +457,10 @@ type UserProfile = {
   name: string
   heightCm: number               // 191
   weightKg: number               // 89 (starting), updated weekly
-  goalCalories: number           // 2400 fallback — phases.ts drives the live number
+  goalCalories: number           // 2700 fallback — phases.ts drives the live number
   goalProtein: number            // 210
   goalWaterMl: number            // 4000
-  goalWeightKg: number           // 82
+  goalWeightKg: number           // 87
   split: Record<string, string>  // PPL timetable
 }
 
@@ -471,7 +491,7 @@ type WeeklyCheckIn = {
 ## Onboarding Flow
 
 1. Name, age, height, current weight
-2. Goal weight and timeline (default: 82 kg in 8 weeks)
+2. Goal weight and timeline (default: 87 kg in 12 weeks)
 3. Daily calorie and protein targets (defaults pre-filled from profile)
 4. Gym split configuration — PPL loaded as default, fully editable per day
 5. Supplement list setup — stack pre-loaded, editable
