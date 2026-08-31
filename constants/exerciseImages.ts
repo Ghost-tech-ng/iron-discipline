@@ -2,16 +2,16 @@ import * as FileSystem from 'expo-file-system/legacy';
 
 // All URLs sourced from wger.de live scan — open-source fitness DB (CC licence)
 // Every key below matches an exercise id used in constants/workouts.ts. wger has no
-// photo at all for a suitcase carry, so that one stays unmapped (ExerciseCard skips
-// rendering when the url is null). Stomach vacuum and side plank also have no exact
-// photo — they use the closest visual proxy wger has (hollow hold / front plank).
+// photo at all for a suitcase carry, Nordic Hamstring Curl, or Sliding Leg Curl, so
+// those stay unmapped (ExerciseCard skips rendering when the url is null). Stomach
+// vacuum and side plank also have no exact photo — they use the closest visual proxy
+// wger has (hollow hold / front plank).
 const IMAGE_URLS: Record<string, string> = {
   // ── Legs A (Monday) ───────────────────────────────────────────
   back_squat:            'https://wger.de/media/exercise-images/1801/60043328-1cfb-4289-9865-aaf64d5aaa28.jpg',
   hack_squat:            'https://wger.de/media/exercise-images/130/Narrow-stance-hack-squats-1-1024x721.png',
   leg_ext:               'https://wger.de/media/exercise-images/369/78c915d1-e46d-4d30-8124-65d68664c3ef.png',
   walking_lunge:         'https://wger.de/media/exercise-images/113/Walking-lunges-1.png',
-  seated_leg_curl_mon:   'https://wger.de/media/exercise-images/117/seated-leg-curl-large-1.png',
   back_ext_45:           'https://wger.de/media/exercise-images/1348/a3769120-2445-49f2-97d3-afc1238bfc2a.webp',
   standing_calf:         'https://wger.de/media/exercise-images/146/8b284904-d072-4381-a256-4c81d8fd9c1f.png',
   cable_crunch_mon:      'https://wger.de/media/exercise-images/91/Crunches-1.png',
@@ -40,7 +40,6 @@ const IMAGE_URLS: Record<string, string> = {
 
   // ── Legs B (Friday) ───────────────────────────────────────────
   rdl_fri:               'https://wger.de/media/exercise-images/1652/0306c8c0-70cc-45d4-92de-6fa72ceaa834.webp',
-  seated_leg_curl_fri:   'https://wger.de/media/exercise-images/117/seated-leg-curl-large-1.png',
   hip_thrust:            'https://wger.de/media/exercise-images/1642/a81ad922-caf5-47f8-99b4-640cb0717436.webp',
   bulgarian_split:       'https://wger.de/media/exercise-images/988/6283b258-a4d7-4833-84f7-a38987022d3d.png',
   roman_chair_ext:       'https://wger.de/media/exercise-images/128/Hyperextensions-1.png',

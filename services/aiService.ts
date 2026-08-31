@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { USER_TARGETS, type MealSlot } from '../constants/nutrition';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const TEXT_MODEL = 'llama-3.3-70b-versatile';
+const TEXT_MODEL = 'openai/gpt-oss-120b';
 const VISION_MODEL = 'qwen/qwen3.6-27b';
 
 function getKey(): string {
