@@ -137,7 +137,7 @@ function RootLayoutInner() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.base }}>
-      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={C.base} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.base } }}>
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />

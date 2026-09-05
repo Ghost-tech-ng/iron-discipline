@@ -12,7 +12,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+type FloatingTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0];
 
 const SCREEN_W = Dimensions.get('window').width;
 const BAR_MARGIN = 16;
@@ -74,7 +74,7 @@ const TAB_W = BAR_W / TAB_DEFS.length;
 const INDICATOR_INSET = 6;
 const INDICATOR_H = BAR_H - INDICATOR_INSET * 2;
 
-function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+function FloatingTabBar({ state, descriptors, navigation }: FloatingTabBarProps) {
   const C = useColors();
   const translateX = useSharedValue(state.index * TAB_W);
   const activeSession = useWorkoutStore((s) => s.activeSession);

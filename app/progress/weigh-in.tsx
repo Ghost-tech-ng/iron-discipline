@@ -118,7 +118,7 @@ export default function WeighInScreen() {
     },
     photoPreview: { width: '100%', height: '100%' },
     photoOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: 'rgba(0,0,0,0.4)',
       alignItems: 'center',
       justifyContent: 'center',

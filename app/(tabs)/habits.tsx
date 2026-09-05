@@ -101,7 +101,7 @@ function HabitRow({ id, label, completed, onToggle }: {
   const habitStyles = React.useMemo(() => StyleSheet.create({
     outer: { overflow: 'hidden' },
     flash: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: Colors.accentGreen,
       borderRadius: 10,
     },

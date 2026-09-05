@@ -105,13 +105,13 @@ export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: Rest
 
   const styles = React.useMemo(() => StyleSheet.create({
     container: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 100,
     },
     backdrop: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: '#000000cc',
     },
     card: {

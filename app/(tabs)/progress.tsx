@@ -14,8 +14,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { router } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -241,7 +240,7 @@ export default function ProgressScreen() {
     },
     photoImg: { width: '100%', height: '100%' },
     photoLabel: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       justifyContent: 'flex-end',
       padding: 6,
       backgroundColor: 'rgba(0,0,0,0.35)',
