@@ -58,7 +58,7 @@ const IMAGE_URLS: Record<string, string> = {
   rear_delt_fly:         '822/74affc0d-03b6-4f33-b5f4-a822a2615f68.png',
   skull_crushers:        '84/Lying-close-grip-triceps-press-to-chin-1.png',
   hammer_curl:           '86/Bicep-hammer-curl-1.png',
-  ab_wheel_sat:          '1573/a9ab402b-61ef-4d60-b91a-df52bf7f41a9.jpg',
+  ab_wheel_sat:          '41/34b37423-269f-43d4-9d29-d2a90eeaa6b4.png',
 };
 
 // Keyed by the exact swap string in constants/workouts.ts. Swaps without an entry
@@ -107,12 +107,41 @@ const SWAP_IMAGE_URLS: Record<string, string> = {
   'Cable Fly (chest height)':                     '71/Cable-crossover-1.png',
   'Flat Dumbbell Fly':                            '238/2fc242d3-5bdd-4f97-99bd-678adb8c96fc.png',
   'Barbell Rollout':                              '41/34b37423-269f-43d4-9d29-d2a90eeaa6b4.png',
+  'Stability Ball Rollout':                       '41/34b37423-269f-43d4-9d29-d2a90eeaa6b4.png',
+  'Safety Bar Squat':                             '1801/60043328-1cfb-4289-9865-aaf64d5aaa28.jpg',
+  'Smith Squat (feet forward and wide)':          '1747/af9647dd-04ec-4adf-9c07-4e33edb77277.jpg',
+  'Goblet Box Squat (wide stance)':               '203/1c052351-2af0-4227-aeb0-244008e4b0a8.jpeg',
+  'Smith Machine Split Squat':                    '1593/9815fcd6-cf40-4ddd-9b38-2eac25973de1.gif',
+  'Reverse Nordic':                               '909/159222d9-c1e4-46ae-89ee-6a2dfaab978d.png',
+  'Smith Machine Romanian Deadlift':              '507/13d526ab-12fc-461e-828a-051dd7c13fb1.png',
+  'Machine Hip Thrust':                           '1642/a81ad922-caf5-47f8-99b4-640cb0717436.webp',
+  'Smith Machine Calf Raise':                     '1243/53d4fabe-c994-4907-873f-8d82813a9832.png',
+  'Single-Leg Dumbbell Calf Raise (on a step)':   '622/9a429bd0-afd3-4ad0-8043-e9beec901c81.jpeg',
+  'Smith Machine Seated Calf Raise':              '1620/edd40e39-e337-4460-a8dd-6127d40ddd16.jpeg',
+  'Incline Machine Press':                        '925/67dbb1c9-b378-46f9-adb6-1f55b3d3007a.png',
+  'Assisted Dip Machine':                         '194/34600351-8b0b-4cb0-8daa-583537be15b0.png',
+  'Low-Incline Dumbbell Fly':                     '238/2fc242d3-5bdd-4f97-99bd-678adb8c96fc.png',
+  'Band Low-to-High Fly':                         '122/Incline-cable-flyes-1.png',
+  'Overhead Dumbbell Extension (two hands)':      '1519/fab7f641-27d4-40b5-8edd-1a0a137bfd94.gif',
+  'EZ-Bar Overhead Extension':                    '1519/fab7f641-27d4-40b5-8edd-1a0a137bfd94.gif',
+  'Overhead Cable Tricep Extension':              '659/a60452f1-e2ea-43fe-baa6-c1a2208d060c.png',
+  'Straight-Bar Pushdown':                        '1185/c5ca283d-8958-4fd8-9d59-a3f52a3ac66b.jpg',
+  'Dumbbell Skull Crusher':                       '84/Lying-close-grip-triceps-press-to-chin-1.png',
+  'Lat Pulldown':                                 '158/0d51a0f2-622f-434b-beb8-1a003c54712a.png',
+  'Lat Pulldown (wide grip)':                     '158/0d51a0f2-622f-434b-beb8-1a003c54712a.png',
+  'Assisted Pull-Up':                             '475/b0554016-16fd-4dbe-be47-a2a17d16ae0e.jpg',
+  'Assisted Pull-Up Machine':                     '475/b0554016-16fd-4dbe-be47-a2a17d16ae0e.jpg',
+  'Seal Row':                                     '1283/e7262f70-7512-408a-8d00-4c499ef632fc.jpg',
+  'Landmine Row (bar in a corner)':               '106/T-bar-row-1.png',
+  'Bayesian Cable Curl (facing away)':            '129/Standing-biceps-curl-1.png',
+  'Cross-Body Hammer Curl':                       '1567/0a8c155c-a48e-47e8-9df3-e39f025c6cad.png',
+  'Band Pallof Press':                            '1194/34c03421-0803-4859-a2b0-5710f2bd94cd.png',
 };
 
 const memCache: Record<string, string | null> = {};
 
 function ext(url: string): string {
-  const match = url.match(/\.(png|jpg|jpeg|webp)(\?|$)/i);
+  const match = url.match(/\.(png|jpg|jpeg|webp|gif)(\?|$)/i);
   return match ? `.${match[1].toLowerCase()}` : '.png';
 }
 

@@ -129,6 +129,24 @@ export default function DashboardScreen() {
     );
   }
 
+  function handleRestartProtocol() {
+    Alert.alert(
+      'Restart From Day 1',
+      'Today becomes Day 1 of week 1 again. Your logged meals, workouts and check-ins are kept.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Restart',
+          style: 'destructive',
+          onPress: () => {
+            startProtocol();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ]
+    );
+  }
+
   const { calories, protein, carbs, fat } = getTotals();
   const calorieRemaining = planTargets.calories - calories;
   const proteinRemaining = planTargets.protein - protein;
@@ -229,6 +247,20 @@ export default function DashboardScreen() {
       ...Typography.small,
       color: Colors.secondary,
       lineHeight: 18,
+    },
+    restartLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      gap: 5,
+      marginTop: 4,
+      paddingVertical: 4,
+    },
+    restartLinkText: {
+      ...Typography.caption,
+      color: Colors.muted,
+      fontWeight: '700',
+      letterSpacing: 0.6,
     },
     disciplineCard: {
       marginBottom: Spacing.lg,
@@ -387,6 +419,10 @@ export default function DashboardScreen() {
                 <Text style={[styles.dayChipText, { color: dayAccent }]}>{planTargets.dayLabel}</Text>
               </View>
               <Text style={styles.phaseRationale}>{planTargets.rationale}</Text>
+              <PressableScale style={styles.restartLink} onPress={handleRestartProtocol} hitSlop={8}>
+                <Ionicons name="refresh" size={13} color={Colors.muted} />
+                <Text style={styles.restartLinkText}>Restart from Day 1</Text>
+              </PressableScale>
             </Card>
           </Animated.View>
         ) : (
