@@ -74,7 +74,7 @@ const TAB_W = BAR_W / TAB_DEFS.length;
 const INDICATOR_INSET = 6;
 const INDICATOR_H = BAR_H - INDICATOR_INSET * 2;
 
-function FloatingTabBar({ state, descriptors, navigation }: FloatingTabBarProps) {
+function FloatingTabBar({ state, descriptors, navigateToTab }: FloatingTabBarProps) {
   const C = useColors();
   const translateX = useSharedValue(state.index * TAB_W);
   const activeSession = useWorkoutStore((s) => s.activeSession);
@@ -134,9 +134,8 @@ function FloatingTabBar({ state, descriptors, navigation }: FloatingTabBarProps)
           return (
             <Pressable
               key={route.key}
-              onPress={() => { if (!isFocused) navigation.navigate(route.name as never); }}
+              onPress={() => { if (!isFocused) navigateToTab(route.key); }}
               style={barStyles.tabItem}
-              android_ripple={null}
             >
               {def && <def.Icon color={color} />}
               <Text style={[barStyles.label, { color }]}>

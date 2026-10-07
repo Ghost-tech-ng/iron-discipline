@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { View, StyleSheet, type ViewProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '../../hooks/useColors';
 import { Radius, Spacing } from '../../constants/theme';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
+  style?: ViewProps['style'];
   glow?: string;
   padding?: number;
   accentColor?: string;
@@ -23,7 +23,7 @@ export function Card({
 }: CardProps) {
   const Colors = useColors();
 
-  const containerStyle: StyleProp<ViewStyle> = [
+  const containerStyle: ViewProps['style'] = [
     {
       backgroundColor: Colors.surface,
       borderRadius: Radius.lg,
