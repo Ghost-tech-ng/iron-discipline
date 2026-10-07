@@ -8,8 +8,8 @@ import type { WeeklyCheckIn } from '../types';
  * in a day and says nothing about where the fat went. Waist at the navel tracks
  * abdominal and flank fat directly, and waist:hip separates "the fat is coming
  * off the middle" from "everything is shrinking". Weight should trend down
- * through ATTACK (weeks 1-4, toward the 87kg floor), then hold roughly flat
- * through BUILD (weeks 5-12) while the waist stays flat and visible muscle
+ * through ATTACK (weeks 1-10, toward ~84kg / 12% body fat), then climb slowly
+ * through BUILD (weeks 11-16) while the waist stays flat and visible muscle
  * increases — a rising scale in BUILD is expected, not a reversal, as long as
  * the waist isn't rising with it. A refeed day bumping the scale 1-2kg
  * overnight is glycogen and water either way.

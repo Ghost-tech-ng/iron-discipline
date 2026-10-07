@@ -199,6 +199,29 @@ export default function HabitsScreen() {
   const [resetting, setResetting] = useState(false);
   const pct = completionPercent();
 
+  function handleRestartProtocol() {
+    Alert.alert(
+      'Restart The Sculpt Protocol',
+      'Turns the protocol off and puts the Start Protocol button back on the dashboard. Your logged meals, workouts and check-ins are kept.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Turn Off',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await useUserStore.getState().stopProtocol();
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.navigate('/(tabs)');
+            } catch (e) {
+              Alert.alert('Error', 'Could not reset the protocol. Try again.');
+            }
+          },
+        },
+      ]
+    );
+  }
+
   async function handleReset() {
     Alert.alert(
       'Reset All Data',
@@ -308,6 +331,21 @@ export default function HabitsScreen() {
       color: Colors.secondary,
       lineHeight: 20,
     },
+    restartBtn: {
+      alignItems: 'center',
+      paddingVertical: 14,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: Colors.accent + '40',
+      backgroundColor: Colors.accent + '10',
+      marginBottom: Spacing.sm,
+    },
+    restartText: {
+      ...Typography.small,
+      color: Colors.accent,
+      fontWeight: '600',
+      letterSpacing: 0.3,
+    },
     resetBtn: {
       alignItems: 'center',
       paddingVertical: 14,
@@ -380,6 +418,12 @@ export default function HabitsScreen() {
               Each habit has a 20% weight in your Discipline Score. Miss all five = 30 pts off your score, regardless of your workout. Sleep and steps are the two most underestimated factors in body recomposition.
             </Text>
           </Card>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(300).duration(450)}>
+          <PressableScale onPress={handleRestartProtocol} style={styles.restartBtn}>
+            <Text style={styles.restartText}>Restart Protocol</Text>
+          </PressableScale>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(320).duration(450)}>

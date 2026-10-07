@@ -70,6 +70,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'The rectus femoris crosses the hip, so it stays slack in every squat pattern and gets almost nothing from them. Leg extensions grow all three of its regions — most at 75% femur length. This is the single biggest gap in a squat-only leg day.',
         notes: 'Hold the top contraction 1 second. Last set: after failure, do 6–8 half reps from the bottom stretched position.',
+        swaps: ['Sissy Squat (hold a post)', 'Reverse Nordic'],
       },
       {
         id: 'walking_lunge',
@@ -88,12 +89,13 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         id: 'seated_leg_curl_mon',
         name: 'Nordic Hamstring Curl',
         muscleGroups: ['hamstrings'],
-        sets: 4,
-        repsMin: 6,
-        repsMax: 10,
-        restSeconds: 90,
+        sets: 3,
+        repsMin: 3,
+        repsMax: 6,
+        restSeconds: 120,
         why: 'No seated leg curl machine in this gym, so this is the swap — Maeo 2024 found seated curls out-grow Nordic curls, but Nordic is the next best thing and needs no equipment beyond an anchor for your ankles.',
-        notes: 'Kneel, ankles anchored (partner holds them or hook under a pad), lower yourself as slowly as possible under control, catch yourself with your hands at the bottom. The slow lowering is the whole exercise — do not rush it.',
+        notes: 'Kneel, ankles anchored (partner holds them or hook under a pad), lower yourself as slowly as possible under control, catch yourself with your hands at the bottom and push back up — only the lowering counts. Most lifters cannot control the full range at first: lower as far as you can hold it, and add reps before you add range. Expect heavy soreness the first two weeks.',
+        swaps: ['Lying Leg Curl (machine)', 'Swiss Ball Leg Curl'],
       },
       {
         id: 'back_ext_45',
@@ -118,6 +120,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'Gastrocnemius. It only loads with a straight knee, which is why it needs its own slot separate from the seated version on Friday.',
         notes: 'Full stretch at the bottom, 2-second pause. No bouncing.',
+        swaps: ['Smith Machine Calf Raise', 'Single-Leg Dumbbell Calf Raise (on a step)'],
       },
       {
         id: 'cable_crunch_mon',
@@ -129,6 +132,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 60,
         why: 'A direct comparison found the crunch produced 36% greater rectus abdominis thickness change than the leg raise. Abs are muscle — visible abs need thickness, and thickness needs progressive load, not endless bodyweight reps.',
         notes: 'Add weight weekly. Curl the spine down rib-to-hip — this is not a hip hinge.',
+        swaps: ['Weighted Decline Crunch', 'Weighted Floor Crunch'],
       },
       {
         id: 'vacuum_mon',
@@ -154,7 +158,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
     ],
     coolDown: [
       { name: 'Standing Quad Stretch', duration: '45 secs each side', description: 'Stand on one leg, pull the other heel to your glute, keep the knees together. Quads carry the bulk of today\'s load — restoring resting length reduces next-day stiffness.' },
-      { name: 'Supine Hamstring Stretch', duration: '45 secs each side', description: 'Lie on your back, pull one leg toward your chest as straight as you can. Necessary after seated curls, which train the hamstring in a deeply shortened-to-lengthened range.' },
+      { name: 'Supine Hamstring Stretch', duration: '45 secs each side', description: 'Lie on your back, pull one leg toward your chest as straight as you can. Necessary after Nordic curls, which load the hamstring hardest at its longest length.' },
       { name: 'Child\'s Pose', duration: '60 secs', description: 'Kneel, sit back on heels, arms extended forward. Decompresses the spine and lengthens the erectors after their first direct loading of the week.' },
       { name: 'Pigeon Pose (Figure-4)', duration: '60 secs each side', description: 'Cross one ankle over the opposite knee, pull both toward the chest. Releases the piriformis and glute medius compressed under heavy squatting.' },
       { name: 'Standing Calf Stretch', duration: '30 secs each side', description: 'Foot flat, straight knee, lean into a wall. Restricted ankle dorsiflexion caps squat depth — this directly addresses it.' },
@@ -193,6 +197,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         compound: true,
         why: 'Flat pressing recruits roughly 30% more sternal (mid and lower) pec than incline. No single press angle builds a complete chest — you need both, and this is the one you can load heaviest.',
         notes: 'Shoulder blades pinned back and down. Touch the chest, no bounce. Primary strength lift — log it.',
+        swaps: ['Dumbbell Bench Press', 'Machine Chest Press'],
       },
       {
         id: 'weighted_dip',
@@ -218,6 +223,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'The only chest movement that keeps tension on the pec at full stretch. A 2025 meta-analysis of 8 studies found training at long muscle lengths beat short-length training for hypertrophy (ES 0.283, p = 0.036). Presses lose tension at the bottom; this does not.',
         notes: 'Cables set low, sweep up and in to meet at collarbone height. Last set: 8 half reps in the stretched position after failure.',
+        swaps: ['Low-Incline Dumbbell Fly', 'Band Low-to-High Fly'],
       },
       {
         id: 'seated_ohp',
@@ -230,6 +236,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         compound: true,
         why: 'Front and lateral delt under heavy load. Dumbbells over a barbell here because the pressing volume this block is already high and the free path is easier on the shoulder.',
         notes: 'Back supported, strict — no leg drive, no lower back arch.',
+        swaps: ['Machine Shoulder Press', 'Seated Barbell Overhead Press'],
       },
       {
         id: 'lateral_raises_tue',
@@ -241,6 +248,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 60,
         why: 'Shoulder width is the other half of a slim waist. The eye reads the shoulder-to-waist ratio, not the waist alone — 2 cm of extra delt does as much for your taper as 2 cm off the waist, and unlike the waist you can build it during the deficit.',
         notes: '3-second lowering, no swing. If you need momentum the weight is wrong.',
+        swaps: ['Cable Lateral Raise', 'Machine Lateral Raise'],
       },
       {
         id: 'oh_tricep_ext',
@@ -253,6 +261,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'The triceps long head crosses the shoulder, so it only reaches full stretch with the arm overhead. Pushdowns alone leave the biggest of the three heads undertrained.',
         notes: 'Elbows tight, full stretch behind the head.',
+        swaps: ['Overhead Dumbbell Extension (two hands)', 'EZ-Bar Overhead Extension'],
       },
       {
         id: 'rope_pushdown',
@@ -263,6 +272,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMax: 15,
         restSeconds: 60,
         notes: 'Spread the rope at the bottom, hard lockout.',
+        swaps: ['Straight-Bar Pushdown', 'Close-Grip Bench Press'],
       },
       {
         id: 'hanging_leg_raise_tue',
@@ -275,6 +285,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         bodyweight: true,
         why: 'Biases the lower rectus abdominis — the region that stays hidden longest and the one you specifically want visible. It does not burn the fat off your lower stomach, but it builds the muscle that shows once the fat is gone.',
         notes: 'Curl the pelvis up at the top. If your legs only swing, the abs are not doing the work — bend the knees and slow down.',
+        swaps: ["Captain's Chair Knee Raise", 'Lying Leg Raise'],
       },
     ],
     warmUp: [
@@ -350,6 +361,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'Full overhead lat stretch that a bilateral bar restricts, plus an anti-rotation demand through the trunk on every rep — two jobs from one movement.',
         notes: 'Reps per side. Let the shoulder travel all the way up at the top.',
+        swaps: ['Neutral-Grip Lat Pulldown', 'One-Arm Dumbbell Row (long stretch)'],
       },
       {
         id: 'face_pulls',
@@ -361,6 +373,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 60,
         why: 'Rear delts and external rotators. Non-negotiable — this is what keeps your shoulders healthy under the pressing volume this block carries.',
         notes: 'Pull to the forehead, elbows high, externally rotate at the end.',
+        swaps: ['Band Face Pull', 'Incline Bench Reverse Fly'],
       },
       {
         id: 'bb_curl',
@@ -371,6 +384,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMax: 12,
         restSeconds: 60,
         notes: 'No swinging. Elbows stay pinned to your sides.',
+        swaps: ['EZ-Bar Curl', 'Dumbbell Curl'],
       },
       {
         id: 'incline_db_curl',
@@ -383,6 +397,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'Sitting the shoulder behind the body puts the biceps long head at full stretch — the position that drives the most growth and the one standing curls never reach.',
         notes: 'Bench at 45–60°, let the arms hang fully behind you.',
+        swaps: ['Bayesian Cable Curl (facing away)', 'Preacher Curl'],
       },
       {
         id: 'pallof_press_wed',
@@ -395,6 +410,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         perSide: true,
         why: 'This choice is deliberate. Loaded Russian twists and weighted side bends grow the obliques thicker, and thicker obliques are a wider waist — the exact opposite of what you asked for. Pallof presses train the same muscles isometrically for stability without adding width.',
         notes: 'Reps per side. Press straight out and resist the rotation. Do not twist.',
+        swaps: ['Band Pallof Press', 'Half-Kneeling Cable Chop (light, no twist)'],
       },
       {
         id: 'suitcase_carry',
@@ -407,7 +423,8 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         perSide: true,
         isTimed: true,
         why: 'Anti-lateral-flexion. The deep core braces against a load it has to resist rather than move — the same reason it builds trunk stiffness without hypertrophying the obliques for width.',
-        notes: 'Metres per side. One heavy dumbbell, walk tall, do not lean away from it.',
+        notes: 'Seconds per side. One heavy dumbbell, walk tall, do not lean away from it.',
+        swaps: ['Single-Arm Kettlebell Carry', 'Single-Arm Dumbbell March (in place)'],
       },
     ],
     warmUp: [
@@ -447,6 +464,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'Puts the hamstring under load at its longest, and holds the erectors in a hard isometric for the entire set. Two of this block\'s three priority areas in one movement.',
         notes: 'Hips back, bar dragging the thighs, 4-second lowering. Stop the moment your lower back rounds — that is your range today.',
+        swaps: ['Dumbbell Romanian Deadlift', 'Smith Machine Romanian Deadlift'],
       },
       {
         id: 'seated_leg_curl_fri',
@@ -458,6 +476,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 75,
         why: 'Second hamstring session of the week — twice-weekly frequency per muscle beats once for growth. No seated curl machine here, and back-to-back heavy Nordics would wreck recovery, so this is a lighter isolation move that still isolates the knee-flexion function RDL does not.',
         notes: 'On your back, heels on a towel or sliders (or paper plates on carpet), hips lifted. Curl your heels in toward your glutes, then slide them back out under control.',
+        swaps: ['Lying Leg Curl (machine)', 'Swiss Ball Leg Curl'],
       },
       {
         id: 'hip_thrust',
@@ -483,6 +502,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         perSide: true,
         why: 'Unilateral quad and glute under a deep stretch, with the rear leg\'s hip flexor lengthening at the same time. Brutal, and the highest return per set on this list.',
         notes: 'Reps per leg. Rear foot elevated, front shin near-vertical, sink deep.',
+        swaps: ['Smith Machine Split Squat', 'Dumbbell Reverse Lunge'],
       },
       {
         id: 'roman_chair_ext',
@@ -506,6 +526,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 90,
         why: 'Foot position high on the platform shifts load off the quad and onto the glutes and hamstrings at a deep hip angle — posterior chain volume without more spinal loading after RDLs.',
         notes: 'Feet high and wide, toes slightly out. Full depth, do not let the lower back lift off the pad.',
+        swaps: ['Smith Squat (feet forward and wide)', 'Goblet Box Squat (wide stance)'],
       },
       {
         id: 'seated_calf',
@@ -517,6 +538,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 60,
         why: 'The soleus only loads with a bent knee, so Monday\'s standing raises miss it entirely. It is also the larger of the two calf muscles by volume.',
         notes: 'Deep stretch at the bottom, 1-second pause at the top.',
+        swaps: ['Seated Dumbbell Calf Raise (weight on knees)', 'Smith Machine Seated Calf Raise'],
       },
       {
         id: 'decline_crunch',
@@ -528,6 +550,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 60,
         why: 'Loaded spinal flexion at a longer starting range than a floor crunch. Second direct rectus abdominis session of the week — abs respond to frequency and load exactly like any other muscle.',
         notes: 'Hold a plate to the chest. Curl up rib-to-hip, do not just hinge at the hips.',
+        swaps: ['Weighted Floor Crunch', 'Cable Crunch'],
       },
       {
         id: 'dead_bug',
@@ -590,6 +613,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         compound: true,
         why: 'Second upper-chest session of the week at a different angle to Tuesday. Chest is a stated growth priority, so it gets two dedicated hits and both start with it — 15–30° changes in bench angle measurably shift where peak activation lands.',
         notes: 'Bench at 30°. Touch high on the chest, just below the collarbone.',
+        swaps: ['Incline Smith Press', 'Incline Dumbbell Press'],
       },
       {
         id: 'pullups_sat',
@@ -614,6 +638,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         lengthenedPartials: true,
         why: 'Elbows fixed means the pec does all the work through a clean arc — the peak-contraction end of the chest that presses under-stimulate.',
         notes: 'Hold the squeeze 1 second. Last set: partials from the stretched position after failure.',
+        swaps: ['Cable Fly (chest height)', 'Flat Dumbbell Fly'],
       },
       {
         id: 'tbar_row',
@@ -626,6 +651,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         compound: true,
         why: 'Second back-thickness angle of the week. A neutral close grip pulls the mid-back and lower lats harder than the wide grip used on Wednesday.',
         notes: 'Chest up, pull to the sternum, control the negative.',
+        swaps: ['Landmine Row (bar in a corner)', 'Seated Cable Row (close grip)'],
       },
       {
         id: 'cable_lateral',
@@ -637,6 +663,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         restSeconds: 45,
         why: 'A cable keeps tension on the delt at the bottom, where a dumbbell has almost none. Second delt session of the week because shoulder width is doing real work for your taper.',
         notes: 'One arm at a time, cable behind you, lead with the elbow.',
+        swaps: ['Lean-Away Dumbbell Lateral Raise', 'Machine Lateral Raise'],
       },
       {
         id: 'rear_delt_fly',
@@ -647,6 +674,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMax: 20,
         restSeconds: 45,
         why: 'Rear delts round the shoulder out from the side and pull your posture back — the difference between wide shoulders and a wide, upright frame.',
+        swaps: ['Cable Rear Delt Fly', 'Incline Bench Reverse Fly'],
       },
       {
         id: 'skull_crushers',
@@ -657,6 +685,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMax: 12,
         restSeconds: 60,
         notes: 'Lower behind the head, not to the forehead — keeps the long head loaded through the stretch.',
+        swaps: ['Dumbbell Skull Crusher', 'Overhead Cable Tricep Extension'],
       },
       {
         id: 'hammer_curl',
@@ -667,6 +696,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         repsMax: 12,
         restSeconds: 60,
         why: 'The brachialis sits underneath the biceps and pushes it up as it grows. This is arm thickness, not arm peak — and it fills the gap between biceps and triceps from the side.',
+        swaps: ['Rope Cable Hammer Curl', 'Cross-Body Hammer Curl'],
       },
       {
         id: 'ab_wheel_sat',
@@ -679,6 +709,7 @@ export const WEEKLY_SPLIT: Record<DayOfWeek, WorkoutSession | null> = {
         bodyweight: true,
         why: 'The hardest anti-extension movement available — the rectus abdominis and the deep core resisting the spine being pulled into extension under a long lever.',
         notes: 'Stop the instant your lower back starts to arch. That point is your honest current range — extend it week by week.',
+        swaps: ['Barbell Rollout', 'Stability Ball Rollout'],
       },
       {
         id: 'side_plank_sat',
@@ -735,7 +766,7 @@ export const SESSION_COLORS: Record<string, string> = {
 /** Weekly set counts per priority area, for the "why this split" panel. */
 export const WEEKLY_VOLUME_SUMMARY: readonly { area: string; sets: number; note: string }[] = [
   { area: 'Quads', sets: 13, note: 'Squat, hack squat, lunge, leg extension — was 13 unfocused sets, now front-loaded on Monday' },
-  { area: 'Hamstrings', sets: 15, note: 'Nordic and sliding curls twice weekly, plus RDL and leg press' },
+  { area: 'Hamstrings', sets: 13, note: 'Nordic and sliding curls twice weekly, plus RDL and leg press' },
   { area: 'Glutes', sets: 12, note: 'Hip thrust, split squat, high-foot leg press, back extensions' },
   { area: 'Lower back', sets: 7, note: 'Was 0 direct sets. Now 45° extensions, Roman chair, plus heavy hinging' },
   { area: 'Chest', sets: 14, note: 'Three angles on Tuesday, two on Saturday — upper chest leads both sessions' },

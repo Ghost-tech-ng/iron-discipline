@@ -1,5 +1,6 @@
 import '../global.css';
 import React, { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -19,7 +20,7 @@ import { loadUserProfile, getProtocolStartOverride } from '../services/userServi
 import { loadTodayMeals, loadTodayWater, loadTodaySupplements } from '../services/nutritionService';
 import { loadTodayDisciplineState, loadWeeklyCheckIns } from '../services/disciplineService';
 import { syncToCloud, isOnline } from '../services/syncService';
-import { isMongoConfigured } from '../services/mongoService';
+import { isCloudConfigured } from '../services/firestoreService';
 import { getActivePlanStatus } from '../constants/plan';
 import { useUserStore } from '../store/userStore';
 import { useNutritionStore } from '../store/nutritionStore';
@@ -33,8 +34,25 @@ import { Colors } from '../constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
+async function scheduleReminders() {
+  const granted = await requestNotificationPermissions();
+  if (!granted) return;
+  const ps = getActivePlanStatus();
+  const goal = ps.isActive ? ps.targets.protein : useUserStore.getState().profile.goalProtein;
+  await scheduleAllNotifications(goal, useDisciplineStore.getState().workoutDone);
+}
+
+/** Startup only covers a cold launch — this catches the app being left open or resumed across midnight. */
+async function handlePossibleNewDay() {
+  try {
+    if (await checkAndRunDailyReset()) await scheduleReminders();
+  } catch (e) {
+    console.warn('Day change handling failed:', e);
+  }
+}
+
 async function runSync() {
-  if (!isMongoConfigured()) return;
+  if (!isCloudConfigured()) return;
   const { setSyncing, setLastSynced, setError } = useSyncStore.getState();
   setSyncing(true);
   try {
@@ -88,12 +106,7 @@ export default function RootLayout() {
         useProgressStore.getState().loadCheckIns(checkIns);
         useCustomFoodStore.getState().hydrate();
 
-        const granted = await requestNotificationPermissions();
-        if (granted) {
-          const ps = getActivePlanStatus();
-          const goal = ps.isActive ? ps.targets.protein : (savedProfile?.goalProtein ?? 200);
-          await scheduleAllNotifications(goal);
-        }
+        await scheduleReminders();
 
         // Auto-sync on startup if online
         const online = await isOnline();
@@ -111,9 +124,17 @@ export default function RootLayout() {
     prepare();
   }, [fontsLoaded]);
 
-  // Poll every 30 seconds for connectivity — sync when we come back online
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') handlePossibleNewDay();
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Poll every 30 seconds for connectivity (sync when we come back online) and midnight rollover
   useEffect(() => {
     const interval = setInterval(async () => {
+      handlePossibleNewDay();
       const online = await isOnline();
       useSyncStore.getState().setOnline(online);
       if (online && !wasOnlineRef.current) {

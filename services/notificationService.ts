@@ -1,5 +1,9 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { WEEKLY_SPLIT } from '../constants/workouts';
+import { getProtocolStatus, mondayIndex } from '../constants/phases';
+import { localIso } from '../utils/date';
+import type { DayOfWeek } from '../types';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -101,68 +105,6 @@ function buildSchedule(proteinGoal: number): Array<{
       body: 'Magnesium glycinate before sleep. Better sleep = better muscle recovery.',
       trigger: { type: 'daily', hour: 22, minute: 0 },
     },
-    // --- Workout reminders (training days) ---
-    {
-      identifier: 'workout_mon',
-      title: 'Push Day — Chest & Shoulders',
-      body: 'Bench press, OHP, incline — build the width. Get it done today.',
-      trigger: { type: 'weekly', weekday: 2, hour: 7, minute: 0 },
-    },
-    {
-      identifier: 'workout_tue',
-      title: 'Pull Day — Back & Biceps',
-      body: 'Rows, pulldowns, curls. The back you build today shows in 8 weeks.',
-      trigger: { type: 'weekly', weekday: 3, hour: 7, minute: 0 },
-    },
-    {
-      identifier: 'workout_wed',
-      title: 'Leg Day — Quads',
-      body: 'Squat day. Heaviest session of the week. Don\'t negotiate with yourself.',
-      trigger: { type: 'weekly', weekday: 4, hour: 7, minute: 0 },
-    },
-    {
-      identifier: 'workout_fri',
-      title: 'Upper Body — Full Compound',
-      body: 'Re-stimulus day — hit everything with fresh strength. End the week properly.',
-      trigger: { type: 'weekly', weekday: 6, hour: 7, minute: 0 },
-    },
-    {
-      identifier: 'workout_sat',
-      title: 'Lower Body — Posterior Chain',
-      body: 'RDLs, leg curls, hip thrusts. Glutes and hamstrings — don\'t skip this.',
-      trigger: { type: 'weekly', weekday: 7, hour: 7, minute: 0 },
-    },
-    // --- Evening workout reminders (training days, if not done) ---
-    {
-      identifier: 'workout_eve_mon',
-      title: 'Push Day Not Done',
-      body: 'Push session still pending. Even 40 focused minutes counts. Don\'t let Monday go.',
-      trigger: { type: 'weekly', weekday: 2, hour: 19, minute: 0 },
-    },
-    {
-      identifier: 'workout_eve_tue',
-      title: 'Pull Day Not Done',
-      body: 'Back session still pending. Pull day skipped = missed protein synthesis opportunity.',
-      trigger: { type: 'weekly', weekday: 3, hour: 19, minute: 0 },
-    },
-    {
-      identifier: 'workout_eve_wed',
-      title: 'Leg Day Not Done',
-      body: 'Squat day still pending. Legs are your biggest driver of fat loss. Get it done.',
-      trigger: { type: 'weekly', weekday: 4, hour: 19, minute: 0 },
-    },
-    {
-      identifier: 'workout_eve_fri',
-      title: 'Upper Body Not Done',
-      body: 'Upper session pending. You have time tonight — finish the training week.',
-      trigger: { type: 'weekly', weekday: 6, hour: 19, minute: 0 },
-    },
-    {
-      identifier: 'workout_eve_sat',
-      title: 'Lower Body Not Done',
-      body: 'Posterior chain session still pending. Finish the week — you\'re one session away.',
-      trigger: { type: 'weekly', weekday: 7, hour: 19, minute: 0 },
-    },
     // --- Evening protein check ---
     {
       identifier: 'protein_evening',
@@ -191,56 +133,126 @@ function buildSchedule(proteinGoal: number): Array<{
       body: 'First thing after waking, after toilet, before food or water. Log your weight now.',
       trigger: { type: 'weekly', weekday: 2, hour: 6, minute: 30 },
     },
-    // --- Rest day protein reminder ---
-    {
-      identifier: 'rest_day_protein_sun',
-      title: 'Rest Day — Hit Protein Anyway',
-      body: `Rest days still need ${proteinGoal}g protein. Muscle doesn\'t know it\'s Sunday.`,
-      trigger: { type: 'weekly', weekday: 1, hour: 13, minute: 0 },
-    },
-    {
-      identifier: 'rest_day_protein_thu',
-      title: 'Rest Day — Hit Protein Anyway',
-      body: `${proteinGoal}g protein even on rest days. Recovery is built at the table, not the gym.`,
-      trigger: { type: 'weekly', weekday: 5, hour: 13, minute: 0 },
-    },
   ];
 }
 
-export async function scheduleAllNotifications(proteinGoal = 200): Promise<void> {
+const DAY_KEYS: DayOfWeek[] = [
+  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+];
+
+/**
+ * How far ahead the split-based reminders are laid out. They are dated rather
+ * than weekly so they follow WEEKLY_SPLIT and deload weeks, and so today's
+ * evening nag can be cancelled once the session is logged. Rescheduled on every
+ * launch and day change; if the app goes unopened this long, they stop.
+ */
+const DAYS_AHEAD = 14;
+
+const eveningReminderId = (iso: string) => `workout_eve_${iso}`;
+
+function at(date: Date, hour: number, minute: number): Date {
+  const d = new Date(date);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
+function buildDatedSchedule(
+  proteinGoal: number,
+  workoutDoneToday: boolean
+): Array<{ identifier: string; title: string; body: string; date: Date }> {
+  const out: Array<{ identifier: string; title: string; body: string; date: Date }> = [];
+  const now = new Date();
+
+  for (let i = 0; i < DAYS_AHEAD; i++) {
+    const day = new Date(now);
+    day.setDate(now.getDate() + i);
+    const iso = localIso(day);
+    const session = WEEKLY_SPLIT[DAY_KEYS[mondayIndex(day)]];
+
+    if (!session) {
+      out.push({
+        identifier: `rest_protein_${iso}`,
+        title: 'Rest Day — Hit Protein Anyway',
+        body: `${proteinGoal}g protein even on rest days. Recovery is built at the table, not the gym.`,
+        date: at(day, 13, 0),
+      });
+      continue;
+    }
+
+    const status = getProtocolStatus(iso);
+    const shortName = session.label.split(' — ')[0];
+    const lifts = session.exercises.slice(0, 3).map((e) => e.name).join(' · ');
+
+    out.push({
+      identifier: `workout_${iso}`,
+      title: status.isDeloadWeek ? `${shortName} — Deload` : session.label,
+      body: status.isDeloadWeek
+        ? 'Deload week: same lifts, 60% of the sets. Show up, move well, recover.'
+        : `${lifts}. Get it done today.`,
+      date: at(day, 7, 0),
+    });
+
+    if (!(i === 0 && workoutDoneToday)) {
+      out.push({
+        identifier: eveningReminderId(iso),
+        title: `${shortName} Not Done`,
+        body: 'Session still pending. Even 40 focused minutes counts — do not let today go.',
+        date: at(day, 19, 0),
+      });
+    }
+  }
+
+  return out.filter((n) => n.date.getTime() > now.getTime());
+}
+
+function channel() {
+  return Platform.OS === 'android' ? { channelId: 'iron-discipline' } : {};
+}
+
+export async function scheduleAllNotifications(proteinGoal = 200, workoutDoneToday = false): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
   const { SchedulableTriggerInputTypes } = Notifications;
-  const schedule = buildSchedule(proteinGoal);
+  const repeating = buildSchedule(proteinGoal).map(({ identifier, title, body, trigger }) => {
+    const notifTrigger: Notifications.SchedulableNotificationTriggerInput =
+      trigger.type === 'daily'
+        ? ({
+            type: SchedulableTriggerInputTypes.DAILY,
+            hour: trigger.hour,
+            minute: trigger.minute,
+          } as Notifications.DailyTriggerInput)
+        : ({
+            type: SchedulableTriggerInputTypes.WEEKLY,
+            weekday: trigger.weekday,
+            hour: trigger.hour,
+            minute: trigger.minute,
+          } as Notifications.WeeklyTriggerInput);
 
-  await Promise.allSettled(
-    schedule.map(({ identifier, title, body, trigger }) => {
-      const notifTrigger: Notifications.SchedulableNotificationTriggerInput =
-        trigger.type === 'daily'
-          ? ({
-              type: SchedulableTriggerInputTypes.DAILY,
-              hour: trigger.hour,
-              minute: trigger.minute,
-            } as Notifications.DailyTriggerInput)
-          : ({
-              type: SchedulableTriggerInputTypes.WEEKLY,
-              weekday: (trigger as WeeklyTrigger).weekday,
-              hour: trigger.hour,
-              minute: trigger.minute,
-            } as Notifications.WeeklyTriggerInput);
+    return Notifications.scheduleNotificationAsync({
+      identifier,
+      content: { title, body, sound: true, ...channel() },
+      trigger: notifTrigger,
+    });
+  });
 
-      return Notifications.scheduleNotificationAsync({
-        identifier,
-        content: {
-          title,
-          body,
-          sound: true,
-          ...(Platform.OS === 'android' ? { channelId: 'iron-discipline' } : {}),
-        },
-        trigger: notifTrigger,
-      });
+  const dated = buildDatedSchedule(proteinGoal, workoutDoneToday).map(({ identifier, title, body, date }) =>
+    Notifications.scheduleNotificationAsync({
+      identifier,
+      content: { title, body, sound: true, ...channel() },
+      trigger: { type: SchedulableTriggerInputTypes.DATE, date },
     })
   );
+
+  await Promise.allSettled([...repeating, ...dated]);
+}
+
+/** Called when today's session is logged, so the 19:00 "Not Done" reminder doesn't fire. */
+export async function cancelTodayWorkoutReminder(): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(eveningReminderId(localIso()));
+  } catch {
+    // Not critical
+  }
 }
 
 export async function cancelAllNotifications(): Promise<void> {

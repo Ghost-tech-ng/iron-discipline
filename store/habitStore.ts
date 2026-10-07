@@ -2,14 +2,16 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { HabitItem } from '../types';
+import { localIso } from '../utils/date';
+import { saveHabitLog } from '../services/habitService';
 
-const todayStr = () => new Date().toISOString().split('T')[0];
+const todayStr = () => localIso();
 
 const DEFAULT_HABITS: HabitItem[] = [
   { id: 'steps', label: '8,000+ Steps', completed: false, weight: 17 },
   { id: 'sleep', label: '7–8 Hours Sleep', completed: false, weight: 17 },
   { id: 'no_junk', label: 'No Junk Food', completed: false, weight: 17 },
-  { id: 'water', label: 'Water Goal (3.5L)', completed: false, weight: 17 },
+  { id: 'water', label: 'Water Goal (4L)', completed: false, weight: 17 },
   { id: 'cardio', label: 'Cardio / Active Rest', completed: false, weight: 16 },
   { id: 'core', label: '2-Min Core', completed: false, weight: 16 },
 ];
@@ -29,12 +31,15 @@ export const useHabitStore = create<HabitStore>()(
       habits: DEFAULT_HABITS,
       date: todayStr(),
 
-      toggleHabit: (id) =>
+      toggleHabit: (id) => {
+        const habit = get().habits.find((h) => h.id === id);
+        if (!habit) return;
+        const completed = !habit.completed;
         set((state) => ({
-          habits: state.habits.map((h) =>
-            h.id === id ? { ...h, completed: !h.completed } : h
-          ),
-        })),
+          habits: state.habits.map((h) => (h.id === id ? { ...h, completed } : h)),
+        }));
+        saveHabitLog(id, completed).catch((e) => console.warn('Failed to save habit log:', e));
+      },
 
       resetHabits: () =>
         set({

@@ -1,11 +1,10 @@
 // Cloud sync via Firebase Firestore REST API
-// (Same exports as before so nothing else needs to change)
 
 const PROJECT_ID = process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? '';
 const API_KEY = process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '';
 const BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
-export function isMongoConfigured(): boolean {
+export function isCloudConfigured(): boolean {
   return PROJECT_ID.length > 0 && API_KEY.length > 0;
 }
 
@@ -33,7 +32,7 @@ function toFSDoc(obj: Record<string, unknown>): { fields: Record<string, FSPrimi
   return { fields };
 }
 
-async function patchDoc(collection: string, docId: string, data: Record<string, unknown>): Promise<void> {
+export async function patchDoc(collection: string, docId: string, data: Record<string, unknown>): Promise<void> {
   const safeId = encodeURIComponent(String(docId).replace(/\//g, '_'));
   const url = `${BASE_URL}/${collection}/${safeId}?key=${API_KEY}`;
   const res = await fetch(url, {
@@ -45,23 +44,4 @@ async function patchDoc(collection: string, docId: string, data: Record<string, 
     const text = await res.text();
     throw new Error(`Firestore write failed (${res.status}): ${text}`);
   }
-}
-
-export async function upsertOne(
-  collection: string,
-  filter: Record<string, unknown>,
-  doc: Record<string, unknown>
-): Promise<void> {
-  const id = String(filter.id ?? filter._id ?? JSON.stringify(filter));
-  await patchDoc(collection, id, doc);
-}
-
-export async function upsertMany(
-  collection: string,
-  docs: Record<string, unknown>[],
-  idField = 'id'
-): Promise<void> {
-  await Promise.all(
-    docs.map((doc) => patchDoc(collection, String(doc[idField]), doc))
-  );
 }

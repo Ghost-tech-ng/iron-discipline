@@ -5,6 +5,7 @@ import {
 } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { getDb } from './db';
+import { localIso } from '../utils/date';
 
 function escapeCSV(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return '';
@@ -90,7 +91,7 @@ export async function exportAllData(): Promise<void> {
   );
 
   const csv = sections.join('\n');
-  const filename = `iron-discipline-export-${new Date().toISOString().split('T')[0]}.csv`;
+  const filename = `iron-discipline-export-${localIso()}.csv`;
   const path = `${documentDirectory}${filename}`;
 
   await writeAsStringAsync(path, csv, {

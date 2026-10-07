@@ -11,7 +11,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { SetRow } from './SetRow';
-import { getExerciseImageUrl } from '../../constants/exerciseImages';
+import { SwapPicker } from './SwapPicker';
+import { getExerciseImageUrl, getSwapImageUrl } from '../../constants/exerciseImages';
 import type { Exercise, SetLog, ExerciseLog, MuscleGroup } from '../../types';
 import { useColors } from '../../hooks/useColors';
 import { Typography, Spacing, Radius } from '../../constants/theme';
@@ -27,9 +28,13 @@ function calcRecommendation(
   const completedSets = previousLog.sets.filter((s) => s.completed);
   if (completedSets.length === 0) return { weight: 0, direction: 'none' };
   const maxWeight = Math.max(...completedSets.map((s) => s.weight));
-  const allHitReps = completedSets.every((s) => s.reps >= exercise.repsMin);
-  if (allHitReps) {
-    return { weight: maxWeight + 5, direction: 'up' };
+  // Double progression: earn the top of the rep range on every set before adding load.
+  // Bumping at the bottom of the range turned lateral raises and curls into +5 kg jumps
+  // every session, which stalls within weeks and drags form with it.
+  const allHitTop = completedSets.every((s) => s.reps >= exercise.repsMax);
+  if (allHitTop && maxWeight > 0) {
+    const isLower = exercise.muscleGroups.some((m) => LEG_MUSCLES.includes(m));
+    return { weight: maxWeight + (isLower ? 5 : 2.5), direction: 'up' };
   }
   return { weight: maxWeight, direction: 'hold' };
 }
@@ -42,6 +47,9 @@ interface ExerciseCardProps {
   onRestStart: (seconds: number) => void;
   isActive: boolean;
   enterDelay?: number;
+  /** Substitute the user picked for this slot, if any. */
+  activeSwap?: string;
+  onSwap: (swapName: string | null) => void;
 }
 
 export function ExerciseCard({
@@ -52,6 +60,8 @@ export function ExerciseCard({
   onRestStart,
   isActive,
   enterDelay = 0,
+  activeSwap,
+  onSwap,
 }: ExerciseCardProps) {
   const Colors = useColors();
   const [completedSets, setCompletedSets] = useState<SetLog[]>(initialSets ?? []);
@@ -60,8 +70,12 @@ export function ExerciseCard({
   const recommendation = calcRecommendation(exercise, previousLog);
 
   useEffect(() => {
-    getExerciseImageUrl(exercise.id).then(setImageUrl);
-  }, [exercise.id]);
+    let cancelled = false;
+    setImageUrl(null);
+    const load = activeSwap ? getSwapImageUrl(activeSwap) : getExerciseImageUrl(exercise.id);
+    load.then((url) => { if (!cancelled) setImageUrl(url); });
+    return () => { cancelled = true; };
+  }, [exercise.id, activeSwap]);
 
   const totalSets = exercise.sets;
   const allDone = completedCount >= totalSets;
@@ -164,6 +178,7 @@ export function ExerciseCard({
       letterSpacing: -0.3,
     },
     nameDone: { color: Colors.secondary },
+    insteadOf: { ...Typography.caption, color: Colors.muted },
     notes: {
       ...Typography.caption,
       color: Colors.muted,
@@ -275,7 +290,8 @@ export function ExerciseCard({
 
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.name, allDone && styles.nameDone]}>{exercise.name}</Text>
+          <Text style={[styles.name, allDone && styles.nameDone]}>{activeSwap ?? exercise.name}</Text>
+          {activeSwap && <Text style={styles.insteadOf}>instead of {exercise.name}</Text>}
           {(exercise.tempo || exercise.perSide || exercise.lengthenedPartials || exercise.isTimed) && (
             <View style={styles.tagRow}>
               {exercise.tempo && <Text style={styles.tag}>TEMPO {exercise.tempo}</Text>}
@@ -329,7 +345,7 @@ export function ExerciseCard({
 
       {/* Sets */}
       {Array.from({ length: totalSets }).map((_, i) => (
-        <React.Fragment key={i}>
+        <React.Fragment key={`${activeSwap ?? 'base'}-${i}`}>
           <SetRow
             setNumber={i + 1}
             previous={getPreviousSet(i + 1)}
@@ -350,6 +366,15 @@ export function ExerciseCard({
 
       {completedCount > 0 && (
         <Text style={styles.undoHint}>Tap ✓ to undo a set</Text>
+      )}
+
+      {!!exercise.swaps?.length && (
+        <SwapPicker
+          originalName={exercise.name}
+          swaps={exercise.swaps}
+          activeSwap={activeSwap}
+          onSwap={onSwap}
+        />
       )}
 
       <View style={styles.specRow}>

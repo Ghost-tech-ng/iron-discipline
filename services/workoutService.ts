@@ -3,28 +3,41 @@ import type { WorkoutLog, ExerciseLog, SetLog } from '../types';
 
 export async function saveWorkoutLog(log: WorkoutLog): Promise<void> {
   const db = getDb();
-  await db.runAsync(
-    `INSERT OR REPLACE INTO workout_logs (id, date, session_type, session_label, duration_minutes, completed)
-     VALUES (?, ?, ?, ?, ?, ?);`,
-    [log.id, log.date, log.sessionType, log.sessionLabel, log.durationMinutes, log.completed ? 1 : 0]
-  );
-
-  for (const el of log.exerciseLogs) {
-    const result = await db.runAsync(
-      `INSERT INTO exercise_logs (workout_log_id, exercise_id, exercise_name)
-       VALUES (?, ?, ?);`,
-      [log.id, el.exerciseId, el.exerciseName]
+  await db.withExclusiveTransactionAsync(async (tx) => {
+    await tx.runAsync(
+      `INSERT INTO workout_logs (id, date, session_type, session_label, duration_minutes, completed)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         date = excluded.date, session_type = excluded.session_type,
+         session_label = excluded.session_label, duration_minutes = excluded.duration_minutes,
+         completed = excluded.completed;`,
+      [log.id, log.date, log.sessionType, log.sessionLabel, log.durationMinutes, log.completed ? 1 : 0]
     );
-    const exerciseLogId = result.lastInsertRowId;
 
-    for (const set of el.sets) {
-      await db.runAsync(
-        `INSERT INTO set_logs (exercise_log_id, set_number, weight, reps, completed)
-         VALUES (?, ?, ?, ?, ?);`,
-        [exerciseLogId, set.setNumber, set.weight, set.reps, set.completed ? 1 : 0]
+    // Re-saving the same workout replaces its exercises rather than appending duplicates.
+    await tx.runAsync(
+      `DELETE FROM set_logs WHERE exercise_log_id IN (SELECT id FROM exercise_logs WHERE workout_log_id = ?);`,
+      [log.id]
+    );
+    await tx.runAsync(`DELETE FROM exercise_logs WHERE workout_log_id = ?;`, [log.id]);
+
+    for (const el of log.exerciseLogs) {
+      const result = await tx.runAsync(
+        `INSERT INTO exercise_logs (workout_log_id, exercise_id, exercise_name)
+         VALUES (?, ?, ?);`,
+        [log.id, el.exerciseId, el.exerciseName]
       );
+      const exerciseLogId = result.lastInsertRowId;
+
+      for (const set of el.sets) {
+        await tx.runAsync(
+          `INSERT INTO set_logs (exercise_log_id, set_number, weight, reps, completed)
+           VALUES (?, ?, ?, ?, ?);`,
+          [exerciseLogId, set.setNumber, set.weight, set.reps, set.completed ? 1 : 0]
+        );
+      }
     }
-  }
+  });
 }
 
 export async function loadWorkoutHistory(): Promise<WorkoutLog[]> {

@@ -27,13 +27,30 @@ import { Button } from '../../components/ui/Button';
 import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
 import { getVolumeModifier } from '../../constants/plan';
 import { useWorkoutStore } from '../../store/workoutStore';
-import { useDisciplineStore } from '../../store/disciplineStore';
+import { useDisciplineStore, WEIGHTS } from '../../store/disciplineStore';
+import { useSwapStore } from '../../store/swapStore';
 import { saveWorkoutLog, getLastSessionByType } from '../../services/workoutService';
 import { useColors } from '../../hooks/useColors';
 import { Spacing, Typography } from '../../constants/theme';
-import type { SessionType, SetLog, WorkoutLog } from '../../types';
+import type { Exercise, ExerciseLog, SessionType, SetLog, WorkoutLog } from '../../types';
+import { localIso } from '../../utils/date';
+import { cancelTodayWorkoutReminder } from '../../services/notificationService';
+import { markWorkoutDoneOn } from '../../services/disciplineService';
 
 type RouteParams = { id: SessionType; makeupDate?: string };
+
+/** Last session's log for this slot, but only if it was the same variant — a Smith squat
+ *  weight is a meaningless target for a back squat and vice versa. */
+function matchingPreviousLog(
+  previous: WorkoutLog | null,
+  exercise: Exercise,
+  activeSwap: string | undefined
+): ExerciseLog | undefined {
+  const log = previous?.exerciseLogs.find((el) => el.exerciseId === exercise.id);
+  if (!log) return undefined;
+  if (activeSwap) return log.exerciseName === activeSwap ? log : undefined;
+  return exercise.swaps?.includes(log.exerciseName) ? undefined : log;
+}
 
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -180,6 +197,9 @@ export default function WorkoutScreen() {
     isResume ? Math.floor((Date.now() - activeSession!.startedAt) / 1000) : 0
   );
   const [previousSession, setPreviousSession] = useState<WorkoutLog | null>(null);
+  const swaps = useSwapStore((s) => s.swaps);
+  const loadSwaps = useSwapStore((s) => s.load);
+  const setSwap = useSwapStore((s) => s.setSwap);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionStartRef = useRef<number>(
     isResume ? activeSession!.startedAt : Date.now()
@@ -344,6 +364,14 @@ export default function WorkoutScreen() {
     getLastSessionByType(id).then((log) => setPreviousSession(log));
   }, [id]);
 
+  useEffect(() => { loadSwaps(); }, []);
+
+  function handleSwap(exerciseId: string, swapName: string | null) {
+    setSwap(exerciseId, swapName).catch(() =>
+      Alert.alert('Swap not saved', 'Could not save that substitution. Try again.')
+    );
+  }
+
   const progressAnim = useSharedValue(0);
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressAnim.value * 100}%` as `${number}%`,
@@ -414,14 +442,14 @@ export default function WorkoutScreen() {
             const durationMinutes = Math.round(elapsed / 60);
             const log: WorkoutLog = {
               id: `workout_${Date.now()}`,
-              date: makeupDate ?? new Date().toISOString().split('T')[0],
+              date: makeupDate ?? localIso(),
               sessionType: session.type,
               sessionLabel: session.label,
               durationMinutes,
               completed: true,
               exerciseLogs: adjustedExercises.map((ex) => ({
                 exerciseId: ex.id,
-                exerciseName: ex.name,
+                exerciseName: swaps[ex.id] ?? ex.name,
                 sets: exerciseLogs.get(ex.id) ?? [],
               })),
             };
@@ -429,7 +457,12 @@ export default function WorkoutScreen() {
             await saveWorkoutLog(log);
             completeWorkout(durationMinutes);
             clearActiveSession();
-            setWorkoutDone(true);
+            if (log.date === localIso()) {
+              setWorkoutDone(true);
+              cancelTodayWorkoutReminder();
+            } else {
+              await markWorkoutDoneOn(log.date, WEIGHTS.workoutDone);
+            }
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.back();
           },
@@ -538,10 +571,12 @@ export default function WorkoutScreen() {
           <ExerciseCard
             key={exercise.id}
             exercise={exercise}
-            previousLog={previousSession?.exerciseLogs.find((el) => el.exerciseId === exercise.id)}
+            previousLog={matchingPreviousLog(previousSession, exercise, swaps[exercise.id])}
             initialSets={exerciseLogs.get(exercise.id)}
             onSetsUpdate={handleSetsUpdate}
-            onRestStart={(secs) => { setRestTimerSecs(secs); setRestExerciseName(exercise.name); }}
+            onRestStart={(secs) => { setRestTimerSecs(secs); setRestExerciseName(swaps[exercise.id] ?? exercise.name); }}
+            activeSwap={swaps[exercise.id]}
+            onSwap={(name) => handleSwap(exercise.id, name)}
             isActive={true}
             enterDelay={idx * 60}
           />

@@ -327,7 +327,7 @@ export default function NutritionScreen() {
         {/* Shopping list teaser */}
         {shopChecked < shopTotal && (
           <Animated.View entering={FadeInDown.delay(60).duration(450)}>
-            <TouchableOpacity onPress={() => router.push('/shopping-list' as any)} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => router.push('/shopping-list')} activeOpacity={0.8}>
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -484,7 +484,7 @@ export default function NutritionScreen() {
               >
                 <View style={styles.mealSlotHeader}>
                   <Text style={styles.mealSlotTime}>{slot.time}</Text>
-                  <Ionicons name={(slot.icon || 'restaurant-outline') as any} size={18} color={Colors.accent} style={{ marginRight: 2 }} />
+                  <Ionicons name={(slot.icon || 'restaurant-outline') as keyof typeof Ionicons.glyphMap} size={18} color={Colors.accent} style={{ marginRight: 2 }} />
                   <View style={styles.mealSlotInfo}>
                     <Text style={styles.mealSlotLabel}>{slot.label}</Text>
                     <Text style={styles.mealSlotMacros}>
@@ -532,7 +532,7 @@ export default function NutritionScreen() {
             />
           </View>
           <TouchableOpacity
-            onPress={() => router.push('/advisor' as any)}
+            onPress={() => router.push('/advisor')}
             style={{
               width: 48,
               borderRadius: 12,

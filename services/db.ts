@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { USER_TARGETS } from '../constants/nutrition';
+import { localIso } from '../utils/date';
 
 let db: SQLite.SQLiteDatabase;
 
@@ -14,6 +15,8 @@ export async function initDatabase(): Promise<void> {
   const database = getDb();
 
   await database.execAsync(`PRAGMA journal_mode = WAL;`);
+  // Off by default in SQLite, per connection — without it the ON DELETE CASCADEs never fire.
+  await database.execAsync(`PRAGMA foreign_keys = ON;`);
 
   // Schema version table
   await database.execAsync(`
@@ -58,6 +61,18 @@ export async function initDatabase(): Promise<void> {
     await runMigration7(database);
     await database.runAsync('INSERT INTO schema_version (version) VALUES (7);');
   }
+  if (currentVersion < 8) {
+    await runMigration8(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (8);');
+  }
+  if (currentVersion < 9) {
+    await runMigration9(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (9);');
+  }
+  if (currentVersion < 10) {
+    await runMigration10(database);
+    await database.runAsync('INSERT INTO schema_version (version) VALUES (10);');
+  }
 }
 
 export async function getUserId(): Promise<string> {
@@ -82,10 +97,12 @@ export async function resetAllData(): Promise<void> {
     DELETE FROM supplement_logs;
     DELETE FROM discipline_history;
     DELETE FROM weekly_checkins;
+    DELETE FROM habit_logs;
+    DELETE FROM sync_state;
     UPDATE user_profile SET
       name = '',
       weight_kg = 89,
-      goal_weight_kg = 87,
+      goal_weight_kg = 84,
       goal_calories = 2700,
       goal_protein = 210,
       goal_carbs = 320,
@@ -159,6 +176,66 @@ async function runMigration6(db: SQLite.SQLiteDatabase): Promise<void> {
  */
 async function runMigration7(db: SQLite.SQLiteDatabase): Promise<void> {
   await db.execAsync(`ALTER TABLE user_profile ADD COLUMN protocol_start_override TEXT;`);
+}
+
+/**
+ * supplement_logs and habit_logs had no uniqueness on (date, id), so every
+ * INSERT OR REPLACE appended a row instead of replacing — un-ticking a
+ * supplement left the earlier taken=1 row behind. Keep the newest row per
+ * day/item, then enforce one row going forward.
+ *
+ * Also drops exercise/set rows orphaned while foreign keys were off, and adds
+ * sync_state so cloud sync only uploads rows that changed.
+ */
+async function runMigration8(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    DELETE FROM supplement_logs WHERE id NOT IN (
+      SELECT MAX(id) FROM supplement_logs GROUP BY date, supplement_id
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_supplement_logs_day
+      ON supplement_logs(date, supplement_id);
+
+    DELETE FROM habit_logs WHERE id NOT IN (
+      SELECT MAX(id) FROM habit_logs GROUP BY date, habit_id
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_habit_logs_day
+      ON habit_logs(date, habit_id);
+
+    DELETE FROM exercise_logs WHERE workout_log_id NOT IN (SELECT id FROM workout_logs);
+    DELETE FROM set_logs WHERE exercise_log_id NOT IN (SELECT id FROM exercise_logs);
+
+    CREATE TABLE IF NOT EXISTS sync_state (
+      collection TEXT NOT NULL,
+      doc_id TEXT NOT NULL,
+      hash TEXT NOT NULL,
+      PRIMARY KEY (collection, doc_id)
+    );
+  `);
+}
+
+/**
+ * Remembers which substitute the user picked when their gym lacks the
+ * prescribed machine, so the same swap is pre-selected every week.
+ */
+async function runMigration9(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS exercise_swaps (
+      exercise_id TEXT PRIMARY KEY,
+      swap_name TEXT NOT NULL
+    );
+  `);
+}
+
+/**
+ * Goal changed from the 87kg floor to 12% body fat (~84kg). Only the profile
+ * row's goal weight moves, and only if it still holds the old default, so a
+ * goal entered by hand is left alone. No logs, meals or check-ins are touched.
+ */
+async function runMigration10(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.runAsync(
+    'UPDATE user_profile SET goal_weight_kg = ? WHERE id = 1 AND goal_weight_kg = 87;',
+    [USER_TARGETS.goalWeightKg]
+  );
 }
 
 /**
@@ -304,6 +381,5 @@ async function runMigration1(db: SQLite.SQLiteDatabase): Promise<void> {
 
 // Helper: get today's date string
 export function today(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return localIso();
 }

@@ -31,10 +31,11 @@ import type { DayOfWeek } from '../../types';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
 import { PROTOCOL_WEEKS } from '../../constants/phases';
+import { localIso } from '../../utils/date';
 
 function computeStreak(history: { date: string; score: number }[]): number {
   if (history.length === 0) return 0;
-  const todayDate = new Date().toISOString().split('T')[0];
+  const todayDate = localIso();
   const sorted = [...history]
     .filter((h) => h.date !== todayDate)
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -43,7 +44,7 @@ function computeStreak(history: { date: string; score: number }[]): number {
   for (let i = 0; i < sorted.length; i++) {
     const expected = new Date(today);
     expected.setDate(today.getDate() - (i + 1));
-    const expectedStr = expected.toISOString().split('T')[0];
+    const expectedStr = localIso(expected);
     if (sorted[i].date === expectedStr && sorted[i].score >= 50) {
       streak++;
     } else {
@@ -393,7 +394,7 @@ export default function DashboardScreen() {
             <Card style={styles.startCard} accentColor={Colors.accent} gradient>
               <Text style={styles.startTitle}>The Sculpt Protocol is ready</Text>
               <Text style={styles.startBody}>
-                12 weeks, ATTACK then BUILD. Nothing counts against you until you tap start —
+                {PROTOCOL_WEEKS} weeks: cut to 12% body fat, then build. Nothing counts against you until you tap start —
                 whenever that is, that day becomes Day 1.
               </Text>
               <Button label="Start Protocol" onPress={handleStartProtocol} />

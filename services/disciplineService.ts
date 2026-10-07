@@ -29,6 +29,21 @@ export async function saveDisciplineScore(
   );
 }
 
+/**
+ * Credits a past day's workout when a missed session is made up later. Today's
+ * row is owned by the discipline store, so this is only for earlier dates.
+ */
+export async function markWorkoutDoneOn(date: string, workoutWeight: number): Promise<void> {
+  const db = getDb();
+  await db.runAsync(
+    `INSERT INTO discipline_history (date, score, workout_done) VALUES (?, ?, 1)
+     ON CONFLICT(date) DO UPDATE SET
+       score = CASE WHEN workout_done = 1 THEN score ELSE MIN(100, score + ?) END,
+       workout_done = 1;`,
+    [date, workoutWeight, workoutWeight]
+  );
+}
+
 export async function loadDisciplineHistory(): Promise<
   { date: string; score: number }[]
 > {

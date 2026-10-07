@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, type TextInputProps } from 'react-native';
 import { router } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { useUserStore } from '../../store/userStore';
@@ -19,8 +19,8 @@ function Field({
   value: string;
   onChangeText: (v: string) => void;
   placeholder: string;
-  keyboardType?: any;
-  autoCapitalize?: any;
+  keyboardType?: TextInputProps['keyboardType'];
+  autoCapitalize?: TextInputProps['autoCapitalize'];
 }) {
   const Colors = useColors();
   const styles = React.useMemo(() => StyleSheet.create({

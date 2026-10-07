@@ -143,7 +143,7 @@ export default function AdvisorScreen() {
     }
   }
 
-  function verdictIcon(v: AdvisorResult['verdict']): string {
+  function verdictIcon(v: AdvisorResult['verdict']): keyof typeof Ionicons.glyphMap {
     switch (v) {
       case 'eat': return 'checkmark-circle';
       case 'avoid': return 'close-circle';
@@ -480,7 +480,7 @@ export default function AdvisorScreen() {
           <Card style={styles.resultCard}>
             <View style={styles.verdictRow}>
               <Ionicons
-                name={verdictIcon(result.verdict) as any}
+                name={verdictIcon(result.verdict)}
                 size={24}
                 color={verdictColor(result.verdict)}
               />

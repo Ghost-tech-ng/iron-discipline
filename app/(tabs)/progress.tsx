@@ -36,7 +36,7 @@ import { generateWeeklyDietAudit, type DietAuditResult } from '../../services/ai
 import { exportAllData } from '../../services/exportService';
 import { syncToCloud, isOnline } from '../../services/syncService';
 import { getUserId } from '../../services/db';
-import { isMongoConfigured } from '../../services/mongoService';
+import { isCloudConfigured } from '../../services/firestoreService';
 import { SyncCard } from '../../components/ui/SyncCard';
 import { useSyncStore } from '../../store/syncStore';
 import { useColors } from '../../hooks/useColors';
@@ -68,10 +68,10 @@ export default function ProgressScreen() {
   const { setSyncing, setLastSynced, setError } = useSyncStore();
 
   async function handleManualSync() {
-    if (!isMongoConfigured()) {
+    if (!isCloudConfigured()) {
       Alert.alert(
-        'MongoDB not configured',
-        'Add your MongoDB Atlas credentials to .env.local to enable cloud backup.'
+        'Cloud backup not configured',
+        'Add EXPO_PUBLIC_FIREBASE_PROJECT_ID and EXPO_PUBLIC_FIREBASE_API_KEY to .env.local to enable cloud backup.'
       );
       return;
     }
@@ -671,6 +671,7 @@ export default function ProgressScreen() {
 }
 
 import type { WeeklyCheckIn } from '../../types';
+import { daysAgoIso } from '../../utils/date';
 
 function CoachingCard({ sessionCount, checkIns, workoutDates }: { sessionCount: number; checkIns: WeeklyCheckIn[]; workoutDates: string[] }) {
   const Colors = useColors();
@@ -773,9 +774,7 @@ function WeeklyAnalyticsCard({
 }) {
   const Colors = useColors();
 
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-  const cutoff = sevenDaysAgo.toISOString().split('T')[0];
+  const cutoff = daysAgoIso(6);
 
   const recentMacros = macroHistory.filter((d) => d.date >= cutoff);
   const recentScores = scoreHistory.filter((d) => d.date >= cutoff);

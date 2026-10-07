@@ -1,5 +1,6 @@
 import { getDb, today } from './db';
 import type { MealEntry, DailyNutrition } from '../types';
+import { daysAgoIso } from '../utils/date';
 
 export async function saveMealEntry(entry: MealEntry): Promise<void> {
   const db = getDb();
@@ -95,9 +96,7 @@ export async function loadDailyCalorieHistory(
   days = 30
 ): Promise<{ date: string; calories: number }[]> {
   const db = getDb();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days + 1);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const cutoffStr = daysAgoIso(days - 1);
 
   const rows = await db.getAllAsync<{ date: string; calories: number }>(
     `SELECT date, ROUND(SUM(food_calories * quantity)) as calories
@@ -114,9 +113,7 @@ export async function loadDailyMacroHistory(
   days = 14
 ): Promise<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]> {
   const db = getDb();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days + 1);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const cutoffStr = daysAgoIso(days - 1);
 
   const rows = await db.getAllAsync<{ date: string; calories: number; protein: number; carbs: number; fat: number }>(
     `SELECT date,
@@ -137,9 +134,7 @@ export async function loadMealEntriesForRange(
   days = 7
 ): Promise<{ date: string; name: string; calories: number; protein: number; carbs: number; fat: number; quantity: number }[]> {
   const db = getDb();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days + 1);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const cutoffStr = daysAgoIso(days - 1);
 
   const rows = await db.getAllAsync<{
     date: string;

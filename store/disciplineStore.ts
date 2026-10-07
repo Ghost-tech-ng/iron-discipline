@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { DisciplineState } from '../types';
 import { saveDisciplineScore } from '../services/disciplineService';
 import { DEFAULT_SUPPLEMENTS } from '../constants/nutrition';
+import { localIso } from '../utils/date';
 
 /**
  * Rebalanced for the Sculpt Protocol. Protein and cardio carry more weight than
@@ -34,7 +35,7 @@ function computeScore(state: Omit<DisciplineState, 'score'>): number {
   return Math.round(Math.min(100, score));
 }
 
-const todayStr = () => new Date().toISOString().split('T')[0];
+const todayStr = () => localIso();
 
 interface DisciplineStore extends DisciplineState {
   setWorkoutDone: (done: boolean) => void;

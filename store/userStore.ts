@@ -15,6 +15,7 @@ interface UserStore {
   setHydrated: () => void;
   hydrateProtocolStart: (iso: string | null) => void;
   startProtocol: () => void;
+  stopProtocol: () => Promise<void>;
 }
 
 const defaults: UserProfile = {
@@ -60,5 +61,11 @@ export const useUserStore = create<UserStore>((set) => ({
     setProtocolStartOverride(iso);
     set({ protocolStartOverride: iso });
     saveProtocolStartOverride(iso).catch((e) => console.warn('Failed to save protocol start:', e));
+  },
+
+  stopProtocol: async () => {
+    await saveProtocolStartOverride(null);
+    setProtocolStartOverride(null);
+    set({ protocolStartOverride: null });
   },
 }));

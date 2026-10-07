@@ -27,6 +27,7 @@ import { Spacing, Typography } from '../../constants/theme';
 import { USER_TARGETS } from '../../constants/nutrition';
 import { getProtocolStatus } from '../../constants/phases';
 import type { WeeklyCheckIn } from '../../types';
+import { localIso } from '../../utils/date';
 
 export default function WeighInScreen() {
   const Colors = useColors();
@@ -227,7 +228,7 @@ export default function WeighInScreen() {
     setSaving(true);
     try {
       const id = `checkin_${Date.now()}`;
-      const today = new Date().toISOString().split('T')[0];
+      const today = localIso();
 
       const checkIn: WeeklyCheckIn = {
         id,
