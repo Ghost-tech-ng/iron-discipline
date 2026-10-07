@@ -1,11 +1,13 @@
 import * as FileSystem from 'expo-file-system/legacy';
 
-// All URLs sourced from wger.de (open-source fitness DB, CC licence). Each one was
-// checked against wger's image index, not the folder number in the path, which is
-// not a reliable exercise id. Exercises with no honest photo on wger (Nordic curl,
-// sliding curl, suitcase carry, dead bug, side plank) stay unmapped; ExerciseCard
-// renders no image rather than a misleading one.
+// Bare paths are wger.de (open-source fitness DB, CC licence), checked against wger's
+// image index, not the folder number in the path, which is not a reliable exercise id.
+// fedb() paths are free-exercise-db (public domain), used where wger has no honest
+// photo. Side plank has a match in neither and stays unmapped; ExerciseCard renders
+// no image rather than a misleading one.
 const WGER = 'https://wger.de/media/exercise-images/';
+const FEDB = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+const fedb = (path: string): string => `${FEDB}${path}`;
 
 const IMAGE_URLS: Record<string, string> = {
   // ── Legs A (Monday) ───────────────────────────────────────────
@@ -15,7 +17,8 @@ const IMAGE_URLS: Record<string, string> = {
   walking_lunge:         '113/Walking-lunges-1.png',
   back_ext_45:           '1348/a3769120-2445-49f2-97d3-afc1238bfc2a.webp',
   standing_calf:         '622/9a429bd0-afd3-4ad0-8043-e9beec901c81.jpeg',
-  cable_crunch_mon:      '91/Crunches-1.png',
+  seated_leg_curl_mon:   fedb('Natural_Glute_Ham_Raise/0.jpg'),
+  cable_crunch_mon:      fedb('Cable_Crunch/0.jpg'),
   vacuum_mon:            '2673/71e1dd6a-c407-45bd-a082-e0e6f5226eb6.jpg',
 
   // ── Push ──────────────────────────────────────────────────────
@@ -37,16 +40,19 @@ const IMAGE_URLS: Record<string, string> = {
   face_pulls:            '1732/d13b9adb-968e-4f73-95e6-b16690bcf616.jpg',
   bb_curl:               '74/Bicep-curls-1.png',
   incline_db_curl:       '81/Biceps-curl-1.png',
+  suitcase_carry:        fedb('Farmers_Walk/1.jpg'),
   pallof_press_wed:      '1194/074e1766-4208-4a67-a211-9721772d99b0.png',
 
   // ── Legs B (Friday) ───────────────────────────────────────────
   rdl_fri:               '507/13d526ab-12fc-461e-828a-051dd7c13fb1.png',
+  seated_leg_curl_fri:   fedb('Ball_Leg_Curl/1.jpg'),
   hip_thrust:            '1642/a81ad922-caf5-47f8-99b4-640cb0717436.webp',
   bulgarian_split:       '988/6283b258-a4d7-4833-84f7-a38987022d3d.png',
   roman_chair_ext:       '128/Hyperextensions-1.png',
   leg_press_high:        '371/d2136f96-3a43-4d4c-9944-1919c4ca1ce1.webp',
   seated_calf:           '1620/edd40e39-e337-4460-a8dd-6127d40ddd16.jpeg',
   decline_crunch:        '93/Decline-crunch-1.png',
+  dead_bug:              fedb('Dead_Bug/0.jpg'),
   vacuum_fri:            '2673/71e1dd6a-c407-45bd-a082-e0e6f5226eb6.jpg',
 
   // ── Upper (Saturday) ──────────────────────────────────────────
@@ -136,6 +142,14 @@ const SWAP_IMAGE_URLS: Record<string, string> = {
   'Bayesian Cable Curl (facing away)':            '129/Standing-biceps-curl-1.png',
   'Cross-Body Hammer Curl':                       '1567/0a8c155c-a48e-47e8-9df3-e39f025c6cad.png',
   'Band Pallof Press':                            '1194/34c03421-0803-4859-a2b0-5710f2bd94cd.png',
+  'Sissy Squat (hold a post)':                    fedb('Weighted_Sissy_Squat/1.jpg'),
+  'Swiss Ball Leg Curl':                          fedb('Ball_Leg_Curl/1.jpg'),
+  'Trap Bar Deadlift':                            fedb('Trap_Bar_Deadlift/0.jpg'),
+  'Half-Kneeling Cable Chop (light, no twist)':   fedb('Standing_Cable_Wood_Chop/0.jpg'),
+  'Single-Arm Kettlebell Carry':                  fedb('Farmers_Walk/1.jpg'),
+  'Single-Arm Dumbbell March (in place)':         fedb('Farmers_Walk/1.jpg'),
+  'Reverse Hyperextension':                       fedb('Reverse_Hyperextension/0.jpg'),
+  'Cable Crunch':                                 fedb('Cable_Crunch/0.jpg'),
 };
 
 const memCache: Record<string, string | null> = {};
@@ -156,7 +170,7 @@ async function resolveCached(cacheKey: string, path: string | undefined): Promis
     memCache[cacheKey] = null;
     return null;
   }
-  const remoteUrl = `${WGER}${path}`;
+  const remoteUrl = path.startsWith('https://') ? path : `${WGER}${path}`;
 
   try {
     const cacheDir = FileSystem.documentDirectory
@@ -166,7 +180,10 @@ async function resolveCached(cacheKey: string, path: string | undefined): Promis
     if (cacheDir) {
       // The URL's file stem is part of the name so a corrected mapping never serves
       // the stale image cached under the same exercise id.
-      const stem = path.split('/').pop()?.replace(/\.[a-z]+$/i, '').slice(0, 12) ?? '';
+      // free-exercise-db files are all named 0.jpg/1.jpg, so its stem includes the folder.
+      const stem = path.startsWith(FEDB)
+        ? path.slice(FEDB.length).replace(/\.[a-z]+$/i, '').replace(/[^a-z0-9]+/gi, '_').slice(0, 40)
+        : path.split('/').pop()?.replace(/\.[a-z]+$/i, '').slice(0, 12) ?? '';
       const localPath = `${cacheDir}${cacheKey}_${stem}${ext(remoteUrl)}`;
 
       const info = await FileSystem.getInfoAsync(localPath);
