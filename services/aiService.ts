@@ -3,7 +3,7 @@ import { USER_TARGETS, type MealSlot } from '../constants/nutrition';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const TEXT_MODEL = 'openai/gpt-oss-120b';
-const VISION_MODEL = 'qwen/qwen3.6-27b';
+const VISION_MODEL = 'qwen/qwen3.8-27b';
 
 function getKey(): string {
   const key = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? '';
@@ -146,7 +146,7 @@ All macros in grams, calories in kcal as integers.`,
       },
     ],
     true,
-    // qwen3.6 is a reasoning model — without this it burns its whole token budget
+    // qwen3.8 is a reasoning model — without this it burns its whole token budget
     // on a <think> block and gets truncated before emitting any JSON.
     { reasoning_effort: 'none', max_tokens: 800 }
   );

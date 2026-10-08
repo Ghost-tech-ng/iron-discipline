@@ -19,7 +19,7 @@ export function CoachCard({ data }: Props) {
   const Colors = useColors();
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [qa, setQa] = useState<QA[]>([]);
@@ -33,12 +33,12 @@ export function CoachCard({ data }: Props) {
 
   async function load() {
     setLoading(true);
-    setError(false);
+    setError(null);
     try {
       const msg = await generateDailyCoaching(data);
       setMessage(msg);
-    } catch {
-      setError(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not reach AI.');
     } finally {
       setLoading(false);
     }
@@ -52,8 +52,9 @@ export function CoachCard({ data }: Props) {
     try {
       const answer = await askCoach(q, data);
       setQa((prev) => [...prev, { question: q, answer }]);
-    } catch {
-      setQa((prev) => [...prev, { question: q, answer: 'Could not reach AI. Check your connection.' }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Could not reach AI.';
+      setQa((prev) => [...prev, { question: q, answer: msg }]);
     } finally {
       setAsking(false);
     }
@@ -179,7 +180,7 @@ export function CoachCard({ data }: Props) {
         )}
 
         {error && !loading && (
-          <Text style={styles.errorText}>Could not reach AI. Check your API key or connection.</Text>
+          <Text style={styles.errorText}>{error}</Text>
         )}
 
         {message && !loading && (
