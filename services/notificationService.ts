@@ -90,7 +90,7 @@ function buildSchedule(proteinGoal: number): Array<{
     {
       identifier: 'supp_morning',
       title: 'Morning Stack',
-      body: 'Creatine · Vitamin D3 · Minoxidil — take before your first meal.',
+      body: 'Creatine · Vitamin D3 — take before your first meal.',
       trigger: { type: 'daily', hour: 8, minute: 0 },
     },
     {

@@ -9,10 +9,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useDisciplineStore } from '../../store/disciplineStore';
-import { saveSupplementLog } from '../../services/nutritionService';
-import { DEFAULT_SUPPLEMENTS } from '../../constants/nutrition';
+import { useNutritionStore } from '../../store/nutritionStore';
+import { saveSupplementLog, saveMealEntry, deleteMealEntry } from '../../services/nutritionService';
+import { DEFAULT_SUPPLEMENTS, FOOD_LIBRARY } from '../../constants/nutrition';
+import { localIso } from '../../utils/date';
+import type { MealEntry } from '../../types';
 import { useColors } from '../../hooks/useColors';
 import { Typography, Spacing } from '../../constants/theme';
+
+const WHEY_FOOD = FOOD_LIBRARY.find((f) => f.id === 'whey_protein');
+
+/** One id per day so un-ticking whey removes exactly the scoop that ticking it logged. */
+const wheyEntryId = (date: string) => `supp_whey_${date}`;
 
 function SupplementRow({
   id,
@@ -103,13 +111,42 @@ function SupplementRow({
 export function SupplementTracker() {
   const Colors = useColors();
   const { supplementsTaken, markSupplementTaken } = useDisciplineStore();
+  const { addMeal, removeMeal } = useNutritionStore();
   const doneCount = supplementsTaken.length;
   const total = DEFAULT_SUPPLEMENTS.length;
 
   async function handleToggle(id: string) {
     markSupplementTaken(id);
     const nowTaken = !supplementsTaken.includes(id);
-    await saveSupplementLog(id, nowTaken);
+    if (id === 'whey') syncWheyMeal(nowTaken);
+    try {
+      await saveSupplementLog(id, nowTaken);
+    } catch (e) {
+      console.warn('[supplements] save failed', e);
+    }
+  }
+
+  function syncWheyMeal(taken: boolean) {
+    if (!WHEY_FOOD) return;
+    const now = new Date();
+    const date = localIso(now);
+    const entryId = wheyEntryId(date);
+    const logged = useNutritionStore.getState().today.entries.some((e) => e.id === entryId);
+    if (taken && !logged) {
+      const entry: MealEntry = {
+        id: entryId,
+        date,
+        time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        category: 'post_workout',
+        foodItem: WHEY_FOOD,
+        quantity: 1,
+      };
+      addMeal(entry);
+      saveMealEntry(entry).catch((e) => console.warn('[supplements] whey meal save failed', e));
+    } else if (!taken && logged) {
+      removeMeal(entryId);
+      deleteMealEntry(entryId).catch((e) => console.warn('[supplements] whey meal delete failed', e));
+    }
   }
 
   const styles = React.useMemo(() => StyleSheet.create({

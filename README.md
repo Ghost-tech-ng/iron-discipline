@@ -145,7 +145,6 @@ Total: **~410–465 kcal, ~49–61g protein** — excellent macro density.
 | Omega-3 | 2–3g EPA+DHA | With food | Inflammation, joint health, fat oxidation |
 | Vitamin D3 | 2,000–4,000 IU | Morning with food | Testosterone support, bone density |
 | Magnesium Glycinate | 300–400mg | Before sleep | Sleep quality, muscle recovery |
-| Minoxidil | Per prescription | As scheduled | — |
 
 ---
 
@@ -348,7 +347,7 @@ The first screen you see every morning.
 
 ### Supplement Tracking
 
-- Pre-configured for the stack above (creatine, whey, omega-3, Vitamin D3, magnesium, minoxidil)
+- Pre-configured for the stack above (creatine, whey, omega-3, Vitamin D3, magnesium)
 - Push notification reminders per supplement (time-configurable)
 - One-tap mark-as-taken
 

@@ -1,6 +1,7 @@
 import { getDb, today } from './db';
 import type { MealEntry, DailyNutrition } from '../types';
 import { daysAgoIso } from '../utils/date';
+import { DEFAULT_SUPPLEMENTS } from '../constants/nutrition';
 
 export async function saveMealEntry(entry: MealEntry): Promise<void> {
   const db = getDb();
@@ -166,5 +167,6 @@ export async function loadTodaySupplements(): Promise<string[]> {
     `SELECT supplement_id FROM supplement_logs WHERE date = ? AND taken = 1;`,
     [today()]
   );
-  return rows.map((r) => r.supplement_id);
+  const known = new Set(DEFAULT_SUPPLEMENTS.map((s) => s.id));
+  return rows.map((r) => r.supplement_id).filter((id) => known.has(id));
 }

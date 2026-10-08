@@ -429,8 +429,8 @@ export const DEFAULT_SUPPLEMENTS: Supplement[] = [
   {
     id: 'whey',
     name: 'Whey Protein',
-    dose: '30–40g',
-    timing: 'Post-workout, and again at night if protein is short',
+    dose: '1 scoop (30g) · 120 kcal · 25g protein',
+    timing: 'Post-workout — ticking it logs the scoop to Fuel',
     taken: false,
     notificationTime: undefined,
   },
@@ -473,13 +473,5 @@ export const DEFAULT_SUPPLEMENTS: Supplement[] = [
     timing: 'Before sleep',
     taken: false,
     notificationTime: '22:00',
-  },
-  {
-    id: 'minoxidil',
-    name: 'Minoxidil',
-    dose: 'Per prescription',
-    timing: 'As scheduled',
-    taken: false,
-    notificationTime: '08:00',
   },
 ];
