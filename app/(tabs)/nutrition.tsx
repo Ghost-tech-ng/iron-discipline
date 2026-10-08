@@ -14,6 +14,7 @@ import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { ScreenHeader } from '../../components/forge/ScreenHeader';
 import { getMealPlan, type MealSlot } from '../../constants/nutrition';
 import { generateMealPlan, loadCachedMealPlan } from '../../services/aiService';
 import { loadDailyMacroHistory } from '../../services/nutritionService';
@@ -111,12 +112,6 @@ export default function NutritionScreen() {
     safe: { flex: 1, backgroundColor: Colors.base },
     scroll: { flex: 1 },
     content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-    title: {
-      ...Typography.h1,
-      color: Colors.primary,
-      fontWeight: '700',
-      letterSpacing: -1,
-    },
     subtitle: { ...Typography.small, color: Colors.secondary },
     totalsCard: { gap: Spacing.md },
     mainCalRow: {
@@ -291,15 +286,20 @@ export default function NutritionScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.delay(0).duration(450)}>
-          <Text style={styles.title}>Fuel</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={styles.subtitle}>
-              {remaining.protein > 0 ? `${remaining.protein}g protein to go` : 'Protein target hit'}
-            </Text>
-            {remaining.protein <= 0 && (
-              <Ionicons name="checkmark-circle" size={14} color={Colors.accentGreen} />
-            )}
-          </View>
+          <ScreenHeader
+            eyebrow="FEED THE FIRE"
+            title="FUEL"
+            sub={
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={styles.subtitle}>
+                  {remaining.protein > 0 ? `${remaining.protein}g protein to go` : 'Protein target hit'}
+                </Text>
+                {remaining.protein <= 0 && (
+                  <Ionicons name="checkmark-circle" size={14} color={Colors.accentGreen} />
+                )}
+              </View>
+            }
+          />
         </Animated.View>
 
         {remaining.protein > 0 && (

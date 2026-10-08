@@ -41,7 +41,9 @@ import { SyncCard } from '../../components/ui/SyncCard';
 import { useSyncStore } from '../../store/syncStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { ScreenHeader } from '../../components/forge/ScreenHeader';
+import { RankStrip } from '../../components/forge/RankStrip';
+import { Colors, Fonts, Spacing, Typography } from '../../constants/theme';
 import { getActivePlanStatus, PLAN_WEEKS } from '../../constants/plan';
 import { USER_TARGETS } from '../../constants/nutrition';
 import type { DayType } from '../../constants/phases';
@@ -187,13 +189,6 @@ export default function ProgressScreen() {
     safe: { flex: 1, backgroundColor: Colors.base },
     scroll: { flex: 1 },
     content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-    title: {
-      ...Typography.h1,
-      color: Colors.primary,
-      fontWeight: '700',
-      letterSpacing: -1,
-    },
-    subtitle: { ...Typography.small, color: Colors.secondary },
     chartCard: { gap: Spacing.sm },
     sculptStats: {
       flexDirection: 'row',
@@ -213,7 +208,7 @@ export default function ProgressScreen() {
     sculptLabel: { ...Typography.caption, color: Colors.muted, letterSpacing: 0.6, fontSize: 9 },
     sculptNote: { ...Typography.caption, color: Colors.muted, lineHeight: 15 },
     goalCard: { gap: Spacing.sm },
-    cardTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    cardTitle: { fontFamily: Fonts.display, fontSize: 15, letterSpacing: 1.4, color: Colors.muted },
     lostBadge: {
       alignSelf: 'flex-start',
       backgroundColor: Colors.accentGreen + '20',
@@ -228,7 +223,7 @@ export default function ProgressScreen() {
       alignItems: 'center',
       marginTop: Spacing.sm,
     },
-    sectionTitle: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    sectionTitle: { fontFamily: Fonts.display, fontSize: 15, letterSpacing: 1.4, color: Colors.muted },
     sectionSub: { ...Typography.caption, color: Colors.secondary },
     photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
     photoThumb: {
@@ -243,7 +238,7 @@ export default function ProgressScreen() {
       ...StyleSheet.absoluteFill,
       justifyContent: 'flex-end',
       padding: 6,
-      backgroundColor: 'rgba(0,0,0,0.35)',
+      backgroundColor: Colors.base + '80',
     },
     photoWeek: { fontSize: 10, color: Colors.primary, fontWeight: '700' },
     photoWeight: { fontSize: 10, color: Colors.secondary },
@@ -322,7 +317,7 @@ export default function ProgressScreen() {
     checkInThumb: { width: 44, height: 58, borderRadius: 6 },
     lightboxBackdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.92)',
+      backgroundColor: Colors.base + 'EB',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 16,
@@ -343,8 +338,11 @@ export default function ProgressScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.delay(0).duration(450)}>
-          <Text style={styles.title}>Progress</Text>
-          <Text style={styles.subtitle}>Weigh in every Monday morning</Text>
+          <ScreenHeader eyebrow={`THE ${PLAN_WEEKS}-WEEK RECORD`} title="PROGRESS" sub="Weigh in every Monday morning." />
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(30).duration(450)}>
+          <RankStrip history={scoreHistory} />
         </Animated.View>
 
         {checkInOverdue && (
@@ -418,7 +416,7 @@ export default function ProgressScreen() {
         {/* Weight trend chart */}
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
           <Card style={styles.chartCard}>
-            <Text style={styles.cardTitle}>WEIGHT TREND — 12 WEEKS</Text>
+            <Text style={styles.cardTitle}>WEIGHT TREND</Text>
             {lost !== null && lost > 0 && (
               <View style={styles.lostBadge}>
                 <Text style={styles.lostText}>−{lost}kg lost</Text>
@@ -435,7 +433,7 @@ export default function ProgressScreen() {
         {/* Goal progress bar */}
         <Animated.View entering={FadeInDown.delay(160).duration(450)}>
           <Card style={styles.goalCard}>
-            <Text style={styles.cardTitle}>12-WEEK GOAL</Text>
+            <Text style={styles.cardTitle}>WEIGHT GOAL</Text>
             <GoalBar
               current={currentWeight}
               start={profile.weightKg}
@@ -464,10 +462,10 @@ export default function ProgressScreen() {
           />
         </Animated.View>
 
-        {/* Discipline score chart */}
+        {/* Heat history chart */}
         <Animated.View entering={FadeInDown.delay(300).duration(450)}>
           <Card style={styles.chartCard}>
-            <Text style={styles.cardTitle}>DISCIPLINE SCORE HISTORY</Text>
+            <Text style={styles.cardTitle}>HEAT HISTORY</Text>
             <ScoreChart history={scoreHistory} />
           </Card>
         </Animated.View>
@@ -583,8 +581,8 @@ export default function ProgressScreen() {
           {[
             { weeks: 'Wk 1–2', change: '−1.5 to −3 kg', note: 'Mostly water + glycogen' },
             { weeks: 'Wk 3–6', change: '−0.5–0.75/wk', note: 'True fat loss begins' },
-            { weeks: 'Wk 7–10', change: '−0.4–0.6/wk', note: 'Rate slows — stay consistent' },
-            { weeks: 'Wk 11–12', change: '−0.3–0.5/wk', note: 'Final stretch — hold form' },
+            { weeks: 'Wk 7–10', change: '−0.4–0.6/wk', note: 'Rate slows — finish the cut at 12%' },
+            { weeks: 'Wk 11–16', change: '+0.1–0.25/wk', note: 'Lean build — waist must hold' },
           ].map((row) => (
             <View key={row.weeks} style={styles.timelineRow}>
               <Text style={styles.weekLabel}>{row.weeks}</Text>
@@ -798,7 +796,7 @@ function WeeklyAnalyticsCard({
 
   const s = React.useMemo(() => StyleSheet.create({
     card: { gap: 14 },
-    title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    title: { fontFamily: Fonts.display, fontSize: 15, letterSpacing: 1.4, color: Colors.muted },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
     tile: {
       flex: 1,
@@ -868,7 +866,7 @@ function WeeklyAnalyticsCard({
         </View>
 
         <View style={s.tile}>
-          <Text style={s.tileLabel}>AVG DISCIPLINE</Text>
+          <Text style={s.tileLabel}>AVG HEAT</Text>
           <Text style={[s.tileValue, { color: statusColor(scorePct) }]}>
             {avgScore != null ? `${avgScore}` : '--'}
           </Text>
@@ -901,7 +899,7 @@ function DietAuditCard({
   const s = React.useMemo(() => StyleSheet.create({
     card: { gap: 12 },
     headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    title: { ...Typography.label, color: Colors.muted, letterSpacing: 1.5 },
+    title: { fontFamily: Fonts.display, fontSize: 15, letterSpacing: 1.4, color: Colors.muted },
     runBtn: {
       flexDirection: 'row',
       alignItems: 'center',

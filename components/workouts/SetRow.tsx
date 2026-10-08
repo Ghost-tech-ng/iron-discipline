@@ -10,7 +10,10 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import type { SetLog } from '../../types';
 import { useColors } from '../../hooks/useColors';
-import { Typography, Spacing } from '../../constants/theme';
+import { Fonts, Spacing } from '../../constants/theme';
+
+/** Width of the strike/stamp column; ExerciseCard's column headers pad to match. */
+export const SET_ACTION_WIDTH = 74;
 
 interface SetRowProps {
   setNumber: number;
@@ -19,6 +22,8 @@ interface SetRowProps {
   onComplete: (set: SetLog) => void;
   onUndo: (setNumber: number) => void;
   completed: boolean;
+  /** The first unlogged set — gets the red STRIKE call to action. */
+  isNext?: boolean;
   existingLog?: SetLog;
   noWeight?: boolean;
 }
@@ -30,10 +35,11 @@ export function SetRow({
   onComplete,
   onUndo,
   completed,
+  isNext = false,
   existingLog,
   noWeight = false,
 }: SetRowProps) {
-  const Colors = useColors();
+  const C = useColors();
   const [weight, setWeight] = useState(
     existingLog?.weight?.toString() ?? (previous?.weight ?? defaultWeight).toString()
   );
@@ -56,7 +62,7 @@ export function SetRow({
       withSpring(0.92, { damping: 10 }),
       withSpring(1, { damping: 12 })
     );
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     onComplete({
       setNumber,
       weight: noWeight ? 0 : parseFloat(weight) || 0,
@@ -66,105 +72,45 @@ export function SetRow({
   }
 
   const styles = React.useMemo(() => StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingVertical: 10,
-      paddingHorizontal: Spacing.md,
-    },
-    rowDone: {
-      opacity: 0.6,
-    },
-    setNum: {
-      width: 24,
-      alignItems: 'center',
-    },
-    setNumText: {
-      ...Typography.small,
-      color: Colors.muted,
-      fontWeight: '600',
-    },
-    setNumDone: {
-      color: Colors.accentGreen,
-    },
-    prevCol: {
-      width: 52,
-      alignItems: 'center',
-    },
-    prevText: {
-      ...Typography.caption,
-      color: Colors.muted,
-      fontWeight: '500',
-    },
-    prevEmpty: {
-      ...Typography.caption,
-      color: Colors.border,
-    },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: Spacing.md },
+    rowNext: { backgroundColor: C.accent + '12' },
+    setNum: { width: 22, alignItems: 'center' },
+    setNumText: { fontFamily: Fonts.display, fontSize: 17, color: C.muted },
+    setNumDone: { color: C.accent },
+    setNumNext: { color: C.primary },
+    prevCol: { width: 50, alignItems: 'center' },
+    prevText: { fontFamily: Fonts.bodySemi, fontSize: 11, color: C.muted },
+    prevEmpty: { fontFamily: Fonts.body, fontSize: 11, color: C.dim },
     input: {
-      flex: 1,
-      backgroundColor: Colors.surface2,
-      borderRadius: 8,
-      paddingVertical: 9,
-      paddingHorizontal: 10,
-      ...Typography.body,
-      color: Colors.primary,
-      textAlign: 'center',
-      borderWidth: 1,
-      borderColor: Colors.border,
-      minWidth: 56,
+      flex: 1, minWidth: 48, backgroundColor: C.surface2, borderRadius: 8, borderWidth: 1, borderColor: C.border,
+      paddingVertical: 7, paddingHorizontal: 8, fontFamily: Fonts.display, fontSize: 18, color: C.primary, textAlign: 'center',
     },
-    inputDone: {
-      borderColor: 'transparent',
-      backgroundColor: 'transparent',
-      color: Colors.secondary,
+    inputNext: { borderColor: C.accent + '66' },
+    inputDone: { borderColor: C.surface, backgroundColor: C.surface, color: C.secondary },
+    bwLabel: { flex: 1, textAlign: 'center', fontFamily: Fonts.display, fontSize: 15, letterSpacing: 1, color: C.muted },
+    x: { fontFamily: Fonts.bodySemi, fontSize: 12, color: C.muted },
+    action: { width: SET_ACTION_WIDTH, alignItems: 'flex-end', justifyContent: 'center' },
+    strike: {
+      flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingHorizontal: 12, borderRadius: 999,
+      backgroundColor: C.accent, shadowColor: C.accent, shadowOpacity: 0.5, shadowRadius: 8,
+      shadowOffset: { width: 0, height: 3 }, elevation: 4,
     },
-    bwLabel: {
-      flex: 1,
-      textAlign: 'center',
-      ...Typography.small,
-      color: Colors.muted,
-      fontWeight: '700',
-      letterSpacing: 1,
+    strikeText: { fontFamily: Fonts.display, fontSize: 14, letterSpacing: 1.2, color: C.onAccent },
+    box: {
+      width: 30, height: 30, marginRight: 4, borderRadius: 7, borderWidth: 1.5, borderColor: C.borderLight,
+      alignItems: 'center', justifyContent: 'center',
     },
-    x: {
-      ...Typography.small,
-      color: Colors.muted,
-    },
-    checkBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      borderWidth: 1.5,
-      borderColor: Colors.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    checkBtnDone: {
-      backgroundColor: Colors.accentGreen + '20',
-      borderColor: Colors.accentGreen,
-    },
-    checkText: {
-      fontSize: 18,
-      color: Colors.muted,
-    },
-    checkTextDone: {
-      color: Colors.accentGreen,
-      fontWeight: '700',
-      fontSize: 16,
-    },
-  }), [Colors]);
+    stamp: { backgroundColor: C.accent, borderColor: C.accent, transform: [{ rotate: '-8deg' }] },
+  }), [C]);
 
   return (
-    <Animated.View style={[styles.row, completed && styles.rowDone, animStyle]}>
-      {/* Set number */}
+    <Animated.View style={[styles.row, isNext && styles.rowNext, animStyle]}>
       <View style={styles.setNum}>
-        <Text style={[styles.setNumText, completed && styles.setNumDone]}>
+        <Text style={[styles.setNumText, isNext && styles.setNumNext, completed && styles.setNumDone]}>
           {setNumber}
         </Text>
       </View>
 
-      {/* Previous (ghost) */}
       <View style={styles.prevCol}>
         {previous ? (
           <Text style={styles.prevText}>
@@ -175,49 +121,48 @@ export function SetRow({
         )}
       </View>
 
-      {/* Weight input or BW label */}
       {noWeight ? (
         <Text style={styles.bwLabel}>BW</Text>
       ) : (
         <TextInput
-          style={[styles.input, completed && styles.inputDone]}
+          style={[styles.input, isNext && styles.inputNext, completed && styles.inputDone]}
           value={weight}
           onChangeText={setWeight}
           keyboardType="decimal-pad"
           placeholder="kg"
-          placeholderTextColor={Colors.muted}
+          placeholderTextColor={C.muted}
           editable={!completed}
           selectTextOnFocus
-          selectionColor={Colors.accent}
+          selectionColor={C.accent}
         />
       )}
 
       <Text style={styles.x}>×</Text>
 
-      {/* Reps input */}
       <TextInput
-        style={[styles.input, completed && styles.inputDone]}
+        style={[styles.input, isNext && styles.inputNext, completed && styles.inputDone]}
         value={reps}
         onChangeText={setReps}
         keyboardType="number-pad"
         placeholder="reps"
-        placeholderTextColor={Colors.muted}
+        placeholderTextColor={C.muted}
         editable={!completed}
         selectTextOnFocus
-        selectionColor={Colors.accent}
+        selectionColor={C.accent}
       />
 
-      {/* Complete / undo button */}
-      <Pressable
-        onPress={handleComplete}
-        style={[styles.checkBtn, completed && styles.checkBtnDone]}
-      >
-        <Ionicons
-          name={completed ? 'checkmark' : 'ellipse-outline'}
-          size={18}
-          color={completed ? Colors.base : Colors.muted}
-        />
-      </Pressable>
+      <View style={styles.action}>
+        {isNext && !completed ? (
+          <Pressable onPress={handleComplete} style={styles.strike} hitSlop={6}>
+            <Ionicons name="hammer" size={13} color={C.onAccent} />
+            <Text style={styles.strikeText}>STRIKE</Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={handleComplete} style={[styles.box, completed && styles.stamp]} hitSlop={8}>
+            {completed && <Ionicons name="checkmark" size={18} color={C.onAccent} />}
+          </Pressable>
+        )}
+      </View>
     </Animated.View>
   );
 }

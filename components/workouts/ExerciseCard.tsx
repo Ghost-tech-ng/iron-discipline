@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,19 +10,17 @@ import Animated, {
   FadeInDown,
   Easing,
 } from 'react-native-reanimated';
-import { SetRow } from './SetRow';
+import { SetRow, SET_ACTION_WIDTH } from './SetRow';
 import { SwapPicker } from './SwapPicker';
+import { ExerciseHeader, type Recommendation } from './ExerciseHeader';
 import { getExerciseImageUrl, getSwapImageUrl } from '../../constants/exerciseImages';
 import type { Exercise, SetLog, ExerciseLog, MuscleGroup } from '../../types';
 import { useColors } from '../../hooks/useColors';
-import { Typography, Spacing, Radius } from '../../constants/theme';
+import { Fonts, Spacing, Radius } from '../../constants/theme';
 
 const LEG_MUSCLES: MuscleGroup[] = ['legs', 'quads', 'hamstrings', 'glutes', 'calves'];
 
-function calcRecommendation(
-  exercise: Exercise,
-  previousLog: ExerciseLog | undefined
-): { weight: number; direction: 'up' | 'hold' | 'none' } {
+function calcRecommendation(exercise: Exercise, previousLog: ExerciseLog | undefined): Recommendation {
   if (exercise.bodyweight) return { weight: 0, direction: 'none' };
   if (!previousLog || previousLog.sets.length === 0) return { weight: 0, direction: 'none' };
   const completedSets = previousLog.sets.filter((s) => s.completed);
@@ -58,12 +56,11 @@ export function ExerciseCard({
   initialSets,
   onSetsUpdate,
   onRestStart,
-  isActive,
   enterDelay = 0,
   activeSwap,
   onSwap,
 }: ExerciseCardProps) {
-  const Colors = useColors();
+  const C = useColors();
   const [completedSets, setCompletedSets] = useState<SetLog[]>(initialSets ?? []);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const completedCount = completedSets.length;
@@ -80,6 +77,8 @@ export function ExerciseCard({
   const totalSets = exercise.sets;
   const allDone = completedCount >= totalSets;
   const inProgress = completedCount > 0 && !allDone;
+  const isDone = (n: number) => completedSets.some((s) => s.setNumber === n);
+  const nextSet = Array.from({ length: totalSets }, (_, i) => i + 1).find((n) => !isDone(n));
 
   const borderAnim = useSharedValue(0);
   const pulseOpacity = useSharedValue(0);
@@ -103,18 +102,16 @@ export function ExerciseCard({
         -1
       );
     } else {
+      borderAnim.value = withTiming(0, { duration: 200 });
       pulseOpacity.value = withTiming(0, { duration: 200 });
     }
   }, [allDone, inProgress]);
 
   const cardStyle = useAnimatedStyle(() => ({
-    borderColor: borderAnim.value === 1 ? Colors.accentGreen : Colors.border,
+    borderColor: borderAnim.value === 1 ? C.accent : C.border,
     transform: [{ scale: doneScale.value }],
   }));
-
-  const accentBarStyle = useAnimatedStyle(() => ({
-    opacity: pulseOpacity.value,
-  }));
+  const accentBarStyle = useAnimatedStyle(() => ({ opacity: pulseOpacity.value }));
 
   function handleSetComplete(set: SetLog) {
     const updated = [...completedSets.filter((s) => s.setNumber !== set.setNumber), set];
@@ -129,226 +126,56 @@ export function ExerciseCard({
     onSetsUpdate(exercise.id, updated);
   }
 
-  function getPreviousSet(setNum: number) {
-    return previousLog?.sets.find((s) => s.setNumber === setNum);
-  }
-
-  function isSetCompleted(setNum: number) {
-    return completedSets.some((s) => s.setNumber === setNum);
-  }
-
   const styles = React.useMemo(() => StyleSheet.create({
-    card: {
-      backgroundColor: Colors.surface,
-      borderRadius: Radius.lg,
-      borderWidth: 1,
-      overflow: 'hidden',
-    },
-    accentBar: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 3,
-      backgroundColor: Colors.accent,
-      zIndex: 1,
-    },
-    imageContainer: {
-      width: '100%',
-      height: 148,
-      backgroundColor: Colors.cream,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    exerciseImage: { width: '100%', height: '100%' },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      paddingHorizontal: Spacing.md,
-      paddingTop: Spacing.md,
-      paddingBottom: 8,
-      gap: 12,
-    },
-    headerLeft: { flex: 1, gap: 4 },
-    name: {
-      ...Typography.h4,
-      color: Colors.primary,
-      fontWeight: '700',
-      letterSpacing: -0.3,
-    },
-    nameDone: { color: Colors.secondary },
-    insteadOf: { ...Typography.caption, color: Colors.muted },
-    notes: {
-      ...Typography.caption,
-      color: Colors.muted,
-      fontStyle: 'italic',
-    },
-    why: {
-      ...Typography.caption,
-      color: Colors.secondary,
-      lineHeight: 15,
-      marginTop: 2,
-    },
-    tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
-    tag: {
-      fontSize: 9,
-      fontWeight: '700',
-      letterSpacing: 0.7,
-      color: Colors.muted,
-      backgroundColor: Colors.surface2,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-      overflow: 'hidden',
-    },
-    tagHot: { color: Colors.accentHeat, backgroundColor: Colors.accentHeat + '18' },
-    progress: {
-      backgroundColor: Colors.surface2,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 8,
-    },
-    progressText: {
-      ...Typography.small,
-      color: Colors.secondary,
-      fontWeight: '700',
-      fontVariant: ['tabular-nums'],
-    },
-    colHeaders: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: Spacing.md,
-      paddingBottom: 6,
-    },
-    colHead: {
-      ...Typography.label,
-      color: Colors.muted,
-      letterSpacing: 0.8,
-    },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: Colors.border,
-    },
-    setSep: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: Colors.surface2,
-      marginLeft: 40,
-    },
-    specRow: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: 10,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: Colors.border,
-    },
-    specText: { ...Typography.caption, color: Colors.muted },
-    targetBadge: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      borderWidth: 1,
-    },
-    targetBadgeUp: {
-      backgroundColor: Colors.accentGreen + '15',
-      borderColor: Colors.accentGreen + '50',
-    },
-    targetBadgeHold: {
-      backgroundColor: Colors.accentAmber + '15',
-      borderColor: Colors.accentAmber + '50',
-    },
-    targetText: {
-      ...Typography.caption,
-      fontWeight: '600',
-      fontSize: 11,
-      letterSpacing: 0.3,
-    },
-    targetTextUp: { color: Colors.accentGreen },
-    targetTextHold: { color: Colors.accentAmber },
-    undoHint: {
-      ...Typography.caption,
-      color: Colors.muted,
-      textAlign: 'center',
-      paddingBottom: 6,
-      fontStyle: 'italic',
-    },
-  }), [Colors]);
+    card: { backgroundColor: C.surface, borderRadius: Radius.lg, borderWidth: 1.5, overflow: 'hidden' },
+    accentBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: C.accent, zIndex: 1 },
+    brief: { paddingHorizontal: Spacing.md, paddingTop: 12, gap: 4 },
+    notes: { fontFamily: Fonts.bodySemi, fontSize: 12, color: C.secondary },
+    why: { fontFamily: Fonts.body, fontSize: 11.5, lineHeight: 16, color: C.muted },
+    colHeaders: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: Spacing.md, paddingTop: 12, paddingBottom: 6 },
+    colHead: { fontFamily: Fonts.bodyHeavy, fontSize: 9, letterSpacing: 1.4, color: C.muted, textAlign: 'center' },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: C.border },
+    setSep: { height: StyleSheet.hairlineWidth, backgroundColor: C.surface2, marginLeft: 40 },
+    undoHint: { fontFamily: Fonts.body, fontSize: 11, color: C.muted, textAlign: 'center', paddingVertical: 6 },
+    specRow: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.border },
+    specText: { fontFamily: Fonts.bodyBold, fontSize: 10, letterSpacing: 1, color: C.muted },
+  }), [C]);
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(enterDelay).duration(400)}
-      style={[styles.card, cardStyle]}
-    >
+    <Animated.View entering={FadeInDown.delay(enterDelay).duration(400)} style={[styles.card, cardStyle]}>
       <Animated.View style={[styles.accentBar, accentBarStyle]} />
 
-      {imageUrl && (
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: imageUrl }} style={styles.exerciseImage} resizeMode="contain" />
+      <ExerciseHeader
+        exercise={exercise}
+        activeSwap={activeSwap}
+        imageUrl={imageUrl}
+        completedCount={completedCount}
+        recommendation={recommendation}
+      />
+
+      {(exercise.notes || exercise.why) && (
+        <View style={styles.brief}>
+          {exercise.notes && <Text style={styles.notes}>{exercise.notes}</Text>}
+          {exercise.why && <Text style={styles.why}>{exercise.why}</Text>}
         </View>
       )}
 
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={[styles.name, allDone && styles.nameDone]}>{activeSwap ?? exercise.name}</Text>
-          {activeSwap && <Text style={styles.insteadOf}>instead of {exercise.name}</Text>}
-          {(exercise.tempo || exercise.perSide || exercise.lengthenedPartials || exercise.isTimed) && (
-            <View style={styles.tagRow}>
-              {exercise.tempo && <Text style={styles.tag}>TEMPO {exercise.tempo}</Text>}
-              {exercise.perSide && <Text style={styles.tag}>PER SIDE</Text>}
-              {exercise.isTimed && <Text style={styles.tag}>HOLD FOR TIME</Text>}
-              {exercise.lengthenedPartials && (
-                <Text style={[styles.tag, styles.tagHot]}>LENGTHENED PARTIALS</Text>
-              )}
-            </View>
-          )}
-          {exercise.notes && <Text style={styles.notes}>{exercise.notes}</Text>}
-          {exercise.why && <Text style={styles.why}>{exercise.why}</Text>}
-          {recommendation.direction !== 'none' && (
-            <View style={[
-              styles.targetBadge,
-              recommendation.direction === 'up' ? styles.targetBadgeUp : styles.targetBadgeHold,
-            ]}>
-              <Text style={[
-                styles.targetText,
-                recommendation.direction === 'up' ? styles.targetTextUp : styles.targetTextHold,
-              ]}>
-                {recommendation.direction === 'up'
-                  ? `Target ${recommendation.weight}kg ↑`
-                  : `Target ${recommendation.weight}kg — hold`}
-              </Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.progress}>
-          <Text style={[styles.progressText, allDone && { color: Colors.accentGreen }]}>
-            {completedCount}/{totalSets}
-          </Text>
-        </View>
-      </View>
-
-      {/* Column headers */}
       <View style={styles.colHeaders}>
-        <View style={{ width: 24 }} />
-        <Text style={[styles.colHead, { width: 52, textAlign: 'center' }]}>PREV</Text>
-        {exercise.bodyweight ? (
-          <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>BW</Text>
-        ) : (
-          <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>KG</Text>
-        )}
-        <View style={{ width: 12 }} />
-        <Text style={[styles.colHead, { flex: 1, textAlign: 'center' }]}>REPS</Text>
-        <View style={{ width: 36 }} />
+        <Text style={[styles.colHead, { width: 22 }]}>SET</Text>
+        <Text style={[styles.colHead, { width: 50 }]}>PREV</Text>
+        <Text style={[styles.colHead, { flex: 1 }]}>{exercise.bodyweight ? 'BW' : 'KG'}</Text>
+        <View style={{ width: 8 }} />
+        <Text style={[styles.colHead, { flex: 1 }]}>{exercise.isTimed ? 'SECS' : 'REPS'}</Text>
+        <View style={{ width: SET_ACTION_WIDTH }} />
       </View>
 
       <View style={styles.divider} />
 
-      {/* Sets */}
       {Array.from({ length: totalSets }).map((_, i) => (
         <React.Fragment key={`${activeSwap ?? 'base'}-${i}`}>
           <SetRow
             setNumber={i + 1}
-            previous={getPreviousSet(i + 1)}
+            previous={previousLog?.sets.find((s) => s.setNumber === i + 1)}
             defaultWeight={
               recommendation.direction !== 'none'
                 ? recommendation.weight
@@ -356,7 +183,8 @@ export function ExerciseCard({
             }
             onComplete={handleSetComplete}
             onUndo={handleSetUndo}
-            completed={isSetCompleted(i + 1)}
+            completed={isDone(i + 1)}
+            isNext={nextSet === i + 1}
             existingLog={completedSets.find((s) => s.setNumber === i + 1)}
             noWeight={exercise.bodyweight}
           />
@@ -364,24 +192,17 @@ export function ExerciseCard({
         </React.Fragment>
       ))}
 
-      {completedCount > 0 && (
-        <Text style={styles.undoHint}>Tap ✓ to undo a set</Text>
-      )}
+      {completedCount > 0 && <Text style={styles.undoHint}>Tap a stamp to undo a set</Text>}
 
       {!!exercise.swaps?.length && (
-        <SwapPicker
-          originalName={exercise.name}
-          swaps={exercise.swaps}
-          activeSwap={activeSwap}
-          onSwap={onSwap}
-        />
+        <SwapPicker originalName={exercise.name} swaps={exercise.swaps} activeSwap={activeSwap} onSwap={onSwap} />
       )}
 
       <View style={styles.specRow}>
         <Text style={styles.specText}>
-          {totalSets} sets · {exercise.repsMin}–{exercise.repsMax}{' '}
-          {exercise.isTimed ? 'secs' : exercise.bodyweight ? 'reps/secs' : 'reps'}
-          {exercise.perSide ? ' per side' : ''} · {exercise.restSeconds}s rest
+          {totalSets} SETS · {exercise.repsMin}–{exercise.repsMax}{' '}
+          {exercise.isTimed ? 'SECS' : exercise.bodyweight ? 'REPS/SECS' : 'REPS'}
+          {exercise.perSide ? ' PER SIDE' : ''} · {exercise.restSeconds}S QUENCH
         </Text>
       </View>
     </Animated.View>

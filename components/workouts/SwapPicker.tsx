@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useColors } from '../../hooks/useColors';
-import { Typography, Spacing } from '../../constants/theme';
+import { Fonts, Spacing } from '../../constants/theme';
 
 interface SwapPickerProps {
   originalName: string;
@@ -22,7 +22,7 @@ export function SwapPicker({ originalName, swaps, activeSwap, onSwap }: SwapPick
       borderTopColor: Colors.border,
       gap: 8,
     },
-    toggle: { ...Typography.caption, color: Colors.accent, fontWeight: '700', letterSpacing: 0.6 },
+    toggle: { fontFamily: Fonts.bodyHeavy, fontSize: 10, color: Colors.accent, letterSpacing: 1.2 },
     chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
     chip: {
       paddingHorizontal: 10,
@@ -33,9 +33,9 @@ export function SwapPicker({ originalName, swaps, activeSwap, onSwap }: SwapPick
       backgroundColor: Colors.surface2,
     },
     chipActive: { borderColor: Colors.accent, backgroundColor: Colors.accent + '18' },
-    chipText: { ...Typography.caption, color: Colors.secondary, fontWeight: '600' },
+    chipText: { fontFamily: Fonts.bodySemi, fontSize: 12, color: Colors.secondary },
     chipTextActive: { color: Colors.accent },
-    hint: { ...Typography.caption, color: Colors.muted, fontStyle: 'italic' },
+    hint: { fontFamily: Fonts.body, fontSize: 11, color: Colors.muted, fontStyle: 'italic' },
   }), [Colors]);
 
   function pick(name: string | null) {

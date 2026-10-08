@@ -22,6 +22,7 @@ import { useUserStore } from '../../store/userStore';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { ScreenHeader } from '../../components/forge/ScreenHeader';
 import { resetAllData } from '../../services/db';
 import { USER_TARGETS } from '../../constants/nutrition';
 import { router } from 'expo-router';
@@ -272,22 +273,6 @@ export default function HabitsScreen() {
     safe: { flex: 1, backgroundColor: Colors.base },
     scroll: { flex: 1 },
     content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-    },
-    titleBlock: { flex: 1 },
-    title: {
-      ...Typography.h1,
-      color: Colors.primary,
-      fontWeight: '700',
-      letterSpacing: -1,
-    },
-    subtitle: {
-      ...Typography.small,
-      color: Colors.secondary,
-    },
     progressCard: { gap: 10 },
     progressHeader: {
       flexDirection: 'row',
@@ -370,12 +355,8 @@ export default function HabitsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInDown.delay(0).duration(450)} style={styles.header}>
-          <View style={styles.titleBlock}>
-            <Text style={styles.title}>Habits</Text>
-            <Text style={styles.subtitle}>Daily non-negotiables</Text>
-          </View>
-          <ThemeToggle />
+        <Animated.View entering={FadeInDown.delay(0).duration(450)}>
+          <ScreenHeader eyebrow="DAILY NON-NEGOTIABLES" title="HABITS" sub="Small fires. Light them every day." right={<ThemeToggle />} />
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
@@ -415,7 +396,7 @@ export default function HabitsScreen() {
           <Card style={styles.noteCard}>
             <Text style={styles.noteTitle}>Why these habits matter</Text>
             <Text style={styles.noteBody}>
-              Each habit has a 20% weight in your Discipline Score. Miss all five = 30 pts off your score, regardless of your workout. Sleep and steps are the two most underestimated factors in body recomposition.
+              Sleep and cardio feed your Heat directly — 10° and 12° of the 100. The rest keep the cut honest. Sleep and steps are the two most underestimated factors in body recomposition.
             </Text>
           </Card>
         </Animated.View>

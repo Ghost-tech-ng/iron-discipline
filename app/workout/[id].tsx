@@ -1,28 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  SafeAreaView,
-  Alert,
-  Pressable,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedProps,
-  withTiming,
-  withRepeat,
-  withSequence,
-  Easing,
-} from 'react-native-reanimated';
-import type { Stretch } from '../../types';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ExerciseCard } from '../../components/workouts/ExerciseCard';
 import { RestTimer } from '../../components/workouts/RestTimer';
+import { StretchSection } from '../../components/workouts/StretchSection';
+import { WorkoutTopBar } from '../../components/forge/WorkoutTopBar';
 import { Button } from '../../components/ui/Button';
 import { WEEKLY_SPLIT } from '../../constants/workouts';
 import { getVolumeModifier } from '../../constants/plan';
@@ -31,7 +14,7 @@ import { useDisciplineStore, WEIGHTS } from '../../store/disciplineStore';
 import { useSwapStore } from '../../store/swapStore';
 import { saveWorkoutLog, getLastSessionByType } from '../../services/workoutService';
 import { useColors } from '../../hooks/useColors';
-import { Spacing, Typography, sessionColor } from '../../constants/theme';
+import { Fonts, Radius, Spacing, sessionColor } from '../../constants/theme';
 import type { Exercise, ExerciseLog, SessionType, SetLog, WorkoutLog } from '../../types';
 import { localIso } from '../../utils/date';
 import { cancelTodayWorkoutReminder } from '../../services/notificationService';
@@ -60,108 +43,6 @@ function formatElapsed(seconds: number): string {
 
 const ALL_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as const;
 
-function StretchSection({
-  title,
-  stretches,
-  accentColor,
-}: {
-  title: string;
-  stretches: Stretch[];
-  accentColor: string;
-}) {
-  const Colors = useColors();
-  const [expanded, setExpanded] = useState(false);
-
-  const stretchStyles = React.useMemo(() => StyleSheet.create({
-    container: {
-      backgroundColor: Colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: Colors.border,
-      borderLeftWidth: 3,
-      overflow: 'hidden',
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: 12,
-      gap: 8,
-    },
-    title: {
-      ...Typography.label,
-      letterSpacing: 1.5,
-      flex: 1,
-    },
-    count: {
-      ...Typography.caption,
-      color: Colors.muted,
-    },
-    toggle: {
-      ...Typography.caption,
-      color: Colors.muted,
-    },
-    list: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: Colors.border,
-    },
-    item: {
-      padding: Spacing.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: Colors.surface2,
-      gap: 4,
-    },
-    itemHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      gap: 8,
-    },
-    name: {
-      ...Typography.small,
-      color: Colors.primary,
-      fontWeight: '600',
-      flex: 1,
-    },
-    duration: {
-      ...Typography.caption,
-      color: Colors.accent,
-      fontWeight: '600',
-      textAlign: 'right',
-      flexShrink: 0,
-    },
-    description: {
-      ...Typography.caption,
-      color: Colors.secondary,
-      lineHeight: 18,
-    },
-  }), [Colors]);
-
-  return (
-    <View style={[stretchStyles.container, { borderLeftColor: accentColor }]}>
-      <Pressable style={stretchStyles.header} onPress={() => setExpanded((e) => !e)}>
-        <Text style={[stretchStyles.title, { color: accentColor }]}>{title}</Text>
-        <Text style={stretchStyles.count}>{stretches.length} stretches</Text>
-        <Text style={stretchStyles.toggle}>{expanded ? '▲' : '▼'}</Text>
-      </Pressable>
-
-      {expanded && (
-        <View style={stretchStyles.list}>
-          {stretches.map((s, i) => (
-            <View key={i} style={stretchStyles.item}>
-              <View style={stretchStyles.itemHeader}>
-                <Text style={stretchStyles.name}>{s.name}</Text>
-                <Text style={stretchStyles.duration}>{s.duration}</Text>
-              </View>
-              <Text style={stretchStyles.description}>{s.description}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
 export default function WorkoutScreen() {
   const Colors = useColors();
   const { id, makeupDate } = useLocalSearchParams<RouteParams>();
@@ -183,7 +64,6 @@ export default function WorkoutScreen() {
   const { completeWorkout, activeSession, startSession, updateSessionLog, clearActiveSession } = useWorkoutStore();
   const { setWorkoutDone } = useDisciplineStore();
 
-  // Resolved early so styles useMemo can consume it
   const accentColor = sessionColor(Colors, id) ?? Colors.accent;
 
   const isResume = activeSession?.sessionType === id;
@@ -206,147 +86,20 @@ export default function WorkoutScreen() {
   );
 
   const styles = React.useMemo(() => StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: Colors.base,
-    },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: 12,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: Colors.border,
-      backgroundColor: accentColor + '0c',
-    },
-    cancelBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    cancelText: {
-      ...Typography.body,
-      color: Colors.muted,
-      fontSize: 22,
-    },
-    minimizeBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    topCenter: {
-      alignItems: 'center',
-      gap: 4,
-    },
-    typePill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 20,
-    },
-    typeDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
-    typeText: {
-      ...Typography.caption,
-      fontWeight: '700',
-      letterSpacing: 1,
-    },
-    elapsed: {
-      ...Typography.small,
-      color: Colors.muted,
-      fontVariant: ['tabular-nums'],
-    },
-    finishBtn: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      backgroundColor: Colors.primary,
-      borderRadius: 20,
-    },
-    finishText: {
-      ...Typography.small,
-      color: Colors.base,
-      fontWeight: '700',
-    },
-    progressTrack: {
-      height: 3,
-      backgroundColor: Colors.surface2,
-    },
-    progressFill: {
-      height: '100%',
-      borderRadius: 1,
-    },
-    sessionHeader: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.md,
-      paddingLeft: Spacing.md + 4,
-      gap: 3,
-      borderLeftWidth: 3,
-      borderLeftColor: accentColor,
-      backgroundColor: accentColor + '08',
-    },
-    sessionTitle: {
-      ...Typography.h2,
-      color: Colors.primary,
-      fontWeight: '700',
-      letterSpacing: -0.8,
-    },
-    sessionSub: {
-      ...Typography.small,
-      color: Colors.muted,
-    },
-    sessionIntent: {
-      ...Typography.small,
-      fontWeight: '600',
-      lineHeight: 18,
-      marginTop: 2,
-      marginBottom: 3,
-    },
+    safe: { flex: 1, backgroundColor: Colors.base },
     scroll: { flex: 1 },
-    scrollContent: {
-      paddingHorizontal: Spacing.md,
-      gap: Spacing.md,
-      paddingBottom: 20,
-    },
+    scrollContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, gap: Spacing.md, paddingBottom: 20 },
     prevBanner: {
-      backgroundColor: Colors.surface2,
-      borderRadius: 10,
-      padding: 12,
-      borderLeftWidth: 3,
-      borderLeftColor: Colors.accent,
+      backgroundColor: Colors.surface, borderRadius: Radius.md, padding: 12,
+      borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 3, borderLeftColor: Colors.accent,
     },
-    prevBannerText: {
-      ...Typography.small,
-      color: Colors.secondary,
-      lineHeight: 18,
-    },
-    finishSection: {
-      gap: 10,
-      marginTop: 8,
-    },
-    finishNote: {
-      ...Typography.caption,
-      color: Colors.muted,
-      textAlign: 'center',
-    },
-    errorContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 16,
-    },
-    errorText: {
-      ...Typography.body,
-      color: Colors.secondary,
-    },
-  }), [Colors, accentColor]);
+    prevBannerText: { fontFamily: Fonts.body, fontSize: 12, color: Colors.secondary, lineHeight: 18 },
+    prevBannerHot: { fontFamily: Fonts.bodyBold, color: Colors.primary },
+    finishSection: { gap: 10, marginTop: 8 },
+    finishNote: { fontFamily: Fonts.body, fontSize: 11, color: Colors.muted, textAlign: 'center' },
+    errorContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+    errorText: { fontFamily: Fonts.body, fontSize: 15, color: Colors.secondary },
+  }), [Colors]);
 
   useEffect(() => {
     if (id) {
@@ -372,42 +125,6 @@ export default function WorkoutScreen() {
     );
   }
 
-  const progressAnim = useSharedValue(0);
-  const progressBarStyle = useAnimatedStyle(() => ({
-    width: `${progressAnim.value * 100}%` as `${number}%`,
-  }));
-
-  const pillPulse = useSharedValue(1);
-  useEffect(() => {
-    pillPulse.value = withRepeat(
-      withSequence(
-        withTiming(1.5, { duration: 900, easing: Easing.inOut(Easing.quad) }),
-        withTiming(1.0, { duration: 900, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1
-    );
-  }, []);
-  const pillDotStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pillPulse.value }],
-    opacity: 0.85,
-  }));
-
-  const completedExerciseCount = [...exerciseLogs.values()].filter(
-    (sets) => {
-      const exercise = adjustedExercises.find((e) =>
-        [...exerciseLogs.entries()].find(([k, v]) => v === sets)?.[0] === e.id
-      );
-      return exercise && sets.length >= exercise.sets;
-    }
-  ).length;
-
-  const totalExercises = adjustedExercises.length;
-  const progressPct = totalExercises > 0 ? completedExerciseCount / totalExercises : 0;
-
-  useEffect(() => {
-    progressAnim.value = withTiming(progressPct, { duration: 600, easing: Easing.out(Easing.quad) });
-  }, [progressPct]);
-
   if (!session) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -419,13 +136,24 @@ export default function WorkoutScreen() {
     );
   }
 
+  const setsTotal = adjustedExercises.reduce((n, ex) => n + ex.sets, 0);
+  const setsDone = adjustedExercises.reduce(
+    (n, ex) => n + Math.min(exerciseLogs.get(ex.id)?.length ?? 0, ex.sets),
+    0
+  );
+  const meta = [
+    `${adjustedExercises.length} EXERCISES`,
+    volume.isDeload
+      ? 'DELOAD · 60% SETS'
+      : volume.extraSets > 0
+        ? `+${volume.extraSets} SET${volume.extraSets > 1 ? 'S' : ''} ON COMPOUNDS`
+        : null,
+    previousSession ? 'PR DATA LOADED' : 'FIRST SESSION',
+  ].filter(Boolean).join('  ·  ');
+
   function handleSetsUpdate(exerciseId: string, sets: SetLog[]) {
     setExerciseLogs((prev) => new Map(prev).set(exerciseId, sets));
     updateSessionLog(exerciseId, sets);
-  }
-
-  function handleMinimize() {
-    router.back();
   }
 
   function handleFinish() {
@@ -471,7 +199,7 @@ export default function WorkoutScreen() {
     );
   }
 
-  function handleCancel() {
+  function handleOptions() {
     Alert.alert('Workout Options', undefined, [
       { text: 'Keep Going', style: 'cancel' },
       { text: 'Minimize — return to app', onPress: () => router.back() },
@@ -485,7 +213,6 @@ export default function WorkoutScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Rest timer overlay */}
       {restTimerSecs !== null && (
         <RestTimer
           seconds={restTimerSecs}
@@ -495,74 +222,35 @@ export default function WorkoutScreen() {
         />
       )}
 
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <Pressable onPress={handleMinimize} style={styles.cancelBtn}>
-          <Ionicons name="chevron-down" size={24} color={Colors.muted} />
-        </Pressable>
+      <WorkoutTopBar
+        type={session.type}
+        label={session.label}
+        intent={session.intent}
+        meta={meta}
+        elapsed={formatElapsed(elapsed)}
+        setsDone={setsDone}
+        setsTotal={setsTotal}
+        accentColor={accentColor}
+        onMinimize={() => router.back()}
+        onOptions={handleOptions}
+        onFinish={handleFinish}
+      />
 
-        <View style={styles.topCenter}>
-          <View style={[styles.typePill, { backgroundColor: accentColor + '20' }]}>
-            <Animated.View style={[styles.typeDot, pillDotStyle, { backgroundColor: accentColor }]} />
-            <Text style={[styles.typeText, { color: accentColor }]}>
-              {session.type.toUpperCase()}
-            </Text>
-          </View>
-          <Text style={styles.elapsed}>{formatElapsed(elapsed)}</Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Pressable onPress={handleCancel} style={styles.minimizeBtn}>
-            <Ionicons name="ellipsis-horizontal" size={20} color={Colors.muted} />
-          </Pressable>
-          <Pressable onPress={handleFinish} style={styles.finishBtn}>
-            <Text style={styles.finishText}>Done</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Progress bar — animated */}
-      <View style={styles.progressTrack}>
-        <Animated.View
-          style={[styles.progressFill, progressBarStyle, { backgroundColor: accentColor }]}
-        />
-      </View>
-
-      {/* Session title */}
-      <View style={styles.sessionHeader}>
-        <Text style={styles.sessionTitle}>{session.label}</Text>
-        {session.intent && (
-          <Text style={[styles.sessionIntent, { color: accentColor }]}>{session.intent}</Text>
-        )}
-        <Text style={styles.sessionSub}>
-          {totalExercises} exercises
-          {volume.isDeload
-            ? '  ·  DELOAD — 60% sets'
-            : volume.extraSets > 0
-              ? `  ·  +${volume.extraSets} set${volume.extraSets > 1 ? 's' : ''} on compounds`
-              : ''}
-          {previousSession ? '  ·  PR data loaded' : '  ·  First session'}
-        </Text>
-      </View>
-
-      {/* Exercise list */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Previous session callout */}
         {previousSession && (
           <View style={styles.prevBanner}>
             <Text style={styles.prevBannerText}>
               Previous: {previousSession.date} · {previousSession.durationMinutes}min
-              {' '}— beat these numbers.
+              {' '}— <Text style={styles.prevBannerHot}>beat these numbers.</Text>
             </Text>
           </View>
         )}
 
-        {/* Warm-up stretches */}
         {session.warmUp.length > 0 && (
           <StretchSection title="WARM-UP" stretches={session.warmUp} accentColor={accentColor} />
         )}
@@ -582,22 +270,13 @@ export default function WorkoutScreen() {
           />
         ))}
 
-        {/* Cool-down stretches */}
         {session.coolDown.length > 0 && (
-          <StretchSection title="COOL-DOWN" stretches={session.coolDown} accentColor={Colors.accentGreen} />
+          <StretchSection title="COOL-DOWN" stretches={session.coolDown} accentColor={Colors.accent2} />
         )}
 
-        {/* Finish button at bottom */}
         <View style={styles.finishSection}>
-          <Button
-            label="Finish Workout"
-            variant="primary"
-            fullWidth
-            onPress={handleFinish}
-          />
-          <Text style={styles.finishNote}>
-            Partial workouts still count toward your streak.
-          </Text>
+          <Button label="Finish Workout" variant="primary" fullWidth onPress={handleFinish} />
+          <Text style={styles.finishNote}>Partial workouts still count toward your streak.</Text>
         </View>
 
         <View style={{ height: 60 }} />

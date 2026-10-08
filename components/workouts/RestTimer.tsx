@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '../../hooks/useColors';
-import { Typography } from '../../constants/theme';
+import { Fonts, Radius } from '../../constants/theme';
 import { sendImmediateNotification } from '../../services/notificationService';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -42,8 +42,8 @@ export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: Rest
     setDone(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     sendImmediateNotification(
-      'Rest complete',
-      exerciseName ? `Time to hit your next set of ${exerciseName}.` : 'Rest is over — next set.'
+      'Quench over',
+      exerciseName ? `Strike your next set of ${exerciseName}.` : 'Steel is set. Next set.'
     );
     onComplete();
   }, [onComplete, exerciseName]);
@@ -101,77 +101,43 @@ export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: Rest
 
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
-  const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
+  const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}`;
+  // The last few seconds re-heat the ring: steel while cooling, red when it's time to strike.
+  const hot = done || remaining <= 5;
+  const ringColor = hot ? Colors.accent : Colors.accent2;
 
   const styles = React.useMemo(() => StyleSheet.create({
-    container: {
-      ...StyleSheet.absoluteFill,
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 100,
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFill,
-      backgroundColor: '#000000cc',
-    },
+    container: { ...StyleSheet.absoluteFill, justifyContent: 'center', alignItems: 'center', zIndex: 100 },
+    backdrop: { ...StyleSheet.absoluteFill, backgroundColor: Colors.base + 'E6' },
     card: {
-      backgroundColor: Colors.surface,
-      borderRadius: 24,
-      padding: 32,
-      alignItems: 'center',
-      gap: 24,
-      borderWidth: 1,
-      borderColor: Colors.border,
-      width: 280,
+      backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: 28, alignItems: 'center', gap: 20,
+      borderWidth: 1, borderColor: Colors.border, width: 288,
     },
-    title: {
-      ...Typography.label,
-      color: Colors.muted,
-      letterSpacing: 3,
-    },
-    ringWrap: {
-      position: 'relative',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    center: {
-      position: 'absolute',
-      alignItems: 'center',
-    },
-    time: {
-      fontSize: 48,
-      fontWeight: '700',
-      letterSpacing: -2,
-      lineHeight: 52,
-    },
-    sub: {
-      ...Typography.caption,
-      color: Colors.muted,
-      letterSpacing: 1.5,
-      textTransform: 'uppercase',
-    },
-    exerciseHint: {
-      ...Typography.caption,
-      color: Colors.muted,
-      textAlign: 'center',
-      paddingHorizontal: 8,
-    },
+    title: { fontFamily: Fonts.display, fontSize: 22, letterSpacing: 5, color: Colors.primary },
+    titleSub: { fontFamily: Fonts.bodyBold, fontSize: 9.5, letterSpacing: 2.4, color: Colors.muted, marginTop: 2, textAlign: 'center' },
+    ringWrap: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
+    center: { position: 'absolute', alignItems: 'center' },
+    time: { fontFamily: Fonts.displayBlack, fontSize: 68, lineHeight: 70, color: Colors.primary, fontVariant: ['tabular-nums'] },
+    sub: { fontFamily: Fonts.bodyHeavy, fontSize: 10, letterSpacing: 2.6, color: Colors.muted },
+    subHot: { color: Colors.accent },
+    exerciseHint: { fontFamily: Fonts.bodySemi, fontSize: 12, color: Colors.secondary, textAlign: 'center', paddingHorizontal: 8 },
     skipBtn: {
-      paddingVertical: 10,
-      paddingHorizontal: 24,
+      flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11, paddingHorizontal: 24,
+      borderRadius: 999, borderWidth: 1, borderColor: Colors.borderLight,
     },
-    skipText: {
-      ...Typography.body,
-      color: Colors.secondary,
-      fontWeight: '500',
-    },
+    skipBtnHot: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+    skipText: { fontFamily: Fonts.display, fontSize: 15, letterSpacing: 1.4, color: Colors.secondary },
+    skipTextHot: { color: Colors.onAccent },
   }), [Colors]);
 
   return (
     <View style={styles.container}>
       <Pressable style={styles.backdrop} onPress={onDismiss} />
       <View style={styles.card}>
-        <Text style={styles.title}>REST</Text>
+        <View>
+          <Text style={styles.title}>QUENCH</Text>
+          <Text style={styles.titleSub}>LET THE STEEL SET</Text>
+        </View>
 
         <View style={styles.ringWrap}>
           <Svg width={SIZE} height={SIZE}>
@@ -181,7 +147,7 @@ export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: Rest
             />
             <AnimatedCircle
               cx={SIZE / 2} cy={SIZE / 2} r={radius}
-              stroke={done ? Colors.accentGreen : Colors.accent}
+              stroke={ringColor}
               strokeWidth={STROKE} fill="none"
               strokeDasharray={circumference}
               animatedProps={animatedProps}
@@ -192,11 +158,11 @@ export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: Rest
           </Svg>
           <View style={styles.center}>
             {done ? (
-              <Ionicons name="checkmark" size={40} color={Colors.accentGreen} />
+              <Ionicons name="hammer" size={44} color={Colors.accent} />
             ) : (
-              <Text style={[styles.time, { color: Colors.primary }]}>{timeStr}</Text>
+              <Text style={styles.time}>{timeStr}</Text>
             )}
-            {!done && <Text style={styles.sub}>rest</Text>}
+            <Text style={[styles.sub, hot && styles.subHot]}>{hot ? 'STRIKE' : mins > 0 ? 'COOLING' : 'SECONDS'}</Text>
           </View>
         </View>
 
@@ -204,11 +170,9 @@ export function RestTimer({ seconds, exerciseName, onComplete, onDismiss }: Rest
           <Text style={styles.exerciseHint}>Next: {exerciseName}</Text>
         )}
 
-        <Pressable onPress={onDismiss} style={styles.skipBtn}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={styles.skipText}>{done ? 'Continue' : 'Skip rest'}</Text>
-            {done && <Ionicons name="arrow-forward" size={14} color={Colors.accent} />}
-          </View>
+        <Pressable onPress={onDismiss} style={[styles.skipBtn, hot && styles.skipBtnHot]}>
+          <Text style={[styles.skipText, hot && styles.skipTextHot]}>{hot ? 'STRIKE' : 'SKIP QUENCH'}</Text>
+          {hot && <Ionicons name="arrow-forward" size={14} color={Colors.onAccent} />}
         </Pressable>
       </View>
     </View>
