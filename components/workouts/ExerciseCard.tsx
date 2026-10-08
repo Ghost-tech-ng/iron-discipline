@@ -156,7 +156,7 @@ export function ExerciseCard({
     imageContainer: {
       width: '100%',
       height: 148,
-      backgroundColor: '#f0ede8',
+      backgroundColor: Colors.cream,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -255,8 +255,8 @@ export function ExerciseCard({
       borderColor: Colors.accentGreen + '50',
     },
     targetBadgeHold: {
-      backgroundColor: '#f59e0b15',
-      borderColor: '#f59e0b50',
+      backgroundColor: Colors.accentAmber + '15',
+      borderColor: Colors.accentAmber + '50',
     },
     targetText: {
       ...Typography.caption,
@@ -265,7 +265,7 @@ export function ExerciseCard({
       letterSpacing: 0.3,
     },
     targetTextUp: { color: Colors.accentGreen },
-    targetTextHold: { color: '#f59e0b' },
+    targetTextHold: { color: Colors.accentAmber },
     undoHint: {
       ...Typography.caption,
       color: Colors.muted,

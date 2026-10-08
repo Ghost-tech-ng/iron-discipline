@@ -1,47 +1,70 @@
+/**
+ * Forge · Red-Hot. Iron heats steel → red-hot → white-hot: steel is cold,
+ * crimson is hot, cream is white-hot. No orange, no purple.
+ * `feature` is the one standout card per screen (cream on dark, coal on light).
+ */
 export const DarkColors = {
-  base: '#080b0f',
-  surface: '#0f1318',
-  surface2: '#161c22',
-  border: '#1e2830',
-  borderLight: '#253040',
-  primary: '#f0f4f8',
-  secondary: '#8a9ab0',
-  muted: '#4a5568',
-  accent: '#2d9cff',
-  accent2: '#8b5cf6',
-  accentGreen: '#22c55e',
-  accentAmber: '#f59e0b',
-  accentRed: '#ef4444',
-  accentHeat: '#ff6b35',
-  push: '#2d9cff',
-  pull: '#8b5cf6',
-  legs: '#22c55e',
-  upper: '#f59e0b',
-  lower: '#ef4444',
-  rest: '#4a5568',
+  base: '#0C0B0A',
+  surface: '#1A1714',
+  surface2: '#2A2621',
+  border: '#302B25',
+  borderLight: '#3D3730',
+  primary: '#F4EBD9',
+  secondary: '#B3A994',
+  muted: '#8C8377',
+  dim: '#544D44',
+  accent: '#FF2E4D',
+  accent2: '#8FB0CC',
+  accentGreen: '#7CCFA3',
+  accentAmber: '#EADBB8',
+  accentRed: '#E5484D',
+  accentHeat: '#FF6B80',
+  onAccent: '#FFFFFF',
+  feature: '#F4EBD9',
+  onFeature: '#0C0B0A',
+  featureMuted: '#5E574D',
+  /** Same in both modes: the backdrop for exercise photos shot on white. */
+  cream: '#F4EBD9',
+  /** Top of the heat scale: white-hot on dark, deep crimson on cream. */
+  heatPeak: '#FFF4E0',
+  shadow: '#000000',
+  push: '#FF2E4D',
+  pull: '#8FB0CC',
+  legs: '#D6CCB8',
+  upper: '#FF6B80',
+  lower: '#B3A994',
+  rest: '#544D44',
 } as const;
 
 export const LightColors = {
-  base: '#f5f3ef',
-  surface: '#ffffff',
-  surface2: '#ede9e3',
-  border: '#ddd9d2',
-  borderLight: '#ccc8c0',
-  primary: '#0a0a0a',
-  secondary: '#4b5563',
-  muted: '#9ca3af',
-  accent: '#1a85e8',
-  accent2: '#7c3aed',
-  accentGreen: '#16a34a',
-  accentAmber: '#d97706',
-  accentRed: '#dc2626',
-  accentHeat: '#e8521a',
-  push: '#1a85e8',
-  pull: '#7c3aed',
-  legs: '#16a34a',
-  upper: '#d97706',
-  lower: '#dc2626',
-  rest: '#9ca3af',
+  base: '#F4EBD9',
+  surface: '#FBF6EC',
+  surface2: '#EADFCB',
+  border: '#DDD0B9',
+  borderLight: '#CFC1A8',
+  primary: '#0C0B0A',
+  secondary: '#5E574D',
+  muted: '#8C8377',
+  dim: '#B3A894',
+  accent: '#E8173A',
+  accent2: '#4F7392',
+  accentGreen: '#2E8B62',
+  accentAmber: '#7A6A50',
+  accentRed: '#C81E3A',
+  accentHeat: '#E8455E',
+  onAccent: '#FFFFFF',
+  feature: '#1A1714',
+  onFeature: '#F4EBD9',
+  featureMuted: '#ADA391',
+  cream: '#F4EBD9',
+  heatPeak: '#9E0F2C',
+  shadow: '#3D2A14',
+  push: '#E8173A',
+  pull: '#4F7392',
+  legs: '#0C0B0A',
+  upper: '#E8455E',
+  lower: '#7A6F60',
+  rest: '#B3A894',
 } as const;
 
 /**
@@ -53,16 +76,25 @@ export type ColorScheme = { readonly [K in keyof typeof DarkColors]: string };
 // Kept for any non-reactive static usage (e.g. navigation config)
 export const Colors = DarkColors;
 
-export const Gradients = {
-  discipline: ['#2d9cff', '#8b5cf6'] as const,
-  protein: ['#22c55e', '#16a34a'] as const,
-  calories: ['#ff6b35', '#e8521a'] as const,
-  danger: ['#ef4444', '#dc2626'] as const,
-  push: ['#2d9cff', '#1a85e8'] as const,
-  pull: ['#8b5cf6', '#7c3aed'] as const,
-  legs: ['#22c55e', '#16a34a'] as const,
-  upper: ['#f59e0b', '#d97706'] as const,
-  lower: ['#ef4444', '#dc2626'] as const,
+export type SessionColorKey = 'push' | 'pull' | 'legs' | 'upper' | 'lower' | 'rest';
+
+export function sessionColor(C: ColorScheme, type: string | undefined): string | undefined {
+  switch (type) {
+    case 'push': case 'pull': case 'legs': case 'upper': case 'lower': case 'rest':
+      return C[type];
+    default:
+      return undefined;
+  }
+}
+
+/** Loaded in app/_layout.tsx. Each weight is its own family, so never pair these with fontWeight. */
+export const Fonts = {
+  display: 'BigShoulders_800ExtraBold',
+  displayBlack: 'BigShoulders_900Black',
+  body: 'Manrope_500Medium',
+  bodySemi: 'Manrope_600SemiBold',
+  bodyBold: 'Manrope_700Bold',
+  bodyHeavy: 'Manrope_800ExtraBold',
 } as const;
 
 export const Spacing = {

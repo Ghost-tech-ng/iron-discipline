@@ -911,7 +911,7 @@ function DietAuditCard({
       paddingHorizontal: 12,
       paddingVertical: 7,
     },
-    runBtnText: { ...Typography.caption, color: '#fff', fontWeight: '700' },
+    runBtnText: { ...Typography.caption, color: Colors.onAccent, fontWeight: '700' },
     sub: { ...Typography.small, color: Colors.muted, lineHeight: 18 },
     summary: { ...Typography.small, color: Colors.primary, fontWeight: '600', lineHeight: 19 },
     sectionTitle: { ...Typography.caption, fontWeight: '700', letterSpacing: 1, marginTop: 4 },
@@ -1007,7 +1007,7 @@ function PhaseCard() {
 
   const { phase, week, dayNumber, daysRemaining, totalDays, dayType, targets, isDeloadWeek, focus } = status;
 
-  const phaseColor = isDeloadWeek ? Colors.accent2 : phase.accent;
+  const phaseColor = isDeloadWeek ? Colors.accent2 : Colors[phase.accent];
   const progressPct = Math.round(((dayNumber - 1) / totalDays) * 100);
   const banner = DAY_BANNERS[dayType];
 
@@ -1040,7 +1040,7 @@ function PhaseCard() {
       fontSize: 9,
       fontWeight: '700',
       letterSpacing: 0.12,
-      color: '#fff',
+      color: phaseColor === Colors.accent ? Colors.onAccent : Colors.base,
     },
     phaseName: { ...Typography.h4, color: Colors.primary, fontWeight: '700' },
     phaseSub: { ...Typography.caption, color: Colors.muted, marginTop: 1 },

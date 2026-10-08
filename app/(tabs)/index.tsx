@@ -1,548 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  SafeAreaView,
-  Alert,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { GlowRing } from '../../components/ui/GlowRing';
-import { GradientBar } from '../../components/ui/GradientBar';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { PressableScale } from '../../components/ui/PressableScale';
-import { StatBadge } from '../../components/ui/StatBadge';
-import { Divider } from '../../components/ui/Divider';
-import { useDisciplineStore, WEIGHTS, TOTAL_SUPPLEMENTS } from '../../store/disciplineStore';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useDisciplineStore } from '../../store/disciplineStore';
 import { useNutritionStore } from '../../store/nutritionStore';
 import { useUserStore } from '../../store/userStore';
-import { useWorkoutStore } from '../../store/workoutStore';
-import { Ionicons } from '@expo/vector-icons';
-import { loadDisciplineHistory } from '../../services/disciplineService';
 import { CoachCard } from '../../components/ai/CoachCard';
-import { WEEKLY_SPLIT } from '../../constants/workouts';
-import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
-import { Colors, Spacing, Typography } from '../../constants/theme';
-import type { DayOfWeek } from '../../types';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { ForgeHeader } from '../../components/forge/ForgeHeader';
+import { ProtocolTrack } from '../../components/forge/ProtocolTrack';
+import { StartProtocolCard } from '../../components/forge/StartProtocolCard';
+import { HeatCard } from '../../components/forge/HeatCard';
+import { SectionHeader } from '../../components/forge/SectionHeader';
+import { StrikeCard } from '../../components/forge/StrikeCard';
+import { FuelCards } from '../../components/forge/FuelCards';
+import { useColors } from '../../hooks/useColors';
+import { useHeatHistory } from '../../hooks/useHeatHistory';
 import { useActivePlanTargets } from '../../hooks/useActivePlanTargets';
-import { PROTOCOL_WEEKS } from '../../constants/phases';
-import { localIso } from '../../utils/date';
+import { WEEKLY_SPLIT } from '../../constants/workouts';
+import { getProtocolStatus, mondayIndex } from '../../constants/phases';
+import { Spacing } from '../../constants/theme';
+import { computeStreak } from '../../utils/heat';
+import type { DayOfWeek } from '../../types';
 
-function computeStreak(history: { date: string; score: number }[]): number {
-  if (history.length === 0) return 0;
-  const todayDate = localIso();
-  const sorted = [...history]
-    .filter((h) => h.date !== todayDate)
-    .sort((a, b) => b.date.localeCompare(a.date));
-  let streak = 0;
-  const today = new Date();
-  for (let i = 0; i < sorted.length; i++) {
-    const expected = new Date(today);
-    expected.setDate(today.getDate() - (i + 1));
-    const expectedStr = localIso(expected);
-    if (sorted[i].date === expectedStr && sorted[i].score >= 50) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  return streak;
+const DAY_NAMES: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+function confirmStart(title: string, body: string, cta: string, onYes: () => void, destructive = false) {
+  Alert.alert(title, body, [
+    { text: destructive ? 'Cancel' : 'Not yet', style: 'cancel' },
+    {
+      text: cta,
+      style: destructive ? 'destructive' : 'default',
+      onPress: () => {
+        onYes();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      },
+    },
+  ]);
 }
 
-const DAY_NAMES: DayOfWeek[] = [
-  'monday','tuesday','wednesday','thursday','friday','saturday','sunday',
-];
+const enter = (i: number) => FadeInDown.delay(i * 60).duration(450);
 
-function getTodaySession() {
-  const jsDay = new Date().getDay(); // 0=Sun
-  const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
-  const dayName = DAY_NAMES[dayIndex];
-  return { dayName, session: WEEKLY_SPLIT[dayName] };
-}
-
-function getGreeting(name: string): string {
-  const hour = new Date().getHours();
-  const prefix = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  return name ? `${prefix}, ${name.split(' ')[0]}.` : `${prefix}.`;
-}
-
-function formatDate(): string {
-  return new Date().toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-}
-
-export default function DashboardScreen() {
-  const Colors = useColors();
-  const {
-    score, workoutDone, proteinHit, calorieHit, supplementsTaken,
-    cardioLogged, sleepLogged, setWorkoutDone,
-  } = useDisciplineStore();
-  const { getTotals, waterMl } = useNutritionStore();
-  const { profile, startProtocol } = useUserStore();
-  const { activeWorkout } = useWorkoutStore();
-  const [streak, setStreak] = useState(0);
-
-  useEffect(() => {
-    loadDisciplineHistory().then((history) => {
-      setStreak(computeStreak(history));
-    });
-  }, [score]);
-
-  const { session } = getTodaySession();
+export default function ForgeScreen() {
+  const C = useColors();
+  const { score, workoutDone, setWorkoutDone } = useDisciplineStore();
+  const totals = useNutritionStore((s) => s.today);
+  const startProtocol = useUserStore((s) => s.startProtocol);
+  const plan = useActivePlanTargets();
+  const status = getProtocolStatus();
+  const history = useHeatHistory(score);
+  const streak = computeStreak(history);
+  const session = WEEKLY_SPLIT[DAY_NAMES[mondayIndex()]];
   const isRestDay = !session;
 
-  // Rest day counts as workout done automatically
   useEffect(() => {
     if (isRestDay && !workoutDone) setWorkoutDone(true);
   }, [isRestDay]);
-  const planTargets = useActivePlanTargets();
-  const onProtocol = planTargets.dayLabel !== 'OFF PROTOCOL';
-  const phaseAccent = planTargets.isDeloadWeek ? Colors.accent2 : planTargets.phase.accent;
-  const dayAccent =
-    planTargets.dayType === 'rest'
-      ? Colors.accent2
-      : planTargets.dayType === 'refeed'
-      ? Colors.accentGreen
-      : Colors.accentAmber;
-  function handleStartProtocol() {
-    Alert.alert(
+
+  const handleStart = () =>
+    confirmStart(
       'Start The Sculpt Protocol',
       "Today becomes Day 1 — week, phase and macro targets all count from here. There's no backlog of missed sessions before this point.",
-      [
-        { text: 'Not yet', style: 'cancel' },
-        {
-          text: "I'm Ready",
-          onPress: () => {
-            startProtocol();
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          },
-        },
-      ]
+      "I'm Ready",
+      startProtocol
     );
-  }
-
-  function handleRestartProtocol() {
-    Alert.alert(
+  const handleRestart = () =>
+    confirmStart(
       'Restart From Day 1',
       'Today becomes Day 1 of week 1 again. Your logged meals, workouts and check-ins are kept.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Restart',
-          style: 'destructive',
-          onPress: () => {
-            startProtocol();
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          },
-        },
-      ]
+      'Restart',
+      startProtocol,
+      true
     );
-  }
-
-  const { calories, protein, carbs, fat } = getTotals();
-  const calorieRemaining = planTargets.calories - calories;
-  const proteinRemaining = planTargets.protein - protein;
-  const waterPct = waterMl / profile.goalWaterMl;
 
   const styles = React.useMemo(() => StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: Colors.base,
-    },
-    scroll: { flex: 1 },
-    content: {
-      paddingHorizontal: Spacing.md,
-      paddingTop: Spacing.lg,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: Spacing.lg,
-    },
-    greeting: {
-      ...Typography.h2,
-      color: Colors.primary,
-      fontWeight: '700',
-      letterSpacing: -0.8,
-    },
-    date: {
-      ...Typography.small,
-      color: Colors.secondary,
-      marginTop: 2,
-    },
-    streakBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      backgroundColor: Colors.surface,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 20,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: Colors.border,
-    },
-    streakCount: {
-      ...Typography.body,
-      color: Colors.primary,
-      fontWeight: '700',
-    },
-    phaseCard: {
-      marginBottom: Spacing.lg,
-      gap: 6,
-    },
-    startCard: {
-      marginBottom: Spacing.lg,
-      gap: 10,
-      padding: Spacing.lg,
-    },
-    startTitle: {
-      ...Typography.h4,
-      color: Colors.primary,
-      fontWeight: '700',
-    },
-    startBody: {
-      ...Typography.small,
-      color: Colors.secondary,
-      lineHeight: 18,
-    },
-    phaseTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    phaseName: {
-      ...Typography.label,
-      fontWeight: '700',
-      letterSpacing: 1.4,
-      flex: 1,
-    },
-    phaseWeek: {
-      ...Typography.caption,
-      color: Colors.muted,
-      fontWeight: '700',
-      letterSpacing: 1,
-    },
-    dayChip: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 4,
-    },
-    dayChipText: {
-      ...Typography.caption,
-      fontWeight: '700',
-      letterSpacing: 1.2,
-      fontSize: 10,
-    },
-    phaseRationale: {
-      ...Typography.small,
-      color: Colors.secondary,
-      lineHeight: 18,
-    },
-    restartLink: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      gap: 5,
-      marginTop: 4,
-      paddingVertical: 4,
-    },
-    restartLinkText: {
-      ...Typography.caption,
-      color: Colors.muted,
-      fontWeight: '700',
-      letterSpacing: 0.6,
-    },
-    disciplineCard: {
-      marginBottom: Spacing.lg,
-      padding: Spacing.lg,
-    },
-    disciplineInner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.lg,
-    },
-    disciplineStats: {
-      flex: 1,
-      gap: Spacing.sm,
-    },
-    disciplineCaption: {
-      ...Typography.small,
-      color: Colors.secondary,
-      lineHeight: 18,
-    },
-    scoreBreakdown: {
-      gap: 2,
-      marginTop: 4,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Spacing.sm,
-      marginTop: Spacing.md,
-    },
-    sectionTitle: {
-      ...Typography.label,
-      color: Colors.muted,
-      letterSpacing: 1.5,
-    },
-    sectionSub: {
-      ...Typography.caption,
-      color: Colors.secondary,
-    },
-    sessionCard: {
-      marginBottom: Spacing.md,
-      gap: 6,
-    },
-    sessionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    sessionDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    sessionLabel: {
-      ...Typography.h4,
-      color: Colors.primary,
-      fontWeight: '600',
-      flex: 1,
-    },
-    doneBadge: {
-      backgroundColor: Colors.accentGreen + '20',
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 4,
-    },
-    doneText: {
-      ...Typography.caption,
-      color: Colors.accentGreen,
-      fontWeight: '700',
-      letterSpacing: 1,
-    },
-    sessionIntent: {
-      ...Typography.small,
-      color: Colors.secondary,
-      lineHeight: 18,
-    },
-    exerciseCount: {
-      ...Typography.small,
-      color: Colors.muted,
-    },
-    sessionCta: {
-      ...Typography.small,
-      color: Colors.accent,
-      fontWeight: '600',
-      marginTop: 4,
-    },
-    restCard: {
-      marginBottom: Spacing.md,
-      alignItems: 'center',
-      paddingVertical: Spacing.lg,
-      gap: 4,
-    },
-    restLabel: {
-      ...Typography.h4,
-      color: Colors.muted,
-      fontWeight: '600',
-      letterSpacing: 2,
-    },
-    restSub: {
-      ...Typography.small,
-      color: Colors.muted,
-      textAlign: 'center',
-      paddingHorizontal: Spacing.md,
-      lineHeight: 18,
-    },
-    nutritionCard: {
-      marginBottom: Spacing.md,
-      gap: 0,
-    },
-    macroGrid: {
-      flexDirection: 'row',
-      paddingBottom: Spacing.sm,
-    },
-    bars: {
-      gap: Spacing.sm,
-    },
-    quickActions: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      marginBottom: Spacing.md,
-    },
-  }), [Colors]);
+    safe: { flex: 1, backgroundColor: C.base },
+    content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg },
+    heat: { marginTop: Spacing.lg },
+    coach: { marginTop: Spacing.lg },
+  }), [C]);
 
   return (
     <SafeAreaView style={styles.safe}>
       <NoiseOverlay />
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <Animated.View entering={FadeInDown.delay(0).duration(450)} style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{getGreeting(profile.name)}</Text>
-            <Text style={styles.date}>{formatDate()}</Text>
-          </View>
-          <PressableScale style={styles.streakBadge} onPress={() => router.push('/(tabs)/progress')}>
-            <Ionicons name="flame" size={16} color={Colors.accentAmber} />
-            <Text style={styles.streakCount}>{streak}</Text>
-          </PressableScale>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Animated.View entering={enter(0)}>
+          <ForgeHeader dayNumber={status.isActive ? status.dayNumber : 0} totalDays={status.totalDays} streak={streak} score={score} />
         </Animated.View>
 
-        {/* Where you are in the protocol — sets the meaning of every number below it */}
-        {onProtocol ? (
-          <Animated.View entering={FadeInDown.delay(40).duration(450)}>
-            <Card style={styles.phaseCard} accentColor={phaseAccent} gradient>
-              <View style={styles.phaseTop}>
-                <Text style={[styles.phaseName, { color: phaseAccent }]}>
-                  {planTargets.phase.name.toUpperCase()}
-                  {planTargets.isDeloadWeek ? ' · DELOAD' : ''}
-                </Text>
-                <Text style={styles.phaseWeek}>WK {planTargets.week}/{PROTOCOL_WEEKS}</Text>
-              </View>
-              <View style={[styles.dayChip, { backgroundColor: dayAccent + '22' }]}>
-                <Text style={[styles.dayChipText, { color: dayAccent }]}>{planTargets.dayLabel}</Text>
-              </View>
-              <Text style={styles.phaseRationale}>{planTargets.rationale}</Text>
-              <PressableScale style={styles.restartLink} onPress={handleRestartProtocol} hitSlop={8}>
-                <Ionicons name="refresh" size={13} color={Colors.muted} />
-                <Text style={styles.restartLinkText}>Restart from Day 1</Text>
-              </PressableScale>
-            </Card>
-          </Animated.View>
-        ) : (
-          <Animated.View entering={FadeInDown.delay(40).duration(450)}>
-            <Card style={styles.startCard} accentColor={Colors.accent} gradient>
-              <Text style={styles.startTitle}>The Sculpt Protocol is ready</Text>
-              <Text style={styles.startBody}>
-                {PROTOCOL_WEEKS} weeks: cut to 12% body fat, then build. Nothing counts against you until you tap start —
-                whenever that is, that day becomes Day 1.
-              </Text>
-              <Button label="Start Protocol" onPress={handleStartProtocol} />
-            </Card>
-          </Animated.View>
-        )}
-
-        {/* Discipline Score — hero element */}
-        <Animated.View entering={FadeInDown.delay(80).duration(450)}>
-        <Card style={styles.disciplineCard} accentColor={Colors.accent} gradient glow={score >= 50 ? Colors.accent : undefined}>
-          <View style={styles.disciplineInner}>
-            <GlowRing score={score} size={200} strokeWidth={14} />
-            <View style={styles.disciplineStats}>
-              <Text style={styles.disciplineCaption}>
-                {score === 0
-                  ? 'Start your day. Execute the system.'
-                  : score < 50
-                  ? 'Keep pushing. The session counts.'
-                  : score < 80
-                  ? 'Solid. Finish strong.'
-                  : 'Locked in. This is the standard.'}
-              </Text>
-              <View style={styles.scoreBreakdown}>
-                <ScoreRow label="Workout" done={workoutDone} pts={WEIGHTS.workoutDone} />
-                <ScoreRow label="Protein" done={proteinHit} pts={WEIGHTS.proteinHit} />
-                <ScoreRow label="Calories" done={calorieHit} pts={WEIGHTS.calorieHit} />
-                <ScoreRow label="Cardio" done={cardioLogged} pts={WEIGHTS.cardioLogged} />
-                <ScoreRow
-                  label="Supplements"
-                  done={supplementsTaken.length >= TOTAL_SUPPLEMENTS}
-                  partial={supplementsTaken.length > 0 && supplementsTaken.length < TOTAL_SUPPLEMENTS}
-                  pts={WEIGHTS.supplementsTaken}
-                  earnedPts={Math.round((supplementsTaken.length / TOTAL_SUPPLEMENTS) * WEIGHTS.supplementsTaken)}
-                />
-                <ScoreRow label="Sleep" done={sleepLogged} pts={WEIGHTS.sleepLogged} />
-                <ScoreRow label="Water" done={waterPct >= 1} pts={WEIGHTS.waterGoalHit} />
-              </View>
-            </View>
-          </View>
-        </Card>
+        <Animated.View entering={enter(1)}>
+          {status.isActive ? <ProtocolTrack status={status} onRestart={handleRestart} /> : <StartProtocolCard onStart={handleStart} />}
         </Animated.View>
 
-        {/* Today's session */}
-        <Animated.View entering={FadeInDown.delay(160).duration(450)}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>TODAY'S SESSION</Text>
-          </View>
-          {session ? (
-            <PressableScale onPress={() => router.push({ pathname: '/workout/[id]', params: { id: session.type } })}>
-              <Card
-                style={styles.sessionCard}
-                accentColor={(Colors as Record<string, string>)[session.type] ?? Colors.accent}
-                glow={!workoutDone ? ((Colors as Record<string, string>)[session.type] ?? Colors.accent) : undefined}
-                gradient
-              >
-                <View style={styles.sessionHeader}>
-                  <View style={[styles.sessionDot, { backgroundColor: Colors[session.type] || Colors.accent }]} />
-                  <Text style={styles.sessionLabel}>{session.label}</Text>
-                  {workoutDone && (
-                    <View style={styles.doneBadge}>
-                      <Text style={styles.doneText}>DONE</Text>
-                    </View>
-                  )}
-                </View>
-                {session.intent && <Text style={styles.sessionIntent}>{session.intent}</Text>}
-                <Text style={styles.exerciseCount}>{session.exercises.length} exercises</Text>
-                <Text style={styles.sessionCta}>{workoutDone ? 'View completed workout' : 'Tap to begin →'}</Text>
-              </Card>
-            </PressableScale>
-          ) : (
-            <Card style={styles.restCard}>
-              <Text style={styles.restLabel}>REST DAY</Text>
-              <Text style={styles.restSub}>
-                Fasted Zone-2 walk, 40 min. Mobility. This is when the growth actually lands.
-              </Text>
-            </Card>
-          )}
+        <Animated.View entering={enter(2)} style={styles.heat}>
+          <HeatCard history={history} />
         </Animated.View>
 
-        {/* Nutrition summary */}
-        <Animated.View entering={FadeInDown.delay(240).duration(450)}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>NUTRITION</Text>
-            <Text style={styles.sectionSub}>
-              {calorieRemaining > 0 ? `${calorieRemaining} kcal remaining` : 'Target reached'}
-            </Text>
-          </View>
-          <Card style={styles.nutritionCard} accentColor={Colors.accentHeat} gradient>
-            <View style={styles.macroGrid}>
-              <StatBadge value={calories} label="kcal" color={Colors.accentAmber} />
-              <StatBadge value={`${protein}g`} label="protein" color={Colors.accent} />
-              <StatBadge value={`${carbs}g`} label="carbs" color={Colors.accentGreen} />
-              <StatBadge value={`${fat}g`} label="fat" color={Colors.accent2} />
-            </View>
-            <Divider />
-            <View style={styles.bars}>
-              <GradientBar value={calories} max={planTargets.calories} label="Calories" unit="kcal" color={Colors.accentAmber} />
-              <GradientBar value={protein} max={planTargets.protein} label="Protein" unit="g" color={Colors.accent} />
-              <GradientBar value={waterMl} max={profile.goalWaterMl} label="Water" unit="ml" color={Colors.accent2} />
-            </View>
-          </Card>
+        <Animated.View entering={enter(3)}>
+          <SectionHeader title="TODAY'S STRIKE" link="Full split →" onLink={() => router.push('/(tabs)/workouts')} />
+          <StrikeCard session={session} done={workoutDone && !isRestDay} />
         </Animated.View>
 
-        {/* AI Coach */}
-        <Animated.View entering={FadeInDown.delay(320).duration(450)}>
+        <Animated.View entering={enter(4)}>
+          <SectionHeader title="FUEL" link="Log meal →" onLink={() => router.push('/meal/log')} />
+          <FuelCards />
+        </Animated.View>
+
+        <Animated.View entering={enter(5)} style={styles.coach}>
           <CoachCard
             data={{
               score,
-              protein,
-              proteinGoal: planTargets.protein,
-              calories,
-              calorieGoal: planTargets.calories,
+              protein: Math.round(totals.protein),
+              proteinGoal: plan.protein,
+              calories: Math.round(totals.calories),
+              calorieGoal: plan.calories,
               workoutDone,
               streak,
               weightTrend: 'unknown',
@@ -550,106 +122,8 @@ export default function DashboardScreen() {
           />
         </Animated.View>
 
-        {/* Quick actions */}
-        <Animated.View entering={FadeInDown.delay(400).duration(450)}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
-          </View>
-          <View style={styles.quickActions}>
-            <QuickAction
-              label="Log Meal"
-              iconName="restaurant-outline"
-              color={Colors.accentAmber}
-              onPress={() => router.push('/meal/log')}
-            />
-            <QuickAction
-              label="Start Workout"
-              iconName="barbell-outline"
-              color={Colors.accent}
-              onPress={() => {
-                const s = getTodaySession();
-                if (s.session) router.push({ pathname: '/workout/[id]', params: { id: s.session.type } });
-              }}
-            />
-            <QuickAction
-              label="Add Water"
-              iconName="water-outline"
-              color={Colors.accent2}
-              onPress={() => router.push('/nutrition')}
-            />
-          </View>
-        </Animated.View>
-
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function ScoreRow({ label, done, partial, pts, earnedPts }: {
-  label: string; done: boolean; partial?: boolean; pts: number; earnedPts?: number;
-}) {
-  const Colors = useColors();
-  const scoreRowStyles = React.useMemo(() => StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingVertical: 3,
-    },
-    indicator: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
-    label: {
-      ...Typography.small,
-      color: Colors.secondary,
-      flex: 1,
-    },
-    pts: {
-      ...Typography.caption,
-      color: Colors.muted,
-      fontWeight: '600',
-    },
-  }), [Colors]);
-
-  const dotColor = done ? Colors.accentGreen : partial ? Colors.accentAmber : Colors.surface2;
-  const ptsLabel = partial && earnedPts !== undefined ? `+${earnedPts}/${pts}` : `+${pts}`;
-
-  return (
-    <View style={scoreRowStyles.row}>
-      <View style={[scoreRowStyles.indicator, { backgroundColor: dotColor }]} />
-      <Text style={scoreRowStyles.label}>{label}</Text>
-      <Text style={scoreRowStyles.pts}>{ptsLabel}</Text>
-    </View>
-  );
-}
-
-function QuickAction({ label, iconName, color, onPress }: { label: string; iconName: React.ComponentProps<typeof Ionicons>['name']; color: string; onPress?: () => void }) {
-  const Colors = useColors();
-  const qaStyles = React.useMemo(() => StyleSheet.create({
-    action: {
-      flex: 1,
-      backgroundColor: Colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      paddingVertical: 16,
-      alignItems: 'center',
-      gap: 6,
-    },
-    label: {
-      ...Typography.caption,
-      fontWeight: '600',
-      letterSpacing: 0.3,
-      textTransform: 'uppercase',
-    },
-  }), [Colors]);
-
-  return (
-    <PressableScale onPress={onPress} style={[qaStyles.action, { borderColor: color + '40' }]}>
-      <Ionicons name={iconName} size={22} color={color} />
-      <Text style={[qaStyles.label, { color }]}>{label}</Text>
-    </PressableScale>
   );
 }

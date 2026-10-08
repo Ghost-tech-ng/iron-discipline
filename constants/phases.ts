@@ -1,4 +1,5 @@
 import { localIso } from '../utils/date';
+import type { ColorScheme } from './theme';
 
 /**
  * THE SCULPT PROTOCOL — 16 weeks, two blocks: ATTACK then BUILD.
@@ -79,8 +80,8 @@ export interface Phase {
   waistGoal: string;
   cardio: readonly string[];
   actions: readonly string[];
-  /** Colour hint used by the UI so each phase reads distinctly. */
-  accent: string;
+  /** Theme colour key so each phase reads distinctly in both light and dark mode. */
+  accent: keyof ColorScheme;
 }
 
 /**
@@ -133,7 +134,7 @@ export const PHASES: readonly Phase[] = [
       'Done early if all six abs show in morning light and the waist has stalled two weeks — switch to BUILD. Hard floor: 82kg on the 7-day average',
       'Sleep 7h+. Under-sleeping on a deficit costs lean mass first',
     ],
-    accent: '#ef4444',
+    accent: 'accent',
   },
   {
     id: 'build',
@@ -163,7 +164,7 @@ export const PHASES: readonly Phase[] = [
       'Progressive overload every session — the whole reason for the surplus is to have the calories to add weight to the bar',
       'Sleep 7h+ — building needs recovery capacity even more than a cut does',
     ],
-    accent: '#22c55e',
+    accent: 'accent2',
   },
 ];
 

@@ -304,7 +304,7 @@ export default function AdvisorScreen() {
     },
     askBtnText: {
       ...Typography.body,
-      color: '#fff',
+      color: Colors.onAccent,
       fontWeight: '700',
     },
     resultCard: { gap: 12 },
@@ -466,10 +466,10 @@ export default function AdvisorScreen() {
           activeOpacity={0.8}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={Colors.onAccent} />
           ) : (
             <>
-              <Ionicons name="sparkles" size={16} color={canAsk ? '#fff' : Colors.muted} />
+              <Ionicons name="sparkles" size={16} color={canAsk ? Colors.onAccent : Colors.muted} />
               <Text style={[styles.askBtnText, !canAsk && { color: Colors.muted }]}>Ask AI Advisor</Text>
             </>
           )}

@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, StyleSheet, type ViewStyle, ActivityIndicator } from 'react-native';
 import { PressableScale } from './PressableScale';
 import { useColors } from '../../hooks/useColors';
-import { Radius, Spacing, Typography } from '../../constants/theme';
+import { Fonts, Radius, Spacing } from '../../constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -31,8 +31,8 @@ export function Button({
 
   const VARIANTS = React.useMemo(() => ({
     primary: {
-      container: { backgroundColor: Colors.primary },
-      textColor: Colors.base,
+      container: { backgroundColor: Colors.accent },
+      textColor: Colors.onAccent,
     },
     secondary: {
       container: {
@@ -48,7 +48,7 @@ export function Button({
     },
     danger: {
       container: { backgroundColor: Colors.accentRed },
-      textColor: '#ffffff',
+      textColor: Colors.onAccent,
     },
   }), [Colors]);
 
@@ -62,15 +62,17 @@ export function Button({
       gap: Spacing.sm,
       paddingVertical: 14,
       paddingHorizontal: Spacing.lg,
-      borderRadius: Radius.md,
+      borderRadius: Radius.full,
     },
     fullWidth: {
       width: '100%',
     },
     label: {
-      ...Typography.body,
-      fontWeight: '600',
-      letterSpacing: -0.1,
+      fontFamily: Fonts.display,
+      fontSize: 18,
+      lineHeight: 22,
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
     },
     disabled: {
       opacity: 0.4,

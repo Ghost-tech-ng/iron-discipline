@@ -5,11 +5,11 @@ import { router } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
-import { WEEKLY_SPLIT, SESSION_COLORS, WEEKLY_VOLUME_SUMMARY } from '../../constants/workouts';
+import { WEEKLY_SPLIT, WEEKLY_VOLUME_SUMMARY } from '../../constants/workouts';
 import { loadRecentCompletedDates } from '../../services/workoutService';
 import { useColors } from '../../hooks/useColors';
 import { NoiseOverlay } from '../../components/ui/NoiseOverlay';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { Colors, Spacing, Typography, sessionColor } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 import { getActivePlanStatus, getVolumeModifier } from '../../constants/plan';
 import { getProtocolStartOverride } from '../../constants/phases';
@@ -43,7 +43,7 @@ export default function WorkoutsScreen() {
   if (planStatus.isActive) {
     const { phase, week, isDeloadWeek, dayType, focus } = planStatus;
     const mod = getVolumeModifier();
-    phaseColor = isDeloadWeek ? Colors.accent2 : phase.accent;
+    phaseColor = isDeloadWeek ? Colors.accent2 : Colors[phase.accent];
     phaseTitle = isDeloadWeek
       ? `WEEK ${week} · ${phase.name.toUpperCase()} · DELOAD`
       : `WEEK ${week} · ${phase.name.toUpperCase()}`;
@@ -264,7 +264,7 @@ export default function WorkoutsScreen() {
             <Text style={styles.sectionLabel}>MAKE UP A MISSED SESSION</Text>
             {missedSessions.map(({ key, label, daysAgo }) => {
               const session = WEEKLY_SPLIT[key]!;
-              const accentColor = SESSION_COLORS[session.type] ?? Colors.accentAmber;
+              const accentColor = sessionColor(Colors, session.type) ?? Colors.accentAmber;
               return (
                 <PressableScale
                   key={`makeup_${key}`}
@@ -306,7 +306,7 @@ export default function WorkoutsScreen() {
           const session = WEEKLY_SPLIT[key];
           const isToday = key === todayKey;
           const accentColor = session
-            ? SESSION_COLORS[session.type] ?? Colors.accent
+            ? sessionColor(Colors, session.type) ?? Colors.accent
             : Colors.muted;
 
           return (

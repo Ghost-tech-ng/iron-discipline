@@ -66,7 +66,7 @@ function SupplementRow({
     },
     checkMark: {
       fontSize: 13,
-      color: '#000',
+      color: Colors.base,
       fontWeight: '700',
     },
     info: { flex: 1, gap: 2 },

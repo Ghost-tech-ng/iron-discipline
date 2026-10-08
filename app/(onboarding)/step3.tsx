@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
+import { WEEKLY_SPLIT } from '../../constants/workouts';
 import { useColors } from '../../hooks/useColors';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { Spacing, Typography, sessionColor } from '../../constants/theme';
 import type { DayOfWeek } from '../../types';
 
 const DAYS: { key: DayOfWeek; label: string }[] = [
@@ -103,7 +103,7 @@ export default function Step3Screen() {
         <Card style={styles.splitCard}>
           {DAYS.map(({ key, label }, idx) => {
             const session = WEEKLY_SPLIT[key];
-            const color = session ? SESSION_COLORS[session.type] : Colors.muted;
+            const color = (session && sessionColor(Colors, session.type)) ?? Colors.muted;
             return (
               <View key={key}>
                 <View style={styles.dayRow}>

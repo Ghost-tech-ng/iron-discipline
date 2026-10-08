@@ -51,16 +51,16 @@ export function SyncStatusBar() {
     dotColor = Colors.muted;
     label = 'Offline · data saved locally';
   } else if (isSyncing) {
-    dotColor = '#f59e0b';
+    dotColor = Colors.accent2;
     label = 'Syncing to cloud…';
   } else if (error) {
-    dotColor = '#ef4444';
+    dotColor = Colors.accentRed;
     label = 'Sync failed · tap Upload to retry';
   } else if (lastSynced) {
     dotColor = Colors.accentGreen;
     label = `Synced ${formatAgo(lastSynced)}`;
   } else {
-    dotColor = '#f59e0b';
+    dotColor = Colors.accentAmber;
     label = 'Online · not yet synced';
   }
 

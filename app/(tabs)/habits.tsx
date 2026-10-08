@@ -141,7 +141,7 @@ function HabitRow({ id, label, completed, onToggle }: {
     },
     checkmark: {
       fontSize: 13,
-      color: '#fff',
+      color: Colors.base,
       fontWeight: '700',
     },
     label: {

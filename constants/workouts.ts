@@ -754,15 +754,6 @@ export const SESSION_LABELS: Record<string, string> = {
   rest: 'Rest',
 };
 
-export const SESSION_COLORS: Record<string, string> = {
-  push: '#2d9cff',
-  pull: '#8b5cf6',
-  legs: '#22c55e',
-  upper: '#f59e0b',
-  lower: '#ef4444',
-  rest: '#4a5568',
-};
-
 /** Weekly set counts per priority area, for the "why this split" panel. */
 export const WEEKLY_VOLUME_SUMMARY: readonly { area: string; sets: number; note: string }[] = [
   { area: 'Quads', sets: 13, note: 'Squat, hack squat, lunge, leg extension — was 13 unfocused sets, now front-loaded on Monday' },

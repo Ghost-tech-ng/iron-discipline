@@ -24,14 +24,14 @@ import * as Haptics from 'expo-haptics';
 import { ExerciseCard } from '../../components/workouts/ExerciseCard';
 import { RestTimer } from '../../components/workouts/RestTimer';
 import { Button } from '../../components/ui/Button';
-import { WEEKLY_SPLIT, SESSION_COLORS } from '../../constants/workouts';
+import { WEEKLY_SPLIT } from '../../constants/workouts';
 import { getVolumeModifier } from '../../constants/plan';
 import { useWorkoutStore } from '../../store/workoutStore';
 import { useDisciplineStore, WEIGHTS } from '../../store/disciplineStore';
 import { useSwapStore } from '../../store/swapStore';
 import { saveWorkoutLog, getLastSessionByType } from '../../services/workoutService';
 import { useColors } from '../../hooks/useColors';
-import { Spacing, Typography } from '../../constants/theme';
+import { Spacing, Typography, sessionColor } from '../../constants/theme';
 import type { Exercise, ExerciseLog, SessionType, SetLog, WorkoutLog } from '../../types';
 import { localIso } from '../../utils/date';
 import { cancelTodayWorkoutReminder } from '../../services/notificationService';
@@ -184,7 +184,7 @@ export default function WorkoutScreen() {
   const { setWorkoutDone } = useDisciplineStore();
 
   // Resolved early so styles useMemo can consume it
-  const accentColor = SESSION_COLORS[id as string] ?? Colors.accent;
+  const accentColor = sessionColor(Colors, id) ?? Colors.accent;
 
   const isResume = activeSession?.sessionType === id;
 

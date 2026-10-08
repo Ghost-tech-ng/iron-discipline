@@ -2,9 +2,12 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
+import { useColors } from '../../hooks/useColors';
 
 export function ThemeToggle() {
   const { isDark, toggleTheme } = useThemeStore();
+  const C = useColors();
+  const thumbColor = C.primary;
   const progress = useSharedValue(isDark ? 0 : 1);
 
   function handleToggle() {
@@ -14,13 +17,13 @@ export function ThemeToggle() {
 
   const thumbStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: withSpring(isDark ? 2 : 22, { damping: 15 }) }],
-    backgroundColor: isDark ? '#f5f5f5' : '#0a0a0a',
+    backgroundColor: thumbColor,
   }));
 
   return (
     <Pressable
       onPress={handleToggle}
-      style={[styles.track, { backgroundColor: isDark ? '#2a2a2a' : '#ddd9d2' }]}
+      style={[styles.track, { backgroundColor: C.surface2 }]}
     >
       <View style={styles.icons}>
         <Animated.Text style={styles.icon}>🌙</Animated.Text>
