@@ -25,7 +25,7 @@ const RIGHT = [
 ] as const;
 type TabDef = (typeof LEFT)[number] | (typeof RIGHT)[number];
 
-export function ForgeTabBar({ state, navigateToTab }: TabBarProps) {
+export function ForgeTabBar({ state, navigation }: TabBarProps) {
   const C = useColors();
   const [sheetOpen, setSheetOpen] = useState(false);
   const activeSession = useWorkoutStore((s) => s.activeSession);
@@ -63,7 +63,7 @@ export function ForgeTabBar({ state, navigateToTab }: TabBarProps) {
     const focused = focusedName === def.name;
     const color = focused ? C.accent : C.muted;
     return (
-      <Pressable key={def.name} style={styles.tab} onPress={() => { if (!focused) navigateToTab(route.key); }}>
+      <Pressable key={def.name} style={styles.tab} onPress={() => { if (!focused) navigation.navigate(route.name as never); }}>
         <def.Icon color={color} />
         <Text style={[styles.label, { color }]}>{def.title}</Text>
         <View style={[styles.underline, !focused && styles.underlineOff]} />
