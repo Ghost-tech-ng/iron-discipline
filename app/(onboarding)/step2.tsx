@@ -108,7 +108,7 @@ export default function Step2Screen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.step}>2 of 5</Text>
+          <Text style={styles.step}>2 of 6</Text>
           <Text style={styles.title}>Your targets</Text>
           <Text style={styles.subtitle}>
             Science-set for your weight and goal. You can adjust later in settings.

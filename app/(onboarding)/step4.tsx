@@ -110,7 +110,7 @@ export default function Step4Screen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.step}>4 of 5</Text>
+          <Text style={styles.step}>4 of 6</Text>
           <Text style={styles.title}>Supplements</Text>
           <Text style={styles.subtitle}>
             Tap to enable. Only add what you actually take — the system will remind and track these daily.
@@ -154,7 +154,7 @@ export default function Step4Screen() {
           label={`Confirm ${enabled.length} supplements →`}
           variant="primary"
           fullWidth
-          onPress={() => router.push('/(onboarding)/step5')}
+          onPress={() => router.push('/(onboarding)/dragon')}
         />
 
         <View style={{ height: 40 }} />

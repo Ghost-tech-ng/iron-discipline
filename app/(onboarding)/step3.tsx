@@ -93,7 +93,7 @@ export default function Step3Screen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.step}>3 of 5</Text>
+          <Text style={styles.step}>3 of 6</Text>
           <Text style={styles.title}>Your split</Text>
           <Text style={styles.subtitle}>
             Pre-loaded with the optimal 5-day PPL programme. Thursday is your rest day.

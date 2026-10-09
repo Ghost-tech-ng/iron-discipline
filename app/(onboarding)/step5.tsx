@@ -99,7 +99,7 @@ export default function Step5Screen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.content}>
         <View style={styles.top}>
-          <Text style={styles.step}>5 of 5</Text>
+          <Text style={styles.step}>6 of 6</Text>
           <Text style={styles.title}>
             {profile.name ? `You're set, ${profile.name.split(' ')[0]}.` : "You're set."}
           </Text>

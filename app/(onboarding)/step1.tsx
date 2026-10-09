@@ -128,7 +128,7 @@ export default function Step1Screen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.step}>1 of 5</Text>
+            <Text style={styles.step}>1 of 6</Text>
             <Text style={styles.title}>Who are you?</Text>
             <Text style={styles.subtitle}>
               This data stays on your phone. It sets your targets.
