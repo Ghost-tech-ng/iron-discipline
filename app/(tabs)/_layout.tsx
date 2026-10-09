@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { SyncStatusBar } from '../../components/ui/SyncStatusBar';
 import { ForgeTabBar } from '../../components/forge/ForgeTabBar';
+import { DragonOverlay } from '../../components/dragon/DragonOverlay';
 
 export default function TabLayout() {
   return (
@@ -16,6 +17,7 @@ export default function TabLayout() {
         <Tabs.Screen name="progress" options={{ title: 'Progress' }} />
         <Tabs.Screen name="habits" options={{ title: 'Habits' }} />
       </Tabs>
+      <DragonOverlay />
     </View>
   );
 }

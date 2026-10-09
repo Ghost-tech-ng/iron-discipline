@@ -15,6 +15,11 @@ const BAR_H = 64;
 const CENTRE = 60;
 const BOTTOM = Platform.OS === 'ios' ? 28 : 18;
 
+/** Overlays (the dragon) stand on the bar: its top edge, and how far the centre button rises above it. */
+export const TAB_BAR_TOP = BOTTOM + BAR_H;
+export const TAB_CENTRE_RISE = CENTRE / 2 - 4;
+export const TAB_CENTRE_HALF = CENTRE / 2 + 6;
+
 const LEFT = [
   { name: 'index', title: 'Forge', Icon: AnvilIcon },
   { name: 'workouts', title: 'Train', Icon: DumbbellIcon },

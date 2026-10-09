@@ -14,6 +14,7 @@ import Animated, {
 import { Card } from '../../components/ui/Card';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { DragonToggle } from '../../components/dragon/DragonToggle';
 import { useHabitStore } from '../../store/habitStore';
 import { useDisciplineStore } from '../../store/disciplineStore';
 import { useNutritionStore } from '../../store/nutritionStore';
@@ -272,6 +273,7 @@ export default function HabitsScreen() {
   const styles = React.useMemo(() => StyleSheet.create({
     safe: { flex: 1, backgroundColor: Colors.base },
     scroll: { flex: 1 },
+    headerToggles: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
     content: { paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, gap: Spacing.md },
     progressCard: { gap: 10 },
     progressHeader: {
@@ -356,7 +358,7 @@ export default function HabitsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.delay(0).duration(450)}>
-          <ScreenHeader eyebrow="DAILY NON-NEGOTIABLES" title="HABITS" sub="Small fires. Light them every day." right={<ThemeToggle />} />
+          <ScreenHeader eyebrow="DAILY NON-NEGOTIABLES" title="HABITS" sub="Small fires. Light them every day." right={<View style={styles.headerToggles}><DragonToggle /><ThemeToggle /></View>} />
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(80).duration(450)}>
